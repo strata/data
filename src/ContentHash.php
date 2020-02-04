@@ -9,6 +9,22 @@ use Strata\Data\Exception\InvalidHashIdentifier;
 /**
  * A simple content hash class to help check whether content has been updated
  *
+ * Usage:
+ *
+ * // Get from cache
+ * $content = unserialize($data);
+ * if ($content === false) {
+ *     $content = new ContentHash();
+ * }
+ *
+ * // Check if content has changed
+ * if ($content->isChanged('id', 'content') {
+ *     // do something
+ * }
+ *
+ * // Save to cache so we can compare content over time
+ * $data = serialize($content);
+ *
  * @package Strata\Data
  */
 class ContentHash
@@ -44,16 +60,6 @@ class ContentHash
         if (!in_array($this->algorithm, hash_algos())) {
             throw new InvalidHashAlgorithm(sprintf('Hash algorithm %s not found on your system', $this->algorithm));
         }
-    }
-
-    public function __sleep()
-    {
-        // TODO: Implement __sleep() method.
-    }
-
-    public function __wakeup()
-    {
-        // TODO: Implement __wakeup() method.
     }
 
     /**
@@ -113,16 +119,9 @@ class ContentHash
      */
     protected function validateIdentifier($id)
     {
-        static $results = [];
-        if (isset($results[$id])) {
-            return;
-        }
-
         if (!is_string($id) && !is_int($id)) {
             throw new InvalidHashIdentifier(sprintf('$id argument must be string or integer, %s passed', gettype($id)));
         }
-
-        $results[$id] = true;
     }
 
     /**
@@ -135,5 +134,4 @@ class ContentHash
     {
         return hash($this->algorithm, $content);
     }
-
 }
