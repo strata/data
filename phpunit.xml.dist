@@ -12,7 +12,7 @@
     </php>
 
     <testsuites>
-        <testsuite name="Frontend Test Suite">
+        <testsuite name="Strata Data Test Suite">
             <directory>tests</directory>
         </testsuite>
     </testsuites>

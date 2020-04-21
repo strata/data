@@ -14,37 +14,50 @@ final class PermissionTest extends TestCase
         $permission = new Permissions();
 
         $this->assertTrue($permission->read());
-        $this->assertFalse($permission->write());
+        $this->assertFalse($permission->create());
+        $this->assertFalse($permission->update());
         $this->assertFalse($permission->delete());
         $this->assertEquals('READ', $permission->__toString());
 
         $this->assertEquals('READ', $permission->getName(Permissions::READ));
-        $this->assertEquals('WRITE', $permission->getName(Permissions::WRITE));
+        $this->assertEquals('CREATE', $permission->getName(Permissions::CREATE));
+        $this->assertEquals('UPDATE', $permission->getName(Permissions::UPDATE));
         $this->assertEquals('DELETE', $permission->getName(Permissions::DELETE));
     }
 
     public function testCustomValues()
     {
-        $permission = new Permissions(Permissions::READ | Permissions::WRITE);
+        $permission = new Permissions(Permissions::READ | Permissions::UPDATE);
 
         $this->assertTrue($permission->read());
-        $this->assertTrue($permission->write());
+        $this->assertTrue($permission->update());
+        $this->assertFalse($permission->create());
         $this->assertFalse($permission->delete());
-        $this->assertEquals('READ, WRITE', $permission->__toString());
+        $this->assertEquals('READ, UPDATE', $permission->__toString());
 
-        $permission = new Permissions(Permissions::READ | Permissions::WRITE | Permissions::DELETE);
+        $permission = new Permissions(Permissions::READ | Permissions::UPDATE | Permissions::CREATE | Permissions::DELETE);
 
         $this->assertTrue($permission->read());
-        $this->assertTrue($permission->write());
+        $this->assertTrue($permission->update());
+        $this->assertTrue($permission->create());
         $this->assertTrue($permission->delete());
-        $this->assertEquals('READ, WRITE, DELETE', $permission->__toString());
+        $this->assertEquals('READ, CREATE, UPDATE, DELETE', $permission->__toString());
 
-        $permission = new Permissions(Permissions::DELETE | Permissions::WRITE);
+        $permission = new Permissions(Permissions::DELETE | Permissions::READ);
+
+        $this->assertTrue($permission->read());
+        $this->assertFalse($permission->update());
+        $this->assertFalse($permission->create());
+        $this->assertTrue($permission->delete());
+        $this->assertEquals('READ, DELETE', $permission->__toString());
+
+        $permission = new Permissions(Permissions::DELETE);
 
         $this->assertFalse($permission->read());
-        $this->assertTrue($permission->write());
+        $this->assertFalse($permission->update());
+        $this->assertFalse($permission->create());
         $this->assertTrue($permission->delete());
-        $this->assertEquals('WRITE, DELETE', $permission->__toString());
+        $this->assertEquals('DELETE', $permission->__toString());
     }
 
 }

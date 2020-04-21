@@ -2,8 +2,6 @@
 
 Read and write data from APIs in a standardised format. 
 
-Currently supports REST, HAL, JSON-LD. Specific APIs this supports: WordPress REST API.
-
 Features:
 
 * Get data from API endpoint
@@ -21,6 +19,12 @@ See [Documentation](docs/README.md)
 // Get one post as an array
 $data = new RestApi('https://domain.com/api/');
 $item = $data->getOne('posts', 123);
+
+$data->from('posts')->getOne(123);
+$data->from('posts')->getList();
+
+
+$item = $data->getOne(123);
 
 // Map results to an object
 $mapper = new Mapper(MyObject::class);
@@ -78,4 +82,19 @@ $api = new JsonLdApi();
 
 // Support custom APIs
 $api = new WordPressApi();
+
+// Markdown files
+$data = new MarkdownData('path/to/folder');
+$item = $data->getOne('./', 'filename.md');
+foreach ($data->list() as $item)) {
+  
+} 
+
+// CSV data
+$data = new CsvData('path/to/file.csv');
+$item = $data->getOne(1);
+foreach ($data->list() as $item) {
+  
+}
+
 ```

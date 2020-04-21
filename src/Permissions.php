@@ -9,16 +9,17 @@ namespace Strata\Data;
  */
 class Permissions
 {
-    const READ = 1;
-    const WRITE = 2;
-    const DELETE = 4;
+    const READ      = 1;
+    const CREATE    = 2;
+    const UPDATE    = 4;
+    const DELETE    = 8;
 
     protected $allowed;
 
     /**
      * Set which actions you are allowed to access via this API
      *
-     * @param int $actions (Permissions::READ, Permissions::WRITE, Permissions::DELETE)
+     * @param int $actions (Permissions::READ, Permissions::CREATE, Permissions::UPDATE, Permissions::DELETE)
      */
     public function __construct(int $actions = self::READ)
     {
@@ -45,9 +46,19 @@ class Permissions
      *
      * @return bool
      */
-    public function write(): bool
+    public function create(): bool
     {
-        return $this->isAllowed(self::WRITE);
+        return $this->isAllowed(self::CREATE);
+    }
+
+    /**
+     * Do you have permission for DELETE access?
+     *
+     * @return bool
+     */
+    public function update(): bool
+    {
+        return $this->isAllowed(self::UPDATE);
     }
 
     /**
@@ -73,8 +84,12 @@ class Permissions
                 return 'READ';
                 break;
 
-            case self::WRITE:
-                return 'WRITE';
+            case self::CREATE:
+                return 'CREATE';
+                break;
+
+            case self::UPDATE:
+                return 'UPDATE';
                 break;
 
             case self::DELETE:
@@ -94,8 +109,11 @@ class Permissions
         if ($this->read()) {
             $results[] = $this->getName(self::READ);
         }
-        if ($this->write()) {
-            $results[] = $this->getName(self::WRITE);
+        if ($this->create()) {
+            $results[] = $this->getName(self::CREATE);
+        }
+        if ($this->update()) {
+            $results[] = $this->getName(self::UPDATE);
         }
         if ($this->delete()) {
             $results[] = $this->getName(self::DELETE);

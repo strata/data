@@ -1,10 +1,9 @@
 <?php
-
 declare(strict_types=1);
 
-namespace Strata\Frontend\Response;
+namespace Strata\Data\Response;
 
-use Strata\Frontend\Content\Pagination\PaginationInterface;
+use Strata\Data\Pagination\PaginationInterface;
 
 /**
  * Simple class to model the response data for lists of data
