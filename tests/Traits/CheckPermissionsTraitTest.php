@@ -6,10 +6,10 @@ namespace Strata\Data\Tests;
 use PHPUnit\Framework\TestCase;
 use Strata\Data\Exception\PermissionException;
 use Strata\Data\Permissions;
-use Strata\Data\Traits\CheckPermissions;
+use Strata\Data\Traits\CheckPermissionsTrait;
 
-class TestClass {
-    use CheckPermissions;
+class TestPermissions {
+    use CheckPermissionsTrait;
 }
 
 final class CheckPermissionsTest extends TestCase
@@ -17,7 +17,7 @@ final class CheckPermissionsTest extends TestCase
 
     public function testPermissionMethods()
     {
-        $class = new TestClass();
+        $class = new TestPermissions();
         $class->setPermissions(new Permissions());
 
         $this->assertTrue($class->getPermissions() instanceof Permissions);
@@ -29,7 +29,7 @@ final class CheckPermissionsTest extends TestCase
 
     public function testPermissionException()
     {
-        $class = new TestClass();
+        $class = new TestPermissions();
         $class->setPermissions(new Permissions());
 
         $this->expectException(PermissionException::class);

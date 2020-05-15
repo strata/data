@@ -3,19 +3,11 @@ declare(strict_types=1);
 
 namespace Strata\Data;
 
+use Strata\Data\Collection\ListInterface;
 use Strata\Data\Exception\PermissionException;
-use Strata\Data\Response\ListResponse;
-use Symfony\Contracts\HttpClient\ResponseInterface;
 
 interface DataInterface
 {
-    /**
-     * Constructor
-     * @param string $baseUri Base URI for data / API
-     * @param Permissions $permissions (if not passed, default permission is read-only)
-     */
-    public function __construct(string $baseUri, Permissions $permissions = null);
-
     /**
      * Check we have permission to create data
      * @param bool $throw Throw an exception by default, or return bool if $throw is set to false
@@ -49,27 +41,71 @@ interface DataInterface
     public function permissionDelete($throw = true): bool;
 
     /**
-     * Return base URI
+     * Set the base URI to use for all requests
+     * @param string $baseUri
+     */
+    public function setBaseUri(string $baseUri);
+
+    /**
+     * Return base URI of data to use for all requests
      * @return string
      */
     public function getBaseUri(): string;
 
     /**
-     * Get endpoint URL / path
-     * @return string
-     */
-    public function getEndpoint(): string;
-
-    /**
      * Set the current endpoint to use with the data request
      * @param string $endpoint
+     */
+    public function setEndpoint(string $endpoint);
+
+    /**
+     * Get endpoint URL / path of current data request
+     * @return string|null
+     */
+    public function getEndpoint(): ?string;
+
+    /**
+     * Return URI for current data request (base URI + endpoint)
+     * @return string
+     */
+    public function getUri(): string;
+
+    /**
+     * Set the endpoint to use with the current data request
+     * @param string $endpoint
+     * @return DataInterface Fluent interface
+     */
+    // public function from(string $endpoint): DataInterface;
+
+    /**
+     * Set the query object to use with current data request
+     * @param Query $query
      * @return DataInterface
      */
-    public function from(string $endpoint): DataInterface;
+    // public function query(Query $query): DataInterface;
 
-    public function getOne($identifier, array $uriParams, array $requestOptions = []): ResponseInterface;
-    public function getList(Query $query, array $uriParams, array $requestOptions = []): ListResponse;
+    /**
+     * Return one item
+     * @param $identifier Identifier to return item (e.g. ID, data item name)
+     * @param array $requestOptions Array of options to pass to the request
+     * @return Content for the item
+     * @throws DataNotFoundException If data not found
+     */
+    public function getOne($identifier, array $requestOptions = []);
 
+    /**
+     * Return a list of items
+     * @param Query $query Query object to generate the list
+     * @param array $requestOptions Array of options to pass to the request
+     * @return ListAbstract
+     */
+    public function getList(Query $query = null, array $requestOptions = []): ListInterface;
+
+    /**
+     * Whether the last response has any results
+     * @return bool
+     */
     public function hasResults(): bool;
-    public function getPagination(int $page, int $limit, ResponseInterface $response) : Pagination;
+
+    /* public function getPagination(int $page, int $limit, ListInterface $response) : Pagination; */
 }

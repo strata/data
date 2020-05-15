@@ -12,9 +12,8 @@ use Strata\Data\Exception\PermissionException;
  * Used to protect against accidental misuse
  * @package Strata\Data\Traits
  */
-trait CheckPermissions
+trait CheckPermissionsTrait
 {
-
     /** @var Permissions */
     protected $permissions;
 
