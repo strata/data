@@ -7,7 +7,8 @@ use PHPUnit\Framework\TestCase;
 use Strata\Data\Exception\BaseUriException;
 use Strata\Data\Traits\BaseUriTrait;
 
-class TestBaseUri {
+class TestBaseUri
+{
     use BaseUriTrait;
 }
 
@@ -39,5 +40,4 @@ final class BaseUriTest extends TestCase
         $this->assertEquals('my-location', $class->getEndpoint());
         $this->assertEquals('test-uri/my-location', $class->getUri());
     }
-
 }

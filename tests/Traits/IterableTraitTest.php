@@ -6,7 +6,8 @@ namespace Strata\Data\Tests;
 use PHPUnit\Framework\TestCase;
 use Strata\Data\Traits\IterableTrait;
 
-class TestIterable implements \SeekableIterator, \Countable {
+class TestIterable implements \SeekableIterator, \Countable
+{
     use IterableTrait;
 }
 
@@ -72,5 +73,4 @@ final class IterableTraitTest extends TestCase
         $this->expectException(\OutOfBoundsException::class);
         $it->seek(10);
     }
-
 }

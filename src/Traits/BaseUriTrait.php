@@ -76,5 +76,4 @@ trait BaseUriTrait
     {
         return $this->getBaseUri() . '/' . $this->getEndpoint();
     }
-
 }

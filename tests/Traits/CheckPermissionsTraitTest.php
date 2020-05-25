@@ -8,7 +8,8 @@ use Strata\Data\Exception\PermissionException;
 use Strata\Data\Permissions;
 use Strata\Data\Traits\CheckPermissionsTrait;
 
-class TestPermissions {
+class TestPermissions
+{
     use CheckPermissionsTrait;
 }
 
@@ -35,5 +36,4 @@ final class CheckPermissionsTest extends TestCase
         $this->expectException(PermissionException::class);
         $class->permissionDelete();
     }
-
 }

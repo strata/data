@@ -108,5 +108,4 @@ trait CheckPermissionsTrait
     {
         return $this->checkPermission(Permissions::DELETE, $throw);
     }
-
 }

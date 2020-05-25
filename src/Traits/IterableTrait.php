@@ -105,5 +105,4 @@ trait IterableTrait
     {
         return count($this->collection);
     }
-
 }
