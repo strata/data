@@ -3,79 +3,24 @@ declare(strict_types=1);
 
 namespace Strata\Data\Metadata;
 
-use DateTime;
-use Strata\Data\Exception\InvalidHashAlgorithm;
+use \DateTime;
 use Strata\Data\Exception\InvalidMetadataId;
+use Strata\Data\Metadata\Storage\StorageInterface;
 
 /**
- * A simple content hash class to help check whether content has been updated
- *
- * Usage:
- *
- *
- * $metadata = new Metadata('id', 'content');
- * if ($metadata->isChanged()) {
- *     // do something
- * }
- *
- * Q. How do I load this from storage????
- *
- *
- * OLD
- *
- * // Get from cache
- * $content = unserialize($data);
- * if ($content === false) {
- *     $content = new ContentHash();
- * }
- *
- * // Check if content has changed
- * if ($content->isChanged('id', 'content') {
- *     // do something
- * }
- *
- * // Save to cache so we can compare content over time
- * $data = serialize($content);
- *
- * @package Strata\Data
- */
-
-/**
- * Class to store metadata about a piece of content/data synced from an external API
+ * Class to store metadata about an item of data
  *
  * @package Strata\Data\Metadata
  */
 class Metadata
 {
-    /** @var string */
-    const DEFAULT_ALGORITHM = 'sha256';
-
-    /** @var int */
-    const STATUS_NEW = 1;
-    const STATUS_CHANGED = 2;
-    const STATUS_NOT_CHANGED = 3;
-    const STATUS_DELETED = 4;
-
-    /** @var string */
-    protected $algorithm;
-
     /** @var int|string */
     protected $id;
-
-    /**
-     * Status of content
-     *
-     * We assume content is deleted, as metadata is updated if it exists in
-     * API it should be marked as updated or new
-     *
-     * @var int
-     */
-    protected $status = self::STATUS_DELETED;
 
     /** @var string */
     protected $url;
 
-    /** @var string */
+    /** @var ContentHash */
     protected $contentHash;
 
     /** @var DateTime */
@@ -87,129 +32,37 @@ class Metadata
     /** @var array */
     protected $attributes;
 
+    /** @var StorageInterface */
+    protected $storage;
+
     /**
      * Constructor
      *
-     * @param int|string $id ID to reference this content
-     * @param string $content Content to detect whether this is new, changed or deleted
+     * @param string|int $id
+     * @param StorageInterface $storage
      * @throws InvalidMetadataId
      */
-    public function __construct($id, string $content = null)
+    public function __construct($id, StorageInterface $storage)
     {
+        $this->storage = $storage;
+
+        // Read existing metadata
+        if ($storage->has($id)) {
+            $storage->populate($id, $this);
+            return;
+        }
+
+        // Create new metadata
         $this->created = new DateTime();
-        $this->setId($id)
-             ->generateContentHash($content);
+        $this->setId($id);
     }
 
     /**
-     * Set the hash algorithm
-     *
-     * @param string|null $algorithm Algorithm to use when using hash() function
-     * @throws InvalidHashAlgorithm
-     * @return Metadata Fluent interface
-     * @see https://www.php.net/hash
+     * Save metadata to storage
      */
-    public function setHashAlgorithm(string $algorithm = null): Metadata
+    public function save()
     {
-        if (null !== $algorithm) {
-            $this->algorithm = $algorithm;
-        } else {
-            $this->algorithm = self::DEFAULT_ALGORITHM;
-        }
-
-        if (!in_array($this->algorithm, hash_algos())) {
-            throw new InvalidHashAlgorithm(sprintf('Hash algorithm %s not found on your system', $this->algorithm));
-        }
-
-        return $this;
-    }
-
-    /**
-     * Return a hash based on passed content
-     *
-     * @param string $content
-     * @return string Hash
-     */
-    public function hash(string $content): string
-    {
-        return hash($this->algorithm, $content);
-    }
-
-    /**
-     * if ($metadata->isChanged($content)) { }
-     *
-     * @param string $content
-     * @return Metadata Fluent interface
-     */
-    public function generateContentHash(string $content): Metadata
-    {
-        $currentContentHash = $this->contentHash;
-        $this->contentHash = $this->hash($content);
-
-        // Detect changes
-        if (empty($currentContentHash)) {
-            $this->status = self::STATUS_NEW;
-        }
-
-        if ($this->hash($content) === $this->content[$id]) {
-            $this->status = self::STATUS_NOT_CHANGED;
-        } else {
-            $this->status = self::STATUS_CHANGED;
-        }
-
-        return $this;
-    }
-
-    /**
-     * Return status of content
-     *
-     * @return int
-     */
-    public function getStatus(): int
-    {
-        return $this->status;
-    }
-
-    /**
-     * Is the content new?
-     *
-     * @return bool
-     */
-    public function isNew(): bool
-    {
-        return ($this->status === self::STATUS_NEW);
-    }
-
-    /**
-     * Whether the content has changed?
-     *
-     * @return bool
-     */
-    public function isChanged(): bool
-    {
-        return ($this->status === self::STATUS_CHANGED);
-    }
-
-    /**
-     * Whether the content has not changed since the last import
-     *
-     * @return bool
-     */
-    public function notChanged(): bool
-    {
-        return ($this->status === self::STATUS_NOT_CHANGED);
-    }
-
-    /**
-     * Whether the content is deleted?
-     *
-     * Please note you should only check this after a full import otherwise it could incorrectly report as deleted
-     *
-     * @return bool
-     */
-    public function isDeleted(): bool
-    {
-        return ($this->status === self::STATUS_DELETED);
+        $this->storage->save($this);
     }
 
     /**
@@ -304,22 +157,22 @@ class Metadata
     }
 
     /**
-     * @return string
+     * @return ContentHash
      */
-    public function getContentHash(): string
+    public function getContentHash(): ContentHash
     {
         return $this->contentHash;
     }
 
     /**
+     * Generate content hash for this item, which helps us work out whether data has been updated
      *
-     *
-     * @param string $contentHash
+     * @param string $content
      * @return Metadata Fluent interface
      */
-    public function setContentHash(string $contentHash): Metadata
+    public function generateContentHash(string $content): Metadata
     {
-        $this->contentHash = $contentHash;
+        $this->contentHash->generateContentHash($content);
         $this->update();
 
         return $this;
@@ -374,5 +227,4 @@ class Metadata
         }
         return null;
     }
-
 }

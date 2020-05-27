@@ -1,12 +1,19 @@
 <?php
 declare(strict_types=1);
 
-namespace Strata\Data\Metadata\Handler;
+namespace Strata\Data\Metadata\Storage;
 
-use Strata\Data\Metadata\Metadata2;
+use Strata\Data\Metadata\Metadata;
 
-interface HandlerInterface
+interface StorageInterface
 {
+    /**
+     * Initialise storage mechanism
+     * @param array $options
+     * @return mixed
+     */
+    public function init(array $options = []);
+
     /**
      * Does a metadata item exist for ID?
      *
@@ -16,20 +23,20 @@ interface HandlerInterface
     public function has($id): bool;
 
     /**
-     * Return one metadata item based on ID
+     * Populate Metadata object with metadata from storage
      *
      * @param $id
-     * @return Metadata2
+     * @param Metadata $metadata
      */
-    public function read($id): Metadata2;
+    public function populate($id, Metadata $metadata);
 
     /**
      * Write one metadata item to storage
      *
-     * @param Metadata2 $metadata
+     * @param Metadata $metadata
      * @return mixed
      */
-    public function write(Metadata2 $metadata);
+    public function save(Metadata $metadata);
 
     /**
      * Delete one metadata item based on ID
@@ -51,8 +58,7 @@ interface HandlerInterface
      *
      * @param $attribute
      * @param $keyword
-     * @return array
+     * @return array Array of metadata items
      */
     public function search($attribute, $keyword): array;
-
 }
