@@ -7,7 +7,7 @@ By default, all API requests are read-only and throw an exception if a 200 HTTP 
 Example usage:
 
 ```php
-use Strata\Data\Provider\RestApi;
+use Strata\Data\Api\RestApi;
 
 $data = new RestApi();
 
