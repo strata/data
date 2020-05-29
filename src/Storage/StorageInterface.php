@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Strata\Data\Metadata\Storage;
+namespace Strata\Data\Storage;
 
 use Strata\Data\Metadata\Metadata;
 
@@ -15,6 +15,28 @@ interface StorageInterface
     public function init(array $options = []);
 
     /**
+     * Set the key used to differentiate the current entity type in the storage
+     *
+     * @param string $key
+     * @return mixed
+     */
+    public function setKey(string $key);
+
+    /**
+     * Get the key used to differentiate the current entity type in the storage
+     *
+     * @return string
+     */
+    public function getKey(): string;
+
+    /**
+     * Gets all items
+     *
+     * @return array
+     */
+    public function all(): array;
+
+    /**
      * Does a metadata item exist for ID?
      *
      * @param $id
@@ -23,20 +45,20 @@ interface StorageInterface
     public function has($id): bool;
 
     /**
-     * Populate Metadata object with metadata from storage
+     * Get a metadata item via ID
      *
      * @param $id
-     * @param Metadata $metadata
+     * @return bool
      */
-    public function populate($id, Metadata $metadata);
+    public function get($id);
 
     /**
      * Write one metadata item to storage
      *
-     * @param Metadata $metadata
+     * @param array $data
      * @return mixed
      */
-    public function save(Metadata $metadata);
+    public function save(array $data);
 
     /**
      * Delete one metadata item based on ID

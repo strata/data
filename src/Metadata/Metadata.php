@@ -5,7 +5,6 @@ namespace Strata\Data\Metadata;
 
 use \DateTime;
 use Strata\Data\Exception\InvalidMetadataId;
-use Strata\Data\Metadata\Storage\StorageInterface;
 
 /**
  * Class to store metadata about an item of data
@@ -17,66 +16,20 @@ class Metadata
     /** @var int|string */
     protected $id;
 
+    /** @var DateTime */
+    protected $createdAt;
+
+    /** @var DateTime */
+    protected $updatedAt;
+
     /** @var string */
     protected $url;
 
-    /** @var ContentHash */
+    /** @var string */
     protected $contentHash;
-
-    /** @var DateTime */
-    protected $created;
-
-    /** @var DateTime */
-    protected $updated;
 
     /** @var array */
     protected $attributes;
-
-    /** @var StorageInterface */
-    protected $storage;
-
-    /**
-     * Constructor
-     *
-     * @param string|int $id
-     * @param StorageInterface $storage
-     * @throws InvalidMetadataId
-     */
-    public function __construct($id, StorageInterface $storage)
-    {
-        $this->storage = $storage;
-
-        // Read existing metadata
-        if ($storage->has($id)) {
-            $storage->populate($id, $this);
-            return;
-        }
-
-        // Create new metadata
-        $this->created = new DateTime();
-        $this->setId($id);
-    }
-
-    /**
-     * Save metadata to storage
-     */
-    public function save()
-    {
-        $this->storage->save($this);
-    }
-
-    /**
-     * Validate whether the identifier argument is OK
-     *
-     * @param $id
-     * @throws InvalidMetadataId
-     */
-    protected function validateIdentifier($id)
-    {
-        if (!is_string($id) && !is_int($id)) {
-            throw new InvalidMetadataId(sprintf('$id argument must be string or integer, %s passed', gettype($id)));
-        }
-    }
 
     /**
      * Return ID
@@ -99,19 +52,44 @@ class Metadata
     {
         $this->validateIdentifier($id);
         $this->id = $id;
-        $this->update();
+        $this->updated();
 
         return $this;
     }
 
     /**
-     * Return created datetime
+     * Validate whether the identifier argument is OK
+     *
+     * @param $id
+     * @throws InvalidMetadataId
+     */
+    protected function validateIdentifier($id)
+    {
+        if (!is_string($id) && !is_int($id)) {
+            throw new InvalidMetadataId(sprintf('$id argument must be string or integer, %s passed', gettype($id)));
+        }
+    }
+
+    /**
+     * Return createdAt datetime
      *
      * @return DateTime
      */
-    public function getCreated(): DateTime
+    public function getCreatedAt(): DateTime
     {
-        return $this->created;
+        return $this->createdAt;
+    }
+
+    /**
+     * Set the updatedAt datetime
+     *
+     * @param \DateTime $createdAt
+     * @return Metadata
+     */
+    public function setCreatedAt(\DateTime $createdAt): Metadata
+    {
+        $this->createdAt = $createdAt;
+        return $this;
     }
 
     /**
@@ -119,17 +97,30 @@ class Metadata
      *
      * @return DateTime
      */
-    public function getUpdated(): DateTime
+    public function getUpdatedAt(): DateTime
     {
-        return $this->updated;
+        return $this->updatedAt;
     }
+
+    /**
+     * Set the updated datetime
+     *
+     * @param \DateTime $updatedAt
+     * @return Metadata
+     */
+    public function setUpdatedAt(\DateTime $updatedAt): Metadata
+    {
+        $this->updatedAt = $updatedAt;
+        return $this;
+    }
+
 
     /**
      * Update last updated with current DateTime
      */
-    public function update(): void
+    protected function updated(): void
     {
-        $this->setUpdated(new DateTime());
+        $this->setUpdatedAt(new DateTime());
     }
 
     /**
@@ -151,29 +142,29 @@ class Metadata
     public function setUrl(string $url): Metadata
     {
         $this->url = $url;
-        $this->update();
+        $this->updated();
 
         return $this;
     }
 
     /**
-     * @return ContentHash
+     * @return ContentHasher
      */
-    public function getContentHash(): ContentHash
+    public function getContentHash(): ?string
     {
         return $this->contentHash;
     }
 
     /**
-     * Generate content hash for this item, which helps us work out whether data has been updated
+     * Set content hash for this item, which helps us work out whether data has been updated
      *
-     * @param string $content
+     * @param string $contentHash
      * @return Metadata Fluent interface
      */
-    public function generateContentHash(string $content): Metadata
+    public function setContentHash(string $contentHash): Metadata
     {
-        $this->contentHash->generateContentHash($content);
-        $this->update();
+        $this->contentHash = $contentHash;
+        $this->updated();
 
         return $this;
     }
@@ -189,16 +180,29 @@ class Metadata
     }
 
     /**
+     * Sets all attributes
+     *
+     * @param array $attributes
+     * @return \Strata\Data\Metadata\Metadata
+     */
+    public function setAttributes(array $attributes): Metadata
+    {
+        $this->attributes = $attributes;
+
+        return $this;
+    }
+
+    /**
      * Set one attribute
      *
      * @param $name
      * @param $value
      * @return Metadata Fluent interface
      */
-    public function set($name, $value): Metadata
+    public function setAttribute($name, $value): Metadata
     {
         $this->attributes[$name] = $value;
-        $this->update();
+        $this->updated();
 
         return $this;
     }
@@ -209,7 +213,7 @@ class Metadata
      * @param string $name
      * @return bool
      */
-    public function has(string $name)
+    public function hasAttribute(string $name)
     {
         return (isset($this->attributes[$name]));
     }
@@ -220,11 +224,28 @@ class Metadata
      * @param string $name
      * @return mixed|null
      */
-    public function get(string $name)
+    public function getAttribute(string $name)
     {
-        if ($this->has($name)) {
+        if ($this->hasAttribute($name)) {
             return $this->attributes[$name];
         }
         return null;
+    }
+
+    /**
+     *
+     *
+     * @return array
+     */
+    public function toArray()
+    {
+        return [
+          'id'          => $this->getId(),
+          'contentHash' => $this->getContentHash(),
+          'url'         => $this->getUrl(),
+          'attributes'  => $this->getAttributes(),
+          'createdAt'   => $this->getCreatedAt(),
+          'updatedAt'   => $this->getUpdatedAt(),
+        ];
     }
 }
