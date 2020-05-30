@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Strata\Data\Metadata\Storage;
+namespace Strata\Data\Storage;
 
 use Strata\Data\Exception\MissingOptionException;
 use Strata\Data\Exception\StorageException;
