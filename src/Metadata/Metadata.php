@@ -243,9 +243,9 @@ class Metadata
           'id'          => $this->getId(),
           'contentHash' => $this->getContentHash(),
           'url'         => $this->getUrl(),
-          'attributes'  => $this->getAttributes(),
-          'createdAt'   => $this->getCreatedAt(),
-          'updatedAt'   => $this->getUpdatedAt(),
+          'attributes'  => implode($this->getAttributes(), ", "),
+          'createdAt'   => $this->getCreatedAt()->format("Y-m-d H:i:s"),
+          'updatedAt'   => $this->getUpdatedAt()->format("Y-m-d H:i:s"),
         ];
     }
 }

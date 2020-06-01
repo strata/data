@@ -5,7 +5,7 @@ namespace Strata\Data\Metadata;
 
 use Strata\Data\Storage\StorageInterface;
 
-class MetadataRepository
+class MetadataRepository implements RepositoryInterface
 {
 
     /**
@@ -26,6 +26,7 @@ class MetadataRepository
     {
         $this->storage = $storage;
         $this->storage->setKey($this->identifier);
+        $this->storage->createTableIfItDoesntExist($this);
     }
 
     /**
@@ -51,7 +52,10 @@ class MetadataRepository
     public function store(Metadata $metadata): Metadata
     {
         $id = $this->storage->save($metadata->toArray());
-        $metadata->setId($id);
+
+        if (empty($metadata->getId())) {
+            $metadata->setId($id);
+        }
 
         return $metadata;
     }
@@ -110,10 +114,16 @@ class MetadataRepository
         }
 
         if (isset($data['createdAt'])) {
+            if (!$data['createdAt'] instanceof \DateTime) {
+                $data['createdAt'] = \DateTime::createFromFormat('Y-m-d H:i:s', $data['createdAt']);
+            }
             $metaData->setCreatedAt($data['createdAt']);
         }
 
         if (isset($data['updatedAt'])) {
+            if (!$data['updatedAt'] instanceof \DateTime) {
+                $data['updatedAt'] = \DateTime::createFromFormat('Y-m-d H:i:s', $data['updatedAt']);
+            }
             $metaData->setUpdatedAt($data['updatedAt']);
         }
 
@@ -126,10 +136,39 @@ class MetadataRepository
         }
 
         if (isset($data['attributes'])) {
+            if (!is_array($data['attributes'])) {
+                $data['attributes'] = explode(',', $data['attributes']);
+            }
             $metaData->setAttributes($data['attributes']);
         }
 
         return $metaData;
 
+    }
+
+    /**
+     * Gets the script rquired for the table set up.
+     * This method can be extended to support multiple storage types
+     *
+     * @param string $storageType
+     * @return string
+     */
+    public function getTableSetupScript(string $storageType): string
+    {
+        switch ($storageType) {
+            case 'sqlite':
+                return $this->getSqliteTableCreationSql();
+        }
+    }
+
+    /**
+     * Get the Sqlite creation SQL required to provision the table
+     *
+     * @return string
+     */
+    protected function getSqliteTableCreationSql() {
+        $sql = 'CREATE TABLE IF NOT EXISTS ' . $this->identifier . ' (id TEXT PRIMARY KEY, createdAt TEXT, updatedAt TEXT, url TEXT, contentHash TEXT, attributes BLOB)';
+
+        return $sql;
     }
 }

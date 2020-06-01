@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Strata\Data\Storage;
 
 use Strata\Data\Metadata\Metadata;
+use Strata\Data\Metadata\RepositoryInterface;
 
 interface StorageInterface
 {
@@ -80,7 +81,14 @@ interface StorageInterface
      *
      * @param $attribute
      * @param $keyword
-     * @return array Array of metadata items
+     * @return array of items
      */
     public function search($attribute, $keyword): array;
+
+    /**
+     * Creates the table required to store the data if required
+     *
+     * @param \Strata\Data\Metadata\RepositoryInterface $repository
+     */
+    public function createTableIfItDoesntExist(RepositoryInterface $repository): void;
 }
