@@ -7,9 +7,12 @@ use Strata\Data\Exception\MissingOptionException;
 use Strata\Data\Exception\StorageException;
 use Strata\Data\Metadata\Metadata;
 use SQLite3;
+use Strata\Data\Metadata\RepositoryInterface;
 
 class SQLiteStorage implements StorageInterface
 {
+    protected $key = '';
+
     /**
      * @var SQLite3
      */
@@ -25,14 +28,70 @@ class SQLiteStorage implements StorageInterface
         if (!isset($options['filename'])) {
             throw new MissingOptionException('You must set the "filename" option, for the path to the SQLite3 database');
         }
-        $options['filename'] = readfile($options['filename']);
         if (!is_writable($options['filename'])) {
             throw new StorageException(sprintf('Cannot write to filename path at %s', $options['filename']));
         }
 
-        $db = new SQLite3($options['filename']);
+        $this->db = new SQLite3($options['filename']);
+    }
 
-        // @todo Check storage table exists
+    /**
+     * Set the key used to differentiate the current entity type in the storage
+     *
+     * @param string $key
+     * @return mixed
+     */
+    public function setKey(string $key)
+    {
+        $this->key = $key;
+    }
+
+    /**
+     * Get the key used to differentiate the current entity type in the storage
+     *
+     * @return string
+     */
+    public function getKey(): string
+    {
+        return $this->key;
+    }
+
+    /**
+     * Gets all items
+     *
+     * @return array
+     */
+    public function all(): array
+    {
+        $statement = $this->db->prepare('SELECT * FROM ' . $this->key);
+        $results = $statement->execute();
+
+        if (!$results) {
+            return [];
+        }
+
+        $response = [];
+        $index = 0;
+
+        while ($row = $results->fetchArray(SQLITE3_ASSOC)) {
+            $response[$index] = $row;
+            $index++;
+        }
+
+        return $response;
+    }
+
+    /**
+     * Get a metadata item via ID
+     *
+     * @param $id
+     * @return bool
+     */
+    public function get($id)
+    {
+        $sql = "SELECT * FROM " . $this->key . " WHERE id='" . $id . "'";
+        $result = $this->db->querySingle($sql, true);
+        return $result;
     }
 
     /**
@@ -43,30 +102,21 @@ class SQLiteStorage implements StorageInterface
      */
     public function has($id): bool
     {
-        // TODO: Implement has() method.
+        $sql = "SELECT EXISTS(SELECT 1 FROM " . $this->key . " WHERE id='" . $id . "' LIMIT 1);";
+
+        $statement = $this->db->prepare($sql);
+        $result = $statement->execute();
+
+        if (!empty($row = $result->fetchArray())) {
+            if ($row[0] === 1) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
-    /**
-     * Populate Metadata object with metadata from storage
-     *
-     * @param $id
-     * @param Metadata $metadata
-     */
-    public function populate($id, Metadata $metadata)
-    {
-        // TODO: Implement populate() method.
-    }
 
-    /**
-     * Write one metadata item to storage
-     *
-     * @param Metadata $metadata
-     * @return mixed
-     */
-    public function save(Metadata $metadata)
-    {
-        // TODO: Implement save() method.
-    }
 
     /**
      * Delete one metadata item based on ID
@@ -76,7 +126,10 @@ class SQLiteStorage implements StorageInterface
      */
     public function delete($id)
     {
-        // TODO: Implement delete() method.
+        $sql = "DELETE FROM " . $this->key . " WHERE id='" . $id . "'";
+
+        $statement = $this->db->prepare($sql);
+        $statement->execute();
     }
 
     /**
@@ -86,20 +139,93 @@ class SQLiteStorage implements StorageInterface
      */
     public function deleteAll()
     {
-        // TODO: Implement deleteAll() method.
+        $sql = "DELETE FROM " . $this->key;
+
+        $statement = $this->db->prepare($sql);
+        $statement->execute();
     }
+
+
+    /**
+     * Write one metadata item to storage
+     *
+     * @param array $data
+     * @return mixed
+     */
+    public function save(array $data)
+    {
+        if ($this->has($data['id'])) {
+            return $this->update($data);
+        }
+
+        $dataKeys = array_keys($data);
+        $dataKeysSql = "";
+        foreach ($dataKeys as $index => $dataKey) {
+            $dataKeysSql .= $dataKey;
+            if ($index+1 !== count($dataKeys)) {
+                $dataKeysSql .= ", ";
+            }
+        }
+
+        $dataValues = array_values($data);
+        $dataValuesSql = "";
+        foreach ($dataValues as $index => $dataValue) {
+            if (empty($dataValue)) {
+                $dataValuesSql .= "NULL";
+            } else {
+                $dataValuesSql .= "'".$dataValue."'";
+            }
+
+            if ($index+1 !== count($dataValues)) {
+                $dataValuesSql .= ", ";
+            }
+        }
+
+
+        $sql = "INSERT INTO " . $this->key . "(" . $dataKeysSql . ") VALUES(" . $dataValuesSql . ")";
+
+        
+        $statement = $this->db->prepare($sql);
+        $statement->execute();
+    }
+
+    public function update(array $data)
+    {
+        $id = $data['id'];
+        unset($data['id']);
+        $dataKeys = array_keys($data);
+        $dataValues = array_values($data);
+
+        $insertSql = "";
+        foreach ($dataKeys as $index => $dataKey) {
+            $insertSql .= $dataKeys[$index] . " = '" . $dataValues[$index] . "'";
+            if ($index+1 !== count($dataKeys)) {
+                $insertSql .= ", ";
+            }
+        }
+
+        $sql = "UPDATE " . $this->key . " SET " . $insertSql . "where id='" . $id . "'";
+        $result = $this->db->exec($sql);
+
+        return $result;
+    }
+
 
     /**
      * Search for metadata items by attribute
      *
      * @param $attribute
      * @param $keyword
-     * @return array Array of metadata items
+     * @return array of items
      */
     public function search($attribute, $keyword): array
     {
         // TODO: Implement search() method.
     }
 
-
+    public function createTableIfItDoesntExist(RepositoryInterface $repository): void
+    {
+        $statement = $this->db->prepare($repository->getTableSetupScript('sqlite'));
+        $statement->execute();
+    }
 }

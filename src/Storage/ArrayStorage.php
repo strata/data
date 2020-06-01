@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Strata\Data\Storage;
 
+use Strata\Data\Metadata\RepositoryInterface;
+
 class ArrayStorage implements StorageInterface
 {
 
@@ -130,17 +132,6 @@ class ArrayStorage implements StorageInterface
         $this->init();
     }
 
-    /**
-     * Search for metadata items by attribute
-     *
-     * @param $attribute
-     * @param $keyword
-     * @return array Array of metadata items
-     */
-    public function search($attribute, $keyword): array
-    {
-        // TODO: Implement search() method.
-    }
 
     /**
      * Gets all items
@@ -150,5 +141,27 @@ class ArrayStorage implements StorageInterface
     public function all(): array
     {
         // TODO: Implement all() method.
+    }
+
+    /**
+     * Search for metadata items by attribute
+     *
+     * @param $attribute
+     * @param $keyword
+     * @return array of items
+     */
+    public function search($attribute, $keyword): array
+    {
+        // TODO: Implement search() method.
+    }
+
+    /**
+     * Creates the table required to store the data if required
+     *
+     * @param \Strata\Data\Metadata\RepositoryInterface $repository
+     */
+    public function createTableIfItDoesntExist(RepositoryInterface $repository): void {
+        // Nothing is required to be set up for the Array Storage system
+        return;
     }
 }
