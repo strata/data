@@ -5,9 +5,11 @@ namespace Strata\Data;
 
 use Strata\Data\Collection\ListInterface;
 use Strata\Data\Exception\PermissionException;
+use Strata\Data\Filter\FilterInterface;
 
 interface DataInterface
 {
+
     /**
      * Check we have permission to create data
      * @param bool $throw Throw an exception by default, or return bool if $throw is set to false
@@ -70,6 +72,8 @@ interface DataInterface
      */
     public function getUri(): string;
 
+    /** CHECK FROM HERE */
+
     /**
      * Set the endpoint to use with the current data request
      * @param string $endpoint
@@ -105,7 +109,16 @@ interface DataInterface
      * Whether the last response has any results
      * @return bool
      */
-    public function hasResults(): bool;
+    /* public function hasResults(): bool; */
 
     /* public function getPagination(int $page, int $limit, ListInterface $response) : Pagination; */
+
+    /*
+    public function addFilter(FilterInterface $filter, int $weight = null);
+
+    public function getFilters(): array;
+
+    public function filter(string $data);
+    */
+
 }
