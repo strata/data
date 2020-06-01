@@ -42,6 +42,9 @@ class SqliteMetadataTest extends TestCase
         $this->metaDataRepository = new MetadataRepository($sqliteStorage);
     }
 
+    /**
+     * Removes the DB before the next test runs
+     */
     protected function tearDown(): void
     {
         unlink($this->dbFileLocation);
