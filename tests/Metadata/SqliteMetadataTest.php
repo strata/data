@@ -27,8 +27,6 @@ class SqliteMetadataTest extends TestCase
         parent::__construct($name, $data, $dataName);
 
         $this->dbFileLocation = __DIR__ . '/database.sqlite';
-        touch($this->dbFileLocation);
-
     }
 
     /**
@@ -39,6 +37,7 @@ class SqliteMetadataTest extends TestCase
         $this->metaDataFactory = new MetadataFactory();
 
         $sqliteStorage = new SQLiteStorage();
+        touch($this->dbFileLocation);
         $sqliteStorage->init(['filename' => $this->dbFileLocation]);
         $this->metaDataRepository = new MetadataRepository($sqliteStorage);
     }
@@ -48,9 +47,9 @@ class SqliteMetadataTest extends TestCase
         unlink($this->dbFileLocation);
     }
 
-    public function testSqliteStorageDataPersistenceWithNoProvidedKey()
+    public function testSqliteStorageDataPersistence()
     {
-        $id = 4;
+        $id = 482;
 
         $metaData = $this->metaDataFactory->createNew();
         $metaData->setUrl('https://example.net');
@@ -58,6 +57,18 @@ class SqliteMetadataTest extends TestCase
         $metaData->setId($id);
 
         $this->metaDataRepository->store($metaData);
+
+        $this->assertTrue($this->metaDataRepository->exists($id));
+    }
+
+    public function testSqliteStorageDataPersistenceWithNoProvidedKey()
+    {
+        $metaData = $this->metaDataFactory->createNew();
+        $metaData->setUrl('https://example.net');
+        $metaData->setAttribute('type', 'example_type');
+
+        $this->metaDataRepository->store($metaData);
+        $id = $metaData->getId();
 
         $this->assertTrue($this->metaDataRepository->exists($id));
     }

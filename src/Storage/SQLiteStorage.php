@@ -158,6 +158,11 @@ class SQLiteStorage implements StorageInterface
             return $this->update($data);
         }
 
+        if (empty($data['id'])) {
+            // Create a random ID if one is not provided
+            $data['id'] = bin2hex(random_bytes(8));
+        }
+
         $dataKeys = array_keys($data);
         $dataKeysSql = "";
         foreach ($dataKeys as $index => $dataKey) {
@@ -184,9 +189,10 @@ class SQLiteStorage implements StorageInterface
 
         $sql = "INSERT INTO " . $this->key . "(" . $dataKeysSql . ") VALUES(" . $dataValuesSql . ")";
 
-        
         $statement = $this->db->prepare($sql);
         $statement->execute();
+        
+        return $data['id'];
     }
 
     public function update(array $data)
