@@ -47,7 +47,7 @@ class SqliteMetadataTest extends TestCase
         unlink($this->dbFileLocation);
     }
 
-    public function testSqliteStorageDataPersistence()
+    public function testDataPersistenceWithId()
     {
         $id = 482;
 
@@ -61,7 +61,7 @@ class SqliteMetadataTest extends TestCase
         $this->assertTrue($this->metaDataRepository->exists($id));
     }
 
-    public function testSqliteStorageDataPersistenceWithNoProvidedKey()
+    public function testDataPersistenceWithNoProvidedId()
     {
         $metaData = $this->metaDataFactory->createNew();
         $metaData->setUrl('https://example.net');
