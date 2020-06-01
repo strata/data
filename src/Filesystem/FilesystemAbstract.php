@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Strata\Data\Filesystem;
 
+use League\Flysystem\AdapterInterface;
 use Strata\Data\Collection\FilesystemList;
 use Strata\Data\Collection\ListInterface;
 use Strata\Data\DataInterface;
@@ -12,6 +13,7 @@ use Strata\Data\Permissions;
 use Strata\Data\Query;
 use Strata\Data\Traits\BaseUriTrait;
 use Strata\Data\Traits\CheckPermissionsTrait;
+use League\Flysystem\Filesystem;
 
 /**
  * Core functionality for getting data from filesystem
@@ -23,32 +25,54 @@ abstract class FilesystemAbstract implements DataInterface
 {
     use CheckPermissionsTrait, BaseUriTrait;
 
+    /** @var Filesystem */
+    protected $filesystem;
+
+    /** @var AdapterInterface */
+    protected $adapter;
+
     /**
-     * Constructor
-     * @param string $baseUri API base URI
-     * @param Permissions $permissions (if not passed, default = read-only)
+     * Set adapater
+     * @param AdapterInterface $adapter
      */
-    public function __construct(string $baseUri, Permissions $permissions = null)
+    public function setAdapter(AdapterInterface $adapter)
     {
-        $this->setBaseUri($baseUri);
-
-        if ($permissions instanceof Permissions) {
-            $this->setPermissions($permissions);
-
-        } else {
-            $this->setPermissions(new Permissions(Permissions::READ));
-        }
+        $this->adapter = $adapter;
     }
 
     /**
-     * Load file and return data in a usable format
-     *
-     * E.g. parse CSV to an array, parse Markdown to HTML
-     *
-     * @param string $filepath Path to file
-     * @return mixed Data loaded from file
+     * Return adapter
+     * @return AdapterInterface
      */
-    abstract public function loadFile(string $filepath);
+    public function getAdapter(): AdapterInterface
+    {
+        return $this->adapter;
+    }
+
+    /**
+     * Set filesystem object explicitly
+     *
+     * Under normal circumstances filesystem is lazy loaded via getFilesystem() method
+     * @param Filesystem $filesystem
+     */
+    public function setFilesystem(Filesystem $filesystem)
+    {
+        $this->filesystem = $filesystem;
+    }
+
+    /**
+     * Setup and return filesystem object
+     * @param array $config
+     * @return Filesystem
+     */
+    public function getFilesystem(array $config = null): Filesystem
+    {
+        if ($this->filesystem instanceof Filesystem) {
+            return $this->filesystem;
+        }
+        $this->filesystem = new Filesystem($this->getAdapter(), $config);
+        return $this->filesystem;
+    }
 
     /**
      * Return URI for current data request (base URI + endpoint)
@@ -72,24 +96,30 @@ abstract class FilesystemAbstract implements DataInterface
         return (string) $absoluteUri;
     }
 
+    /** EDIT FROM HERE */
+
     /**
      * Return one item
-     * @param $identifier Filename to return item
+     * @param $filename Filename to return item
      * @param array $requestOptions Array of options to pass to the request
      * @return Content for the item
      * @throws DataNotFoundException If data not found
      */
-    public function getOne($identifier, array $requestOptions = []): string
+    public function getOne($filename, array $requestOptions = []): string
     {
         $this->permissionRead();
-
-        $this->setEndpoint((string) $identifier);
-        $uri = $this->getUri();
-        if (!file_exists($uri)) {
-            throw new DataNotFoundException(sprintf('File "%s" not found', $identifier));
+        $this->setEndpoint((string) $filename);
+        if (!$this->getFilesystem()->has($this->getEndpoint())) {
+            throw new DataNotFoundException(sprintf('File "%s" not found at path "%s"', $this->getEndpoint(), $this->getUri()));
         }
 
-        return $this->loadFile($uri);
+        $data = $this->getFilesystem()->read($this->getEndpoint());
+        if ($data === false) {
+            throw new DataNotFoundException(sprintf('Cannot load file "%s"', $uri));
+        }
+
+        // Can we set metadata now? For path & last updated time?
+        return $data;
     }
 
     /**
@@ -111,38 +141,28 @@ abstract class FilesystemAbstract implements DataInterface
      */
     public function getList(Query $query = null, array $requestOptions = []): ListInterface
     {
-        $uri = $this->getUri();
-        if (!is_dir($uri)) {
-            throw new DataNotFoundException(sprintf('Filepath "%s" is not a folder, cannot list data', $uri));
+        $this->permissionRead();
+        $this->setEndpoint((string) './');
+        if (!$this->getFilesystem()->has($this->getEndpoint())) {
+            throw new DataNotFoundException(sprintf('Folder "%s" not found at path "%s"', $this->getEndpoint(), $this->getUri()));
         }
 
         $data = [];
 
+        $recursive = false;
+        if ($requestOptions['recursive']) {
+            $recursive = true;
+        }
+        $contents = $this->getFilesystem()->listContents($this->getEndpoint(), $recursive);
+
+        foreach ($contents as $object) {
+            //echo $object['basename'].' is located at '.$object['path'].' and is a '.$object['type'];
+            $data[] = $object['contents'];
+        }
+
+        // @todo data filter
+        // @todo metadata
         // @todo only get files that match pattern (file extension)
-        // @todo convert data on load (e.g. markdown, CSV)
-        // @todo support YAML front matter in markdown?
-
-        // Recursive (all levels)
-        if (isset($requestOptions['recursive']) && $requestOptions['recursive'] === true) {
-            $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($uri));
-            $iterator->rewind();
-            while ($iterator->valid()) {
-                if (!$iterator->isDot()) {
-                    $data[] = $this->loadFile($iterator->key());
-                }
-                $iterator->next();
-            }
-
-            return new FilesystemList($data);
-        }
-
-        // Single-level
-        $iterator = new \DirectoryIterator($uri);
-        foreach ($iterator as $fileinfo) {
-            if (!$fileinfo->isDot()) {
-                $data[] = $this->loadFile($fileinfo->getPathname());
-            }
-        }
 
         return new FilesystemList($data);
     }
@@ -153,7 +173,5 @@ abstract class FilesystemAbstract implements DataInterface
      */
     public function hasResults(): bool
     {
-
     }
-
 }
