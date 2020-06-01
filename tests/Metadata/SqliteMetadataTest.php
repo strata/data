@@ -20,6 +20,17 @@ class SqliteMetadataTest extends TestCase
      */
     protected $metaDataRepository;
 
+    protected $dbFileLocation = '';
+
+    public function __construct($name = null, array $data = [], $dataName = '')
+    {
+        parent::__construct($name, $data, $dataName);
+
+        $this->dbFileLocation = __DIR__ . '/database.sqlite';
+        touch($this->dbFileLocation);
+
+    }
+
     /**
      * Sets up the properties before the next test runs
      */
@@ -28,8 +39,13 @@ class SqliteMetadataTest extends TestCase
         $this->metaDataFactory = new MetadataFactory();
 
         $sqliteStorage = new SQLiteStorage();
-        $sqliteStorage->init(['filename' => __DIR__ . '/database.sqlite']);
+        $sqliteStorage->init(['filename' => $this->dbFileLocation]);
         $this->metaDataRepository = new MetadataRepository($sqliteStorage);
+    }
+
+    protected function tearDown(): void
+    {
+        unlink($this->dbFileLocation);
     }
 
     public function testSqliteStorageDataPersistenceWithNoProvidedKey()
