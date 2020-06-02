@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Strata\Data\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Strata\Data\Helpers\ContentHasher;
 use Strata\Data\Metadata\Metadata;
 use Strata\Data\Metadata\MetadataFactory;
 use Strata\Data\Metadata\MetadataRepository;
@@ -56,7 +57,8 @@ class MetadataTest extends TestCase
         $this->assertTrue($this->metaDataRepository->exists($id));
     }
 
-    public function testItemCanBeRetrieved() {
+    public function testItemCanBeRetrieved()
+    {
         $id = 36;
         $url = 'https://example.net';
 
@@ -75,7 +77,8 @@ class MetadataTest extends TestCase
         $this->assertEquals($url, $metaData->getUrl());
     }
 
-    public function testDeleteItemFromStorage() {
+    public function testDeleteItemFromStorage()
+    {
         $id = 34;
         $this->addExampleItemToStorage($id);
 
@@ -86,11 +89,31 @@ class MetadataTest extends TestCase
         $this->assertFalse($this->metaDataRepository->exists($id));
     }
 
+    public function testCheckIfContentHasChanged()
+    {
+        $content = 'The quick brown fox jumped over the lazy dog';
+        $contentHasher = new ContentHasher();
+
+        $metaData = $this->metaDataFactory->createNew();
+        $metaData->setId(23);
+        $metaData->setUrl('https://another-example.co.uk');
+        $metaData->setAttributes(['attr1' => 'Purple', 'attr2' => 8973]);
+        $metaData->setContentHash($contentHasher->hash($content));
+        $this->metaDataRepository->store($metaData);
+
+        $identicalContent = $content;
+        $differentContent = 'The five boxing wizards jump quickly';
+
+        $this->assertFalse($contentHasher->hasContentChanged($metaData->getContentHash(), $identicalContent));
+        $this->assertTrue($contentHasher->hasContentChanged($metaData->getContentHash(), $differentContent));
+
+
+    }
+
     protected function addExampleItemToStorage($id): Metadata {
         $metaData = $this->metaDataFactory->createNew();
         $metaData->setId($id);
         $metaData->setUrl('https://another-example.co.uk');
-        $metaData->setAttribute('type', 'example_type');
         $metaData->setAttributes(['attr1' => 'Purple', 'attr2' => 8973]);
         $metaData->setContentHash('asdfjh38f2£F23f23f23f');
 

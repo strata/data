@@ -188,6 +188,7 @@ class Metadata
     public function setAttributes(array $attributes): Metadata
     {
         $this->attributes = $attributes;
+        $this->updated();
 
         return $this;
     }
