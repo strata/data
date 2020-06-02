@@ -8,6 +8,7 @@ use Strata\Data\Helpers\ContentHasher;
 use Strata\Data\Metadata\Metadata;
 use Strata\Data\Metadata\MetadataFactory;
 use Strata\Data\Metadata\MetadataRepository;
+use Strata\Data\Metadata\MetadataStatus;
 use Strata\Data\Storage\ArrayStorage;
 
 class MetadataTest extends TestCase
@@ -106,11 +107,70 @@ class MetadataTest extends TestCase
 
         $this->assertFalse($contentHasher->hasContentChanged($metaData->getContentHash(), $identicalContent));
         $this->assertTrue($contentHasher->hasContentChanged($metaData->getContentHash(), $differentContent));
-
-
     }
 
-    protected function addExampleItemToStorage($id): Metadata {
+    public function testContentNew()
+    {
+        $content = 'The quick brown fox jumped over the lazy dog';
+        $id = 1;
+        $contentHasher = new ContentHasher();
+
+        $metaData = $this->metaDataFactory->createNew();
+        $metaData->setId($id);
+        $metaData->setUrl('https://another-example.co.uk');
+        $metaData->setAttributes(['attr1' => 'Purple', 'attr2' => 8973]);
+        $metaData->setContentHash($contentHasher->hash($content));
+        $this->metaDataRepository->store($metaData);
+
+        $newId = 2;
+        $newContent = 'Some new content';
+
+        $contentStatus = new MetadataStatus($this->metaDataRepository, $contentHasher);
+        $this->assertEquals($contentStatus::STATUS_NEW, $contentStatus->getStatus($newId, $newContent));
+    }
+
+    public function testContentChanged()
+    {
+        $content = 'The quick brown fox jumped over the lazy dog';
+        $id = 1;
+        $contentHasher = new ContentHasher();
+
+        $metaData = $this->metaDataFactory->createNew();
+        $metaData->setId($id);
+        $metaData->setUrl('https://another-example.co.uk');
+        $metaData->setAttributes(['attr1' => 'Purple', 'attr2' => 8973]);
+        $metaData->setContentHash($contentHasher->hash($content));
+        $this->metaDataRepository->store($metaData);
+
+        $sameId = 1;
+        $newContent = 'Some changed content';
+
+        $contentStatus = new MetadataStatus($this->metaDataRepository, $contentHasher);
+        $this->assertEquals($contentStatus::STATUS_CHANGED, $contentStatus->getStatus($sameId, $newContent));
+    }
+
+    public function testContentUnchanged()
+    {
+        $content = 'The quick brown fox jumped over the lazy dog';
+        $id = 1;
+        $contentHasher = new ContentHasher();
+
+        $metaData = $this->metaDataFactory->createNew();
+        $metaData->setId($id);
+        $metaData->setUrl('https://another-example.co.uk');
+        $metaData->setAttributes(['attr1' => 'Purple', 'attr2' => 8973]);
+        $metaData->setContentHash($contentHasher->hash($content));
+        $this->metaDataRepository->store($metaData);
+
+        $sameId = 1;
+        $sameContent = 'The quick brown fox jumped over the lazy dog';
+
+        $contentStatus = new MetadataStatus($this->metaDataRepository, $contentHasher);
+        $this->assertEquals($contentStatus::STATUS_NOT_CHANGED, $contentStatus->getStatus($sameId, $sameContent));
+    }
+
+    protected function addExampleItemToStorage($id): Metadata
+    {
         $metaData = $this->metaDataFactory->createNew();
         $metaData->setId($id);
         $metaData->setUrl('https://another-example.co.uk');
