@@ -12,7 +12,8 @@ use Strata\Data\Response\MockResponseFromFile;
 use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
-class TestRestApi extends RestApiAbstract {
+class TestRestApi extends RestApiAbstract
+{
 
     public function setupHttpClient(): HttpClientInterface
     {
@@ -23,13 +24,12 @@ class TestRestApi extends RestApiAbstract {
             ]
         ]);
     }
-
 }
 
 final class ApiTest extends TestCase
 {
 
-    public function testBasicMethods ()
+    public function testBasicMethods()
     {
         $api = new TestRestApi('https://example.com/');
         $this->assertEquals('https://example.com/', $api->getBaseUri());
@@ -138,5 +138,4 @@ final class ApiTest extends TestCase
 
         $this->assertEquals(5, $api->getTotalRequests());
     }
-
 }

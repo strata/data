@@ -9,7 +9,7 @@ namespace Strata\Data\Traits;
  * This uses bitwise operators to calculate whether options are enabled.
  *
  * It is recommended to define options in your class via constants with valid binary numbers that increase in increment
- * of 2, e.g.: 1, 2, 4, 8, 16, 32, 64, 128, etc.
+ * by a power of 2, e.g.: 1, 2, 4, 8, 16, 32, 64, 128, etc.
  *
  * E.g. given:
  * const OPTION_A = 1;

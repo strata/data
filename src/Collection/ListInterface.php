@@ -74,5 +74,4 @@ interface ListInterface extends \SeekableIterator, \Countable
      * @return array
      */
     public function getCollection(): array;
-
 }

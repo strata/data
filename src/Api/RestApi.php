@@ -3,19 +3,19 @@ declare(strict_types=1);
 
 namespace Strata\Data\Api;
 
+use Strata\Data\HttpAbstract;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 use Strata\Frontend\Response\ListResponse;
 use Strata\Data\Pagination\Pagination;
 
-class RestApi implements ApiInterface
+class RestApi extends HttpAbstract implements ApiInterface
 {
+
     /**
      * Setup HTTP client
-     *
-     * @return HttpClient
-     * @throws \Strata\Data\Exception\ApiException
+     * @return HttpClientInterface
      */
     public function setupHttpClient(): HttpClientInterface
     {
@@ -25,31 +25,6 @@ class RestApi implements ApiInterface
                 'User-Agent' => $this->getUserAgent(),
             ]
         ]);
-    }
-
-    /**
-     * Get a single content item
-     *
-     * API endpoint format is expected to be: base_url/content_type/id
-     *
-     * @param string $apiEndpoint API endpoint to query
-     * @param mixed $id Identifier of item to return
-     * @return array
-     * @throws \GuzzleHttp\Exception\GuzzleException
-     * @throws \Psr\SimpleCache\InvalidArgumentException
-     * @throws \Strata\Frontend\Exception\FailedRequestException
-     * @throws \Strata\Frontend\Exception\PermissionException
-     * @throws \Strata\Frontend\Exception\NotFoundException
-     */
-    public function getOne($apiEndpoint, $id): array
-    {
-        $this->permissionRead();
-        $this->expectedResponseCode(200);
-
-        $response = $this->get(sprintf('%s/%s', $apiEndpoint, $id));
-        $data = $this->parseJsonResponse($response);
-
-        return $data;
     }
 
     /**

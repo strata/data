@@ -9,10 +9,10 @@ use Strata\Data\Query;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Strata\Data\DataInterface;
-use Strata\Data\Traits\CheckPermissions;
+use Strata\Data\Traits\CheckPermissionsTrait;
 use Strata\Data\Api\RestApiAbstract;
 use Symfony\Contracts\HttpClient\ResponseInterface;
-use Strata\Data\Response\ListResponse;
+use Strata\Data\Response\ListAbstract;
 use Strata\Data\Pagination\Pagination;
 use Strata\Data\Exception\ApiException;
 
@@ -48,7 +48,7 @@ class Wordpress extends RestApiAbstract implements DataInterface
     }
 
 
-    public function getList(Query $query, array $uriParams, array $requestOptions = []): ListResponse
+    public function getList(Query $query, array $uriParams, array $requestOptions = []): ListAbstract
     {
         $this->permissionRead();
         $this->expectedResponseCode(200);
@@ -63,10 +63,8 @@ class Wordpress extends RestApiAbstract implements DataInterface
             'tags'      => 'filter.tags'
         ]);
 
-        if ($query->has)
-
-        return $this->get($this->getUri('list', $query->getEndpoint(), $uriParams), $requestOptions);
+        if ($query->has) {
+            return $this->get($this->getUri('list', $query->getEndpoint(), $uriParams), $requestOptions);
+        }
     }
-
-
 }

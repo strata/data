@@ -17,7 +17,5 @@ final class WordpressTest extends TestCase
 
         $this->assertTrue($api->isSuccess($response));
         $this->assertEquals('hello-world', $data['slug']);
-
     }
-
 }

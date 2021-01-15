@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Strata\Data\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Strata\Data\Exception\FilterException;
+use Strata\Data\Exception\DecoderException;
 use Strata\Data\Filter\Json;
 
 final class JsonTest extends TestCase
@@ -33,13 +33,14 @@ EOD;
         $this->assertIsArray($data);
         $this->assertEquals('John Smith', $data['name']);
         $this->assertEquals('place2', $data['places'][1]);
+        $this->assertEquals('1234567', $data['tel']);
     }
 
     public function testInvalidJson()
     {
         $json = new Json();
 
-        $this->expectException(FilterException::class);
+        $this->expectException(DecoderException::class);
         $data = $json->filter($this->invalidJson);
     }
 

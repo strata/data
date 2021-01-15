@@ -67,5 +67,4 @@ EOD;
         $this->expectException('Exception');
         $client = new MockHttpClient([new MockResponseFromFile('https://httpbin.org/status/200')]);
     }
-
 }

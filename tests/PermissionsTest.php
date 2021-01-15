@@ -59,5 +59,4 @@ final class PermissionTest extends TestCase
         $this->assertTrue($permission->delete());
         $this->assertEquals('DELETE', $permission->__toString());
     }
-
 }

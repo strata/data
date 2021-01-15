@@ -18,12 +18,16 @@ trait CheckPermissionsTrait
     protected $permissions;
 
     /**
-     * Set permissions for accessing the API
+     * Set permissions for accessing the API, defaults to read-only
      * @param Permissions $permissions
      */
-    public function setPermissions(Permissions $permissions)
+    public function setPermissions(Permissions $permissions = null)
     {
-        $this->permissions = $permissions;
+        if ($permissions instanceof Permissions) {
+            $this->permissions = $permissions;
+        } else {
+            $this->permissions = new Permissions(Permissions::READ);
+        }
     }
 
     /**

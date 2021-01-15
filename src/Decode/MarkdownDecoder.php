@@ -1,21 +1,23 @@
 <?php
 declare(strict_types=1);
 
-namespace Strata\Data\Filter;
+namespace Strata\Data\Decode;
 
+use Strata\Data\Data\Item;
+use Strata\Data\Exception\DecoderException;
 use Strata\Data\Traits\FlagsTrait;
 use Parsedown;
 use ParsedownExtra;
 
 /**
- * Markdown filter
+ * MarkdownDecoder decoder
  *
- * Supports Markdown Extra
+ * Supports MarkdownDecoder Extra
  *
  * @see https://michelf.ca/projects/php-markdown/extra/
  * @package Strata\Data\Filter
  */
-class Markdown implements FilterInterface
+class MarkdownDecoder implements DecoderInterface
 {
     use FlagsTrait;
 
@@ -24,9 +26,10 @@ class Markdown implements FilterInterface
     /**
      * Filter markdown string to HTML
      * @param string $data
+     * @param Item $item
      * @return string
      */
-    public function filter($data): string
+    public function decode(string $data, Item $item): string
     {
         if ($this->flagEnabled(self::MARKDOWN_EXTRA)) {
             $parsedown = new ParsedownExtra();

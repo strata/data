@@ -6,7 +6,8 @@ namespace Strata\Data\Tests;
 use PHPUnit\Framework\TestCase;
 use Strata\Data\Collection\ListAbstract;
 
-class TestList extends ListAbstract {
+class TestList extends ListAbstract
+{
 }
 
 final class ListAbstractTest extends TestCase
@@ -42,5 +43,4 @@ final class ListAbstractTest extends TestCase
         $this->assertEquals('bar', $list->getMetadata('foo'));
         $this->assertEquals(2, count($list->getAllMetadata()));
     }
-
 }

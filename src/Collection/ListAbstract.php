@@ -135,5 +135,4 @@ abstract class ListAbstract implements ListInterface
     {
         return $this->metadata;
     }
-
 }

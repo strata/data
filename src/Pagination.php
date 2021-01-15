@@ -18,6 +18,27 @@ class Pagination implements PaginationInterface
     protected $resultsPerPage = 20;
 
     /**
+     * Constructor
+     *
+     * @param int|null $totalResults
+     * @param int|null $resultsPerPage
+     * @param int|null $currentPage
+     * @throws PaginationException
+     */
+    public function __construct(?int $totalResults, ?int $resultsPerPage, ?int $currentPage)
+    {
+        if ($totalResults !== null) {
+            $this->setTotalResults($totalResults);
+        }
+        if ($resultsPerPage !== null) {
+            $this->setResultsPerPage($resultsPerPage);
+        }
+        if ($currentPage !== null) {
+            $this->setPage($currentPage);
+        }
+    }
+
+    /**
      * Implement count(), returns total number of pages
      *
      * @return int

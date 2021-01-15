@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Strata\Data\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Strata\Data\Helpers\ContentHasher;
+use Strata\Data\Helper\ContentHasher;
 use Strata\Data\Metadata\Metadata;
 use Strata\Data\Metadata\MetadataFactory;
 use Strata\Data\Metadata\MetadataRepository;

@@ -1,0 +1,14 @@
+{
+  "errors": [
+    {
+      "message": "Syntax Error: Unexpected Name \"invalid\"",
+      "category": "graphql",
+      "locations": [
+        {
+          "line": 1,
+          "column": 1
+        }
+      ]
+    }
+  ]
+}

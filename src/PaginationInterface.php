@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Strata\Data\Pagination;
+namespace Strata\Data;
 
 interface PaginationInterface extends \Countable
 {

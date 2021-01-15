@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Strata\Data\Metadata;
 
-use Strata\Data\Helpers\ContentHasher;
+use Strata\Data\Helper\ContentHasher;
 
 class MetadataStatus
 {
@@ -14,14 +14,14 @@ class MetadataStatus
     protected $metadataRepository;
 
     /**
-     * @var \Strata\Data\Helpers\ContentHasher
+     * @var \Strata\Data\Helper\ContentHasher
      */
     protected $contentHasher;
 
     /**
      * MetadataStatus constructor.
      * @param \Strata\Data\Metadata\MetadataRepository $metadataRepository
-     * @param \Strata\Data\Helpers\ContentHasher $contentHasher
+     * @param \Strata\Data\Helper\ContentHasher $contentHasher
      */
     public function __construct(MetadataRepository $metadataRepository, ContentHasher $contentHasher)
     {

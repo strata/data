@@ -52,5 +52,4 @@ class MockResponseFromFile extends MockResponse
 
         parent::__construct($body, $info);
     }
-
 }

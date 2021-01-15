@@ -5,8 +5,7 @@ namespace Strata\Data\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Strata\Data\Exception\InvalidHashAlgorithm;
-use Strata\Data\Exception\InvalidHashIdentifier;
-use Strata\Data\Helpers\ContentHasher;
+use Strata\Data\Helper\ContentHasher;
 
 final class ContentHashTest extends TestCase
 {
@@ -24,12 +23,12 @@ final class ContentHashTest extends TestCase
     protected $contentExamples = [
       "Some words.",
       "Some words that are different to the ones that went before.",
-      "More words that are different again.",
-      "Another string slightly longer than before.",
+      "some words that are different to the ones that went before.",
+      "Some words.",
       "And now for something completely different.",
     ];
 
-    public function testMultpleValidExamples()
+    public function testMultipleValidExamples()
     {
         foreach ($this->contentExamples as $contentExample) {
             $this->assertFalse($this->contentHasher->hasContentChanged($this->contentHasher->hash($contentExample), $contentExample));
@@ -45,7 +44,9 @@ final class ContentHashTest extends TestCase
         }
 
         $this->assertFalse($this->contentHasher->hasContentChanged($hashes[0], $this->contentExamples[0]));
-        $this->assertTrue($this->contentHasher->hasContentChanged($hashes[1], 'A different string to the original.'));
+        $this->assertTrue($this->contentHasher->hasContentChanged($hashes[1], $this->contentExamples[2]));
+        $this->assertFalse($this->contentHasher->hasContentChanged($hashes[0], $this->contentExamples[3]));
+        $this->assertTrue($this->contentHasher->hasContentChanged($hashes[3], $this->contentExamples[4]));
     }
 
     public function testInvalidHash()
@@ -54,8 +55,7 @@ final class ContentHashTest extends TestCase
         $content = new ContentHasher('fictionalHash123');
     }
 
-
-    public function testDifferentHash()
+    public function testDifferentHashAlgorithm()
     {
         $this->contentHasher = new ContentHasher('md5');
         foreach ($this->contentExamples as $contentExample) {
@@ -63,6 +63,17 @@ final class ContentHashTest extends TestCase
         }
 
         $this->assertFalse($this->contentHasher->hasContentChanged($hashes[0], $this->contentExamples[0]));
-        $this->assertTrue($this->contentHasher->hasContentChanged($hashes[1], 'A different string to the original.'));
+        $this->assertTrue($this->contentHasher->hasContentChanged($hashes[1], $this->contentExamples[2]));
     }
+
+    public function testFileHash()
+    {
+        $hash1 = $this->contentHasher->hash(file_get_contents(__DIR__ . '/../Filesystem/files/test-1.md'));
+        $hash2 = $this->contentHasher->hash(file_get_contents(__DIR__ . '/../Filesystem/files/test-2.md'));
+        $hash3 = $this->contentHasher->hash(file_get_contents(__DIR__ . '/../Filesystem/files/test-1.md'));
+
+        $this->assertFalse($hash1 == $hash2);
+        $this->assertTrue($hash1 == $hash3);
+    }
+
 }
