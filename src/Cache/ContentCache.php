@@ -6,8 +6,6 @@ namespace Strata\Data;
 use Strata\Data\Helper\ContentHasher;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
-use Symfony\Component\Cache\Adapter\FilesystemAdapter;
-
 
 class Cache
 {

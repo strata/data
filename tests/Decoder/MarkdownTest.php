@@ -4,8 +4,8 @@ declare(strict_types=1);
 namespace Strata\Data\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Strata\Data\Exception\UnsupportedMethodException;
-use Strata\Data\Filter\Markdown;
+use Strata\Data\Decoder\Markdown;
+use Strata\Data\Decoder\MarkdownExtra;
 
 final class MarkdownTest extends TestCase
 {
@@ -17,17 +17,16 @@ EOD;
 
     public function testMarkdown()
     {
-        $filter = new Markdown();
-
-        $html = $filter->filter($this->markdown);
+        $html = Markdown::decode($this->markdown);
         $this->assertStringContainsString('<h2>Hello', $html);
+
+        $html = Markdown::decode('test string * string');
+        $this->assertEquals('<p>test string * string</p>', $html);
     }
 
     public function testMarkdownExtra()
     {
-        $filter = new Markdown(Markdown::MARKDOWN_EXTRA);
-
-        $html = $filter->filter($this->markdown);
+        $html = MarkdownExtra::decode($this->markdown);
         $this->assertStringContainsString('<h2 id="header1">Hello', $html);
     }
 

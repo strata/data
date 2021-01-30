@@ -8,6 +8,7 @@ use Strata\Data\Exception\DecoderException;
 use Strata\Data\Exception\ItemContentException;
 use Strata\Data\Helper\ContentHasher;
 use DateTime;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 
 /**
  * Cacheable item returned from an API request
@@ -25,11 +26,12 @@ class Item
 {
     private string $identifier;
     private string $contentHash;
-    private bool $isSuccessful;
+    private bool $isSuccess = false;
+    private string $errorMessage = '';
+    private array $errorData = [];
     private \DateTime $updated;
     private $content;
     private array $meta;
-    private ContentHasher $hasher;
 
     /**
      * Constructor
@@ -41,8 +43,6 @@ class Item
      */
     public function __construct(string $identifier, $content = null, ?DecoderStrategy $decoder = null)
     {
-        $this->hasher = new ContentHasher();
-
         $this->identifier = $identifier;
         $this->updated = new DateTime();
 
@@ -54,6 +54,41 @@ class Item
     public function getIdentifier(): string
     {
         return $this->identifier;
+    }
+
+    public function setSuccess(bool $success): void
+    {
+        $this->isSuccess = $success;
+    }
+
+    public function isSuccess(): bool
+    {
+        return $this->isSuccess;
+    }
+
+    public function setErrorMessage(string $message): void
+    {
+        $this->errorMessage = $message;
+    }
+
+    public function getErrorMessage(): string
+    {
+        return $this->errorMessage;
+    }
+
+    public function setErrorData(array $data): void
+    {
+        $this->errorData = $data;
+    }
+
+    public function addErrorDataFromString(string $data): void
+    {
+        $this->errorData[] = $data;
+    }
+
+    public function getErrorData(): array
+    {
+        return $this->errorData;
     }
 
     /**
@@ -104,7 +139,7 @@ class Item
         if (empty($this->getContent())) {
             throw new ItemContentException('Cannot set content hash until content is set on this Item');
         }
-        $this->contentHash = $this->hasher->hash($this->__toString());
+        $this->contentHash = ContentHasher::hash($this->__toString());
     }
 
     public function getContentHash(): string
@@ -122,7 +157,7 @@ class Item
      */
     public function isChanged(string $newContent): bool
     {
-        return $this->hasher->hasContentChanged($this->getContentHash(), $newContent);
+        return ContentHasher::hasContentChanged($this->getContentHash(), $newContent);
     }
 
     /**
@@ -176,7 +211,6 @@ class Item
      */
     public function __sleep(): array
     {
-        unset($this->hasher);
         return ['identifier', 'contentHash', 'updated', 'content', 'meta'];
     }
 
@@ -185,7 +219,6 @@ class Item
      */
     public function __wake(): void
     {
-        $this->hasher = new ContentHasher();
     }
 
 }
