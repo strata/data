@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Strata\Data;
+namespace Strata\Data\Model;
 
 use Strata\Data\Pagination\Pagination;
 use Strata\Data\Traits\IterableTrait;
@@ -11,10 +11,10 @@ use Strata\Data\Traits\IterableTrait;
  *
  * Usage:
  * use Strata\Data\Decode\DecoderStrategy;
- * use Strata\Data\Decode\JsonDecoder;
+ * use Strata\Data\Decode\Json;
  * use Strata\Data\Pagination\Pagination;
  *
- * $decoder = new DecoderStrategy(new JsonDecoder());
+ * $decoder = new DecoderStrategy(new Json());
  * $collection = new Collection();
  * $collection->add(new Item($uri, $data, $decoder));
  * $collection->add(new Item($uri2, $data2, $decoder));
@@ -66,5 +66,4 @@ class Collection implements \SeekableIterator, \Countable
     {
         return $this->collection[$this->position];
     }
-
 }

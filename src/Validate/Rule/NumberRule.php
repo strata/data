@@ -18,7 +18,7 @@ class NumberRule extends RuleAbstract
      */
     public function validate(string $propertyReference, Item $item): bool
     {
-        $result = is_numeric($this->getProperty($item, $propertyReference));
+        $result = is_numeric($item->getProperty($propertyReference));
         if (!$result) {
             $this->setErrorMessage(sprintf('%s is not a valid number', $propertyReference));
         }

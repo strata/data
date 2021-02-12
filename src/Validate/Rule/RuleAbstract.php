@@ -32,63 +32,6 @@ abstract class RuleAbstract implements RuleInterface
     }
 
     /**
-     * Explode property reference into an array of nested property references
-     *
-     * E.g. 'data.title' returns ['data', 'title']
-     *
-     * @param string $propertyReference
-     * @return array
-     */
-    protected function explodeNestedProperty(string $propertyReference): array
-    {
-        return explode(ValidationRules::NESTED_PROPERTY_SEPARATOR, $propertyReference);
-    }
-
-    /**
-     * Internal method to return nested property
-     *
-     * Usage:
-     *
-     * $nestedItem = clone $item;
-     * foreach ($this->explodeNestedProperty($propertyReference) as $nestedProperty) {
-     *     $nestedItem = $this->getNestedProperty($nestedItem, $nestedProperty);
-     * }
-     *
-     * @param $nestedItem
-     * @param $property
-     * @return mixed|null Nested value, or null if it doesn't exist
-     */
-    protected function getNestedProperty($nestedItem, $property)
-    {
-        if ($nestedItem instanceof Item && $nestedItem->containsString()) {
-            return null;
-        }
-        if (isset($nestedItem[$property])) {
-            return $nestedItem[$property];
-        }
-        return null;
-    }
-
-    /**
-     * Return nested property from an item, or null if property does not exist
-     *
-     * @param Item $item
-     * @param string $propertyReference
-     * @return mixed|null
-     */
-    public function getProperty(Item $item, string $propertyReference)
-    {
-        $nestedItem = clone $item;
-        foreach ($this->explodeNestedProperty($propertyReference) as $nestedProperty) {
-            $nestedItem = $this->getNestedProperty($nestedItem, $nestedProperty);
-            if ($nestedItem === null) {
-                return null;
-            }
-        }
-        return $nestedItem;
-    }
-
-    /**
      * Is the item value valid?
      *
      * @param string $propertyReference
@@ -116,5 +59,4 @@ abstract class RuleAbstract implements RuleInterface
     {
         return $this->errorMessage;
     }
-
 }

@@ -17,7 +17,7 @@ class InRule extends RuleAbstract
      */
     public function validate(string $propertyReference, Item $item): bool
     {
-        $result = in_array($this->getProperty($item, $propertyReference), $this->getValues());
+        $result = in_array($item->getProperty($propertyReference), $this->getValues());
         if (!$result) {
             $this->setErrorMessage(sprintf('%s does not contain a valid value', $propertyReference));
         }

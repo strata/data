@@ -1,100 +1,59 @@
 <?php
 declare(strict_types=1);
 
-namespace Strata\Data;
+namespace Strata\Data\Model;
 
-use Strata\Data\Decode\DecoderStrategy;
+use Strata\Data\Decode\DecoderInterface;
 use Strata\Data\Exception\DecoderException;
 use Strata\Data\Exception\ItemContentException;
-use Strata\Data\Helper\ContentHasher;
-use DateTime;
-use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
+use Strata\Data\Validate\ValidationRules;
 
 /**
- * Cacheable item returned from an API request
+ * Item returned from an API request, either an array of data properties or a string
  *
  * Usage:
- * use Strata\Data\Decode\DecoderStrategy;
- * use Strata\Data\Decode\JsonDecoder;
+ * use Strata\Data\Decode\Json;
  *
- * $decoder = new DecoderStrategy(new JsonDecoder());
- * $item = new Item($uri, $data, $decoder);
+ * $item = new Item($uri, $data, new Json());
+ *
+ * // Access content as an array
+ * echo $item['title'];
+ *
+ * // Or if content is a string, access as a string
+ * echo $item;
  *
  * @package Strata\Data\Data
  */
-class Item
+class Item implements \ArrayAccess
 {
+    const NESTED_PROPERTY_SEPARATOR = '.';
     private string $identifier;
-    private string $contentHash;
-    private bool $isSuccess = false;
-    private string $errorMessage = '';
-    private array $errorData = [];
-    private \DateTime $updated;
     private $content;
-    private array $meta;
+    private array $meta = [];
 
     /**
      * Constructor
      *
-     * @param string $identifier
-     * @param null $content
-     * @param ?DecoderStrategy $decoder Decoder to transform content
-     * @throws ItemContentException
+     * @param string $identifier Unique identifier for this item
      */
-    public function __construct(string $identifier, $content = null, ?DecoderStrategy $decoder = null)
+    public function __construct(string $identifier)
     {
         $this->identifier = $identifier;
-        $this->updated = new DateTime();
-
-        if ($content !== null) {
-            $this->setContent($content, $decoder);
-        }
     }
 
+    /**
+     * Return item identifier
+     *
+     * @return string
+     */
     public function getIdentifier(): string
     {
         return $this->identifier;
     }
 
-    public function setSuccess(bool $success): void
-    {
-        $this->isSuccess = $success;
-    }
-
-    public function isSuccess(): bool
-    {
-        return $this->isSuccess;
-    }
-
-    public function setErrorMessage(string $message): void
-    {
-        $this->errorMessage = $message;
-    }
-
-    public function getErrorMessage(): string
-    {
-        return $this->errorMessage;
-    }
-
-    public function setErrorData(array $data): void
-    {
-        $this->errorData = $data;
-    }
-
-    public function addErrorDataFromString(string $data): void
-    {
-        $this->errorData[] = $data;
-    }
-
-    public function getErrorData(): array
-    {
-        return $this->errorData;
-    }
-
     /**
-     * Set content
+     * Set content from data response
      *
-     * Content hash is automatically set the first time content is set on an Item (since this is likely to be a string)
      * If a decoder is passed, then content is transformed to the required format
      *
      * @param array|string $content
@@ -102,20 +61,12 @@ class Item
      * @throws ItemContentException
      * @throws DecoderException
      */
-    public function setContent(string $content, ?DecoderStrategy $decoder)
+    public function setContent($content, ?DecoderInterface $decoder = null)
     {
-        if (!is_array($content) && (!is_string($content))) {
-            throw new ItemContentException(sprintf('Item content is invalid. Require string or array, %s detected', gettype($content)));
-        }
-
-        $this->content = $content;
-
-        if (empty($this->contentHash)) {
-            $this->generateContentHash();
-        }
-
         if ($decoder !== null) {
-            $decoder->decode($this);
+            $this->content = $decoder->decode($content);
+        } else {
+            $this->content = $content;
         }
     }
 
@@ -129,62 +80,61 @@ class Item
         return $this->content;
     }
 
-    public function getUpdated(): ?DateTime
+    /**
+     * Explode property reference into an array of nested property references
+     *
+     * E.g. 'data.title' returns ['data', 'title']
+     *
+     * @param string $propertyReference
+     * @return array
+     */
+    protected function explodeNestedProperty(string $propertyReference): array
     {
-        return $this->updated;
-    }
-
-    public function generateContentHash()
-    {
-        if (empty($this->getContent())) {
-            throw new ItemContentException('Cannot set content hash until content is set on this Item');
-        }
-        $this->contentHash = ContentHasher::hash($this->__toString());
-    }
-
-    public function getContentHash(): string
-    {
-        return $this->contentHash;
+        return explode(self::NESTED_PROPERTY_SEPARATOR, $propertyReference);
     }
 
     /**
-     * Return whether new content is different to content already stored against this Item
+
+    /**
+     * Return nested property from an item, or null if property does not exist
      *
-     * Useful if you cache items and check them again later
-     *
-     * @param string $newContent
-     * @return bool
+     * @param Item $item
+     * @param string $propertyReference Property reference, with nested properties separated by a dot
+     * @return mixed|null
      */
-    public function isChanged(string $newContent): bool
+    public function getProperty(string $propertyReference)
     {
-        return ContentHasher::hasContentChanged($this->getContentHash(), $newContent);
+        if (!$this->containsArray()) {
+            return null;
+        }
+
+        $nestedItem = $this->getContent();
+        foreach ($this->explodeNestedProperty($propertyReference) as $propertyName) {
+            if (isset($nestedItem[$propertyName])) {
+                $nestedItem = $nestedItem[$propertyName];
+            } else {
+                return null;
+            }
+        }
+        return $nestedItem;
     }
 
     /**
-     * Return a string representation of content
+     * Set item metadata
      *
-     * If content is a data array, uses print_r to return string representation
-     * If content is empty, returns an empty string
-     * @return string
+     * @param string $key
+     * @param $value
      */
-    public function __toString(): string
-    {
-        if (is_string($this->getContent())) {
-            return (string) $this->getContent();
-        }
-
-        if (is_array($this->getContent())) {
-            return print_r($this->getContent(), true);
-        }
-
-        return '';
-    }
-
     public function setMeta(string $key, $value)
     {
         $this->meta[$key] = $value;
     }
 
+    /**
+     * Set item metadata from an array
+     *
+     * @param array $metadata
+     */
     public function setMetaFromArray(array $metadata)
     {
         foreach ($metadata as $key => $value) {
@@ -192,6 +142,12 @@ class Item
         }
     }
 
+    /**
+     * Return item metadata
+     *
+     * @param string $key
+     * @return mixed|null
+     */
     public function getMeta(string $key)
     {
         if (isset($this->meta[$key])) {
@@ -200,25 +156,110 @@ class Item
         return null;
     }
 
+    /**
+     * Return all metadata
+     *
+     * @return array
+     */
     public function getAllMeta(): array
     {
         return $this->meta;
     }
 
     /**
-     * Cleanup before serialization
-     * @return string[]
+     * Whether the item contains string content
+     *
+     * @return bool
      */
-    public function __sleep(): array
+    public function containsString(): bool
     {
-        return ['identifier', 'contentHash', 'updated', 'content', 'meta'];
+        return is_string($this->content);
     }
 
     /**
-     * Restart after unserialization
+     * Whether the item contains array content
+     *
+     * @return bool
      */
-    public function __wake(): void
+    public function containsArray(): bool
     {
+        return is_array($this->content);
     }
 
+    private function throwExceptionIfNotString()
+    {
+        if (!$this->containsString()) {
+            throw new ItemContentException('Item content is an array so cannot be accessed as a string');
+        }
+    }
+
+    private function throwExceptionIfNotArray()
+    {
+        if (!$this->containsArray()) {
+            throw new ItemContentException('Item content is a string so cannot be accessed as an array');
+        }
+    }
+
+    /**
+     * Return item content if a string
+     *
+     * @return string
+     * @throws ItemContentException If item content is not a string
+     */
+    public function __toString(): string
+    {
+        $this->throwExceptionIfNotString();
+        return $this->content;
+    }
+
+    /**
+     * Whether an offset exists
+     *
+     * @param mixed $offset
+     * @return bool
+     * @throws ItemContentException If item content is not an array
+     */
+    public function offsetExists($offset): bool
+    {
+        $this->throwExceptionIfNotArray();
+        return isset($this->content[$offset]);
+    }
+
+    /**
+     * Return item content by offset
+     *
+     * @param mixed $offset
+     * @return mixed|null
+     * @throws ItemContentException If item content is not an array
+     */
+    public function offsetGet($offset)
+    {
+        $this->throwExceptionIfNotArray();
+        return isset($this->content[$offset]) ? $this->content[$offset] : null;
+    }
+
+    /**
+     * Set item content by offset
+     *
+     * @param mixed $offset
+     * @param mixed $value
+     * @throws ItemContentException If item content is not an array
+     */
+    public function offsetSet($offset, $value)
+    {
+        $this->throwExceptionIfNotArray();
+        $this->content[$offset] = $value;
+    }
+
+    /**
+     * Offset to unset
+     *
+     * @param mixed $offset
+     * @throws ItemContentException If item content is not an array
+     */
+    public function offsetUnset($offset)
+    {
+        $this->throwExceptionIfNotArray();
+        unset($this->content[$offset]);
+    }
 }

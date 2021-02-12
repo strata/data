@@ -14,8 +14,8 @@ class RequiredRuleTest extends TestCase
     {
         $validator = new RequiredRule();
         $item = new Item('test');
-
         $item->setContent(['email' => 'hello@studio24.net', 'title' => '', 'number' => 0, 'things' => [], 'null' => null]);
+
         $this->assertTrue($validator->validate('email', $item));
         $this->assertFalse($validator->validate('category', $item));
         $this->assertFalse($validator->validate('title', $item));

@@ -18,7 +18,7 @@ class ImageRule extends RuleAbstract
      */
     public function validate(string $propertyReference, Item $item): bool
     {
-        $info = pathinfo($this->getProperty($item, $propertyReference));
+        $info = pathinfo($item->getProperty($propertyReference));
         if (!isset($info['extension'])) {
             return false;
         }

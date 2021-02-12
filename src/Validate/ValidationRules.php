@@ -157,5 +157,4 @@ class ValidationRules implements ValidatorInterface
     {
         return implode(', ', $this->errors);
     }
-
 }

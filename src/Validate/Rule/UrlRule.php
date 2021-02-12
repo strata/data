@@ -17,7 +17,7 @@ class UrlRule extends RuleAbstract
      */
     public function validate(string $propertyReference, Item $item): bool
     {
-        $result = filter_var($this->getProperty($item, $propertyReference), FILTER_VALIDATE_URL);
+        $result = filter_var($item->getProperty($propertyReference), FILTER_VALIDATE_URL);
         if ($result === false) {
             $this->setErrorMessage(sprintf('%s is not a valid URL', $propertyReference));
             return false;

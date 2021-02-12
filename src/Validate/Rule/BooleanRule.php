@@ -18,7 +18,7 @@ class BooleanRule extends RuleAbstract
      */
     public function validate(string $propertyReference, Item $item): bool
     {
-        $result = in_array($this->getProperty($item, $propertyReference), self::VALID);
+        $result = in_array($item->getProperty($propertyReference), self::VALID);
         if ($result === false) {
             $this->setErrorMessage(sprintf('%s is not a valid boolean', $propertyReference));
             return false;

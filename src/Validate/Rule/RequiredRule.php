@@ -18,7 +18,7 @@ class RequiredRule extends RuleAbstract
     public function validate(string $propertyReference, Item $item): bool
     {
         $result = true;
-        $value = $this->getProperty($item, $propertyReference);
+        $value = $item->getProperty($propertyReference);
         if ($value === null) {
             $result = false;
         } else if ($value === '') {
@@ -32,5 +32,4 @@ class RequiredRule extends RuleAbstract
         }
         return $result;
     }
-
 }

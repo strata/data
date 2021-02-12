@@ -17,7 +17,7 @@ class ArrayRule extends RuleAbstract
      */
     public function validate(string $propertyReference, Item $item): bool
     {
-        $result = is_array($this->getProperty($item, $propertyReference));
+        $result = is_array($item->getProperty($propertyReference));
         if (!$result) {
             $this->setErrorMessage(sprintf('%s is not an array', $propertyReference));
         }
