@@ -16,9 +16,9 @@ class CachingHttpClient implements HttpClientInterface
     /**
      * Decorator to cache API responses via PSR-6 compatible Symfony HttpCache Store
      *
-     * Supports auto-pruning of cache, invalidating cache via tags (via Cache-Tags header).
+     * Supports auto-pruning of cache, invalidating cache via tags (via ContentCache-Tags header).
      *
-     * Cache lifetime is determined by Cache-Control or Expires headers from API response, or default_ttl if not set.
+     * ContentCache lifetime is determined by ContentCache-Control or Expires headers from API response, or default_ttl if not set.
      *
      * Usage:
      * $client = HttpClient::create();
@@ -50,5 +50,4 @@ class CachingHttpClient implements HttpClientInterface
     {
         return $this->client->stream($responses, $timeout);
     }
-
 }

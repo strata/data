@@ -10,10 +10,13 @@ use Symfony\Component\HttpClient\MockHttpClient;
 
 class GraphQLTest extends TestCase
 {
+    /**
+     * Test valid GraphQL query building
+     */
     public function testBuildQuery()
     {
         // ping
-        $graphQL = new GraphQL();
+        $graphQL = new GraphQL('https://example.com/api');
         $query = '{ping}';
         $expected = <<<EOD
 {
@@ -65,48 +68,67 @@ EOD;
         $this->assertEquals($expected, $graphQL->buildQuery($query, ["offset" => 10]));
     }
 
+    /**
+     * Test mock GraphQL graphql
+     */
     public function testPing()
     {
         $responses = [
-            new MockResponseFromFile(__DIR__ . '/responses/ping'),
-            new MockResponseFromFile(__DIR__ . '/responses/invalid-ping'),
+            new MockResponseFromFile(__DIR__ . '/graphql/ping'),
+            new MockResponseFromFile(__DIR__ . '/graphql/invalid-ping'),
         ];
         $graphQL = new GraphQL('https://example.com/api');
-        $graphQL->setClient(new MockHttpClient($responses, $graphQL->getBaseUri()));
+        $graphQL->setClient(new MockHttpClient($responses));
 
         $this->assertTrue($graphQL->ping());
-        $this->assertFalse($graphQL->ping());
-    }
 
-    public function testNoBaseUri()
-    {
-        $graphQL = new GraphQL();
-
-        $this->expectException('Strata\Data\Exception\BaseUriException');
+        $this->expectException('\Strata\Data\Exception\NotFoundException');
         $graphQL->ping();
     }
 
-    public function testError()
+    /**
+     * Test mock GraphQL graphql
+     */
+    public function testSuppressErrors()
     {
         $responses = [
-            new MockResponseFromFile(__DIR__ . '/responses/invalid'),
+            new MockResponseFromFile(__DIR__ . '/graphql/invalid-ping'),
         ];
         $graphQL = new GraphQL('https://example.com/api');
-        $graphQL->setClient(new MockHttpClient($responses, $graphQL->getBaseUri()));
+        $graphQL->setClient(new MockHttpClient($responses));
+        $graphQL->suppressErrors(true);
 
-        $response = $graphQL->query('invalid');
-        $this->assertFalse($response->isSuccess());
-        $this->assertStringContainsString('Syntax Error', $response->getErrorMessage());
-        $this->assertEquals('graphql', $response->getErrorData()['category']);
+        $this->assertFalse($graphQL->ping());
+    }
+
+    public function testGraphQLError()
+    {
+        $responses = [
+            new MockResponseFromFile(__DIR__ . '/graphql/invalid'),
+        ];
+        $graphQL = new GraphQL('https://example.com/api');
+        $graphQL->setClient(new MockHttpClient($responses));
+        $foundException = false;
+
+        try {
+            $response = $graphQL->query('invalid');
+            $item = $response->getItem();
+        } catch (\Strata\Data\Exception\FailedGraphQLException $e) {
+            $foundException = true;
+            $this->assertStringContainsString('Syntax Error', $e->getMessage());
+            $this->assertEquals('graphql', $e->getErrorData()[0]['category']);
+        }
+
+        $this->assertTrue($foundException);
     }
 
     public function testQuery()
     {
         $responses = [
-            new MockResponseFromFile(__DIR__ . '/responses/query'),
+            new MockResponseFromFile(__DIR__ . '/graphql/query'),
         ];
         $graphQL = new GraphQL('https://example.com/api');
-        $graphQL->setClient(new MockHttpClient($responses, $graphQL->getBaseUri()));
+        $graphQL->setClient(new MockHttpClient($responses));
 
         // Simple query
         $query = '
@@ -118,19 +140,19 @@ query {
   }
 }';
         $response = $graphQL->query($query);
-        $this->assertTrue($response->isSuccess());
-        $this->assertEquals(257, $response->toArray()['data']['entries'][0]['id']);
-        $this->assertEquals("The super-duper business event", $response->toArray()['data']['entries'][0]['title']);
+        $results = $response->getItem();
+        $this->assertEquals(257, $results['entries'][0]['id']);
+        $this->assertEquals("The super-duper business event", $results['entries'][0]['title']);
     }
 
     public function testVariables()
     {
         $responses = [
-            new MockResponseFromFile(__DIR__ . '/responses/query'),
-            new MockResponseFromFile(__DIR__ . '/responses/query-2'),
+            new MockResponseFromFile(__DIR__ . '/graphql/query'),
+            new MockResponseFromFile(__DIR__ . '/graphql/query-2'),
         ];
         $graphQL = new GraphQL('https://example.com/api');
-        $graphQL->setClient(new MockHttpClient($responses, $graphQL->getBaseUri()));
+        $graphQL->setClient(new MockHttpClient($responses,));
 
         $query = <<<'EOD'
 query ($offset: Int) {
@@ -142,12 +164,14 @@ query ($offset: Int) {
 }
 EOD;
         $response = $graphQL->query($query, ['offset' => 0]);
-        $this->assertEquals(2, count($response->toArray()['data']['entries']));
-        $this->assertEquals(257, $response->toArray()['data']['entries'][0]['id']);
+        $item = $response->getItem();
+        $this->assertEquals(2, count($item['entries']));
+        $this->assertEquals(257, $item['entries'][0]['id']);
 
         $response = $graphQL->query($query, ['offset' => 2]);
-        $this->assertEquals(1, count($response->toArray()['data']['entries']));
-        $this->assertEquals(8, $response->toArray()['data']['entries'][0]['id']);
+        $item = $response->getItem();
+        $this->assertEquals(1, count($item['entries']));
+        $this->assertEquals(8,$item['entries'][0]['id']);
     }
 
 }

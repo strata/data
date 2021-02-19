@@ -6,9 +6,9 @@ namespace Strata\Data\Pagination;
 use Strata\Data\Exception\PaginationException;
 
 /**
- * Simple class to manage API pagination
+ * Simple class to manage pagination
  *
- * @package Strata\Frontend\Api
+ * @package Strata\Data\Pagination
  */
 class Pagination implements PaginationInterface
 {
@@ -25,7 +25,7 @@ class Pagination implements PaginationInterface
      * @param int|null $currentPage
      * @throws PaginationException
      */
-    public function __construct(?int $totalResults, ?int $resultsPerPage, ?int $currentPage)
+    public function __construct(?int $totalResults = null, ?int $resultsPerPage = null, ?int $currentPage = null)
     {
         if ($totalResults !== null) {
             $this->setTotalResults($totalResults);

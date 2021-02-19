@@ -3,10 +3,7 @@ declare(strict_types=1);
 
 namespace Strata\Data\Model;
 
-use Strata\Data\Decode\DecoderInterface;
-use Strata\Data\Exception\DecoderException;
 use Strata\Data\Exception\ItemContentException;
-use Strata\Data\Validate\ValidationRules;
 
 /**
  * Item returned from an API request, either an array of data properties or a string
@@ -54,20 +51,12 @@ class Item implements \ArrayAccess
     /**
      * Set content from data response
      *
-     * If a decoder is passed, then content is transformed to the required format
-     *
      * @param array|string $content
-     * @param ?DecoderStrategy $decoder Decoder to transform content
      * @throws ItemContentException
-     * @throws DecoderException
      */
-    public function setContent($content, ?DecoderInterface $decoder = null)
+    public function setContent($content)
     {
-        if ($decoder !== null) {
-            $this->content = $decoder->decode($content);
-        } else {
-            $this->content = $content;
-        }
+        $this->content = $content;
     }
 
     /**

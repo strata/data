@@ -3,26 +3,22 @@ declare(strict_types=1);
 
 namespace Strata\Data\Http;
 
+use Strata\Data\Decode\DecoderInterface;
 use Strata\Data\Decode\DecoderStrategy;
-use Strata\Data\Decode\JsonDecoder;
+use Strata\Data\Decode\Json;
+use Strata\Data\Exception\FailedApiRequestException;
+use Strata\Data\Exception\FailedGraphQLException;
+use Strata\Data\Exception\FailedRequestException;
 use Strata\Data\Helper\ContentHasher;
-use Strata\Data\Response\HttpResponse;
+use Strata\Data\Model\Response;
+use Strata\Data\Traits\AuthTokenTrait;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 class GraphQL extends HttpAbstract
 {
-    const JSON_ENCODE_FLAGS = JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT;
-
     private string $lastQuery;
-
-    public function __construct(?string $baseUri = null)
-    {
-        if ($baseUri !== null) {
-            $this->setBaseUri($baseUri);
-        }
-    }
 
     /**
      * Setup HTTP client
@@ -32,12 +28,14 @@ class GraphQL extends HttpAbstract
      */
     public function setupHttpClient(): HttpClientInterface
     {
-        return HttpClient::create([
+        $options = [
             'base_uri' => $this->getBaseUri(),
             'headers' => [
                 'Content-Type' => 'application/json',
             ]
-        ]);
+        ];
+
+        return HttpClient::create($options);
     }
 
     /**
@@ -59,13 +57,59 @@ class GraphQL extends HttpAbstract
     }
 
     /**
-     * Setup decoder to use on body content of responses
+     * Return decoder to decode responses
      *
-     * @return ?DecoderStrategy Decoder or null if body is not to be processed
+     * @return ?DecoderStrategy Decoder
      */
-    public function setupDecoder(): ?DecoderStrategy
+    public function getDefaultDecoder(): ?DecoderInterface
     {
-        return new DecoderStrategy(new JsonDecoder());
+        return new Json();
+    }
+
+    /**
+     * Populate response with data content
+     *
+     * Populates contents of 'data' response property, or an empty array if this is missing
+     *
+     * @param Response $response
+     * @param ResponseInterface $httpResponse
+     * @return void
+     */
+    public function populateResponse(Response $response, ResponseInterface $httpResponse): void
+    {
+        $httpResponse = $this->decode($httpResponse->getContent());
+
+        // Add one item since cannot parse GraphQL response
+        $data = [];
+        if (isset($httpResponse['data']) && is_array($httpResponse['data'])) {
+            $data = $httpResponse['data'];
+        }
+        $item = $response->add($response->getRequestId(), $data);
+
+        // Add any GraphQL errors
+        if (isset($httpResponse['errors']) && is_array($httpResponse['errors'])) {
+            $response->setMeta('errors', $httpResponse['errors']);
+        }
+    }
+
+    /**
+     * Check whether a response is failed and if so, throw a FailedRequestException
+     *
+     * @param Response $response
+     * @return void
+     * @throws FailedRequestException
+     */
+    public function throwExceptionOnFailedRequest(Response $response): void
+    {
+        $errors = $response->getMeta('errors');
+
+        if ($errors !== null && is_array($errors)) {
+            $partialData = [];
+            if (!empty($response->getItem()->getContent())) {
+                $partialData = $response->getItem()->getContent();
+            }
+            throw new FailedGraphQLException(sprintf('GraphQL query failed: %s', $errors[0]['message']), $errors, $partialData);
+        }
     }
 
     /**
@@ -85,41 +129,6 @@ class GraphQL extends HttpAbstract
     }
 
     /**
-     * Is the response successful, detect GraphQL errors
-     *
-     * @param ResponseInterface $response
-     * @return bool
-     * @throws \Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface
-     * @throws \Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface
-     * @throws \Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface
-     * @throws \Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface
-     * @throws \Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface
-     */
-    public function isSuccessful(HttpResponse $response): bool
-    {
-        if ($response->getStatusCode() == 200) {
-            $data = $response->toArray();
-
-            if (isset($data['errors']) && is_array($data['errors'])) {
-                $response->setSuccess(false);
-                $response->setErrorMessage($data['errors'][0]['message']);
-                if (count($data['errors']) === 1) {
-                    $response->setErrorData($data['errors'][0]);
-                } else {
-                    $response->setErrorData($data['errors']);
-                }
-                return false;
-            }
-
-            $response->setSuccess(true);
-            return true;
-        }
-
-        $response->setSuccess(false);
-        return false;
-    }
-
-    /**
      * Ping a GraphQL API service to check it is online
      *
      * Sends request to baseUri
@@ -131,8 +140,9 @@ class GraphQL extends HttpAbstract
      */
     public function ping(): bool
     {
-        $result = $this->query('{ping}');
-        if ($result->isSuccess() && isset($result->toArray()['data']['ping']) && $result->toArray()['data']['ping'] === 'pong') {
+        $response = $this->query('{ping}');
+        $item = $response->getItem();
+        if ($item['ping'] === 'pong') {
             return true;
         }
         return false;
@@ -147,14 +157,14 @@ class GraphQL extends HttpAbstract
      * @param array $query GraphQL query
      * @param ?array $variables Array of variables to pass to GraphQL (key & value pairs)
      * @param ?string $operationName Operation name to execute (only required if query contains multiple operations)
-     * @return HttpResponse
+     * @return Response
      * @throws \JsonException on invalid query JSON string
      * @throws \Strata\Data\Exception\BaseUriException
      * @throws \Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface
      */
-    public function query(string $query, ?array $variables = [], ?string $operationName = null): HttpResponse
+    public function query(string $query, ?array $variables = [], ?string $operationName = null): Response
     {
-        return $this->request('POST', $this->getBaseUri(), ['body' => $this->buildQuery($query, $variables, $operationName)]);
+        return $this->request('POST', '', ['body' => $this->buildQuery($query, $variables, $operationName)]);
     }
 
     /**
@@ -180,9 +190,8 @@ class GraphQL extends HttpAbstract
             $data['variables'] = $variables;
         }
 
-        $query = json_encode($data, self::JSON_ENCODE_FLAGS);
+        $query = json_encode($data, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT);
         $this->setLastQuery($query);
         return $query;
     }
-
 }

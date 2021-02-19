@@ -63,5 +63,4 @@ class ContentHasher
             throw new InvalidArgumentException(sprintf('$content argument must be a string or array, \'%s\' passed', gettype($content)));
         }
     }
-
 }

@@ -4,9 +4,10 @@ declare(strict_types=1);
 namespace Strata\Data\Model;
 
 use Strata\Data\Decode\DecoderInterface;
+use Strata\Data\Populate\PopulateInterface;
 use Strata\Data\Traits\IterableTrait;
 use Strata\Data\Pagination\Pagination;
-use Strata\Data\Transform\ArrayCollectionStrategy;
+use Strata\Data\Transform\ArrayStrategy;
 use Strata\Data\Transform\TransformStrategyInterface;
 use Symfony\Component\Cache\CacheItem;
 use Symfony\Component\Cache\Exception\InvalidArgumentException;
@@ -16,6 +17,8 @@ use Symfony\Component\Cache\Exception\InvalidArgumentException;
  *
  * Usage:
  * $response = new Response();
+ * $response->setRawData($data);
+ * Populate strategy...
  * $response->add(new Item());
  *
  * // Get one (or first) item
@@ -37,14 +40,16 @@ class Response
 
     const MASTER_RESPONSE = 1;
     const SUB_RESPONSE = 2;
+    const NESTED_PROPERTY_SEPARATOR = '.';
 
     private string $requestId;
     private int $responseType = self::MASTER_RESPONSE;
     private string $uri;
     private array $meta = [];
+    private array $rawContent = [];
     private Pagination $pagination;
-    private array $transformers = [];
-    private TransformStrategyInterface $defaultCollectionStrategy;
+    private array $transformStrategy = [];
+    private array $populateStrategy = [];
 
     /**
      * Constructor
@@ -127,6 +132,84 @@ class Response
         return $this->uri;
     }
 
+    /**
+     * Set raw response content so we can lazy load data when accessed
+     *
+     * @param array $content
+     */
+    public function setRawContent(array $content)
+    {
+        $this->rawContent = $content;
+    }
+
+    public function getRawData(): array
+    {
+        return $this->rawContent;
+    }
+
+    /**
+     * Explode property reference into an array of nested property references
+     *
+     * E.g. 'data.title' returns ['data', 'title']
+     *
+     * @param string $propertyReference
+     * @return array
+     */
+    protected function explodeNestedProperty(string $propertyReference): array
+    {
+        return explode(self::NESTED_PROPERTY_SEPARATOR, $propertyReference);
+    }
+
+    /**
+     * Return nested property from an array, or null if property does not exist
+     *
+     * @param Item $item
+     * @param string $propertyReference Property reference, with nested properties separated by a dot
+     * @return mixed|null
+     */
+    protected function getNestedProperty(array $data, string $propertyReference)
+    {
+        foreach ($this->explodeNestedProperty($propertyReference) as $propertyName) {
+            if (isset($data[$propertyName])) {
+                $data = $data[$propertyName];
+            } else {
+                return null;
+            }
+        }
+        return $data;
+    }
+
+    /**
+     * Return nested property from current item, or null if does not exist
+     *
+     * @param string $propertyReference
+     * @return mixed|null
+     */
+    public function getProperty(string $propertyReference)
+    {
+        $item = $this->current();
+        if (!is_array($item)) {
+            return null;
+        }
+        return $this->getNestedProperty($this->getItem(), $propertyReference);
+    }
+
+    /**
+     * Return nested property from raw data, or null if does not exist
+     *
+     * @param string $propertyReference
+     * @return mixed|null
+     */
+    public function getRawProperty(string $propertyReference)
+    {
+        if (!is_array($this->rawContent)) {
+            return null;
+        }
+        return $this->getNestedProperty($this->rawContent, $propertyReference);
+    }
+
+
+    /* @todo delete
     public function setErrorMessage(string $message): void
     {
         $this->errorMessage = $message;
@@ -151,6 +234,7 @@ class Response
     {
         return $this->errorData;
     }
+    */
 
     public function setMeta(string $key, $value)
     {
@@ -164,6 +248,23 @@ class Response
         }
     }
 
+    /**
+     * Whether meta data exists
+     *
+     * @param string $key
+     * @return bool
+     */
+    public function hasMeta(string $key): bool
+    {
+        return isset($this->meta[$key]);
+    }
+
+    /**
+     * Return meta data, or null if not set
+     *
+     * @param string $key
+     * @return mixed|null
+     */
     public function getMeta(string $key)
     {
         if (isset($this->meta[$key])) {
@@ -172,6 +273,11 @@ class Response
         return null;
     }
 
+    /**
+     * Return all meta data
+     *
+     * @return array
+     */
     public function getAllMeta(): array
     {
         return $this->meta;
@@ -223,36 +329,47 @@ class Response
         return $this->pagination;
     }
 
-    public function addTransformer(TransformStrategyInterface $transformStrategy)
-    {
-        $this->transformers[] = $transformStrategy;
-    }
-
     /**
-     * @return TransformStrategyInterface[]
-     */
-    public function getTransformers(): array
-    {
-        return $this->transformers;
-    }
-
-    public function getCollectionStrategy(): TransformStrategyInterface
-    {
-        if (!($this->defaultCollectionStrategy instanceof TransformStrategyInterface)) {
-            $this->defaultCollectionStrategy = new ArrayCollectionStrategy();
-        }
-        return $this->defaultCollectionStrategy;
-    }
-
-    /**
-     * Load a collection of items
+     * Add a populate strategy to populate data for this response
      *
-     * @param string $property
+     * @param PopulateInterface $populate
      */
-    public function loadCollection(string $property): void
+    public function populateStrategy(PopulateInterface $populate)
     {
-        $strategy = $this->getCollectionStrategy();
-        $strategy->transform($this, ['property' => $property]);
+        $this->populateStrategy[] = $populate;
     }
+
+    /**
+     * Populate the response object from raw data
+     */
+    public function populate()
+    {
+        /** @var PopulateInterface $strategy */
+        foreach ($this->populateStrategy as $strategy) {
+            $strategy->populate($this);
+        }
+    }
+
+    /**
+     * Add data transformation strategy
+     *
+     * @param TransformStrategyInterface $transformStrategy
+     */
+    public function transformStrategy(TransformStrategyInterface $transformStrategy)
+    {
+        $this->transformStrategy[] = $transformStrategy;
+    }
+
+    /**
+     * Run data transformers
+     */
+    public function transform()
+    {
+        /** @var TransformStrategyInterface $transformer */
+        foreach ($this->transformStrategy as $strategy) {
+            $strategy->transform($this);
+        }
+    }
+
 
 }

@@ -3,10 +3,12 @@ declare(strict_types=1);
 
 namespace Strata\Data\Http;
 
+use Strata\Data\Decode\DecoderInterface;
 use Strata\Data\Decode\DecoderStrategy;
-use Strata\Data\Decode\JsonDecoder;
+use Strata\Data\Decode\Json;
+use Strata\Data\Exception\FailedRequestException;
 use Strata\Data\Helper\ContentHasher;
-use Strata\Data\Response\HttpResponse;
+use Strata\Data\Model\Response;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
@@ -41,38 +43,47 @@ class RestApi extends HttpAbstract
         if (!empty($options['query'])) {
             $uri .= '?' . urlencode($options['query']);
         }
-        return return ContentHasher::hash($method . ' ' . $uri);
+        return ContentHasher::hash($method . ' ' . $uri);
     }
 
     /**
-     * Setup decoder to use on body content of responses
+     * Return decoder to decode responses
      *
-     * @return ?DecoderStrategy Decoder or null if body is not to be processed
+     * @return ?DecoderStrategy Decoder
      */
-    public function setupDecoder(): ?DecoderStrategy
+    public function getDefaultDecoder(): ?DecoderInterface
     {
-        return new DecoderStrategy(new JsonDecoder());
+        return new Json();
     }
 
     /**
-     * Is the response successful?
+     * Populate response with data content
      *
-     * @param ResponseInterface $response
-     * @return bool
-     * @throws \Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface
-     * @throws \Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface
-     * @throws \Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface
-     * @throws \Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface
-     * @throws \Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface
+     * By default, populate array data into content
+     * Expand on this in child classes
+     *
+     * @param Response $response
+     * @param ResponseInterface $httpResponse
+     * @return void
      */
-    public function isSuccessful(HttpResponse $response): bool
+    public function populateResponse(Response $response, ResponseInterface $httpResponse): void
     {
-        if ($response->getStatusCode() == 200) {
-            return true;
-        } else {
-            return false;
-        }
+        $data = $this->decode($httpResponse->getContent());
+        //$item = $response->add($response->getRequestId(), $data);
+
+        $response->setRawContent($data);
     }
 
-
+    /**
+     * Check whether a response is failed and if so, throw a FailedRequestException
+     *
+     * Nothing to do since RestAPI responses fail on non-200 status code which is dealt with by HTTPClient
+     *
+     * @param $response
+     * @return void
+     * @throws FailedRequestException
+     */
+    public function throwExceptionOnFailedRequest($response): void
+    {
+    }
 }
