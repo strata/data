@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Strata\Data\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Strata\Data\Decoder\FrontMatter;
+use Strata\Data\Decode\FrontMatter;
 
 final class YamlFrontMatterTest extends TestCase
 {
@@ -30,16 +30,17 @@ EOD;
 
     public function testFrontMatter()
     {
-        $data = FrontMatter::decode($this->text1);
+        $decoder = new FrontMatter();
+        $data = $decoder->decode($this->text1);
         $this->assertNull($data->title);
         $this->assertEquals($this->text1, $data->body());
 
-        $data = FrontMatter::decode($this->text2);
+        $data = $decoder->decode($this->text2);
         $this->assertEquals('Valid example', $data->title);
         $this->assertEquals('test2', $data->layout);
         $this->assertEquals(PHP_EOL . $this->text1, $data->body());
 
-        $data =FrontMatter::decode($this->text3);
+        $data = $decoder->decode($this->text3);
         $this->assertNull($data->title);
         $this->assertEquals($this->text3, $data->body());
     }

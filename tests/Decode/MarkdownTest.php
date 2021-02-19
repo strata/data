@@ -4,8 +4,8 @@ declare(strict_types=1);
 namespace Strata\Data\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Strata\Data\Decoder\Markdown;
-use Strata\Data\Decoder\MarkdownExtra;
+use Strata\Data\Decode\Markdown;
+use Strata\Data\Decode\MarkdownExtra;
 
 final class MarkdownTest extends TestCase
 {
@@ -17,16 +17,18 @@ EOD;
 
     public function testMarkdown()
     {
-        $html = Markdown::decode($this->markdown);
+        $decoder = new Markdown();
+        $html = $decoder->decode($this->markdown);
         $this->assertStringContainsString('<h2>Hello', $html);
 
-        $html = Markdown::decode('test string * string');
+        $html = $decoder->decode('test string * string');
         $this->assertEquals('<p>test string * string</p>', $html);
     }
 
     public function testMarkdownExtra()
     {
-        $html = MarkdownExtra::decode($this->markdown);
+        $decoder = new MarkdownExtra();
+        $html = $decoder->decode($this->markdown);
         $this->assertStringContainsString('<h2 id="header1">Hello', $html);
     }
 

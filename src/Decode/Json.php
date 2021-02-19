@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Strata\Data\Decoder;
+namespace Strata\Data\Decode;
 
 use Strata\Data\Exception\DecoderException;
 
@@ -21,7 +21,7 @@ class Json implements DecoderInterface
      * @return array
      * @throws DecoderException
      */
-    public static function decode(string $data): array
+    public function decode(string $data): array
     {
         try {
             $data = json_decode($data, true, 512, JSON_THROW_ON_ERROR);
@@ -30,5 +30,4 @@ class Json implements DecoderInterface
         }
         return $data;
     }
-
 }

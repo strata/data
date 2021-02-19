@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Strata\Data\Decoder;
+namespace Strata\Data\Decode;
 
 use Parsedown;
 
@@ -20,10 +20,9 @@ class Markdown implements DecoderInterface
      * @param string $data
      * @return string
      */
-    public static function decode(string $data): string
+    public function decode(string $data): string
     {
         $parsedown = new Parsedown();
         return $parsedown->text($data);
     }
-
 }

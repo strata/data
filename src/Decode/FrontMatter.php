@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Strata\Data\Decoder;
+namespace Strata\Data\Decode;
 
 use Spatie\YamlFrontMatter\Document;
 use Strata\Data\Data\Item;
@@ -35,9 +35,9 @@ class FrontMatter implements DecoderInterface
      * $item->matter('title')
      *
      * @param string $data
-     * @return array Array of front matter or empty array on failure
+     * @return Document Array of front matter or empty array on failure
      */
-    public static function decode(string $data): Document
+    public function decode(string $data): Document
     {
         return SpatieFrontMatter::parse($data);
     }

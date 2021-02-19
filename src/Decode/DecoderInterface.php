@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Strata\Data\Decoder;
+namespace Strata\Data\Decode;
 
 interface DecoderInterface
 {
@@ -11,5 +11,5 @@ interface DecoderInterface
      * @param string $data Data string to decode
      * @return mixed Decoded data
      */
-    public static function decode(string $data);
+    public function decode(string $data);
 }
