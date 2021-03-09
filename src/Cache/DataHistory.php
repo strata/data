@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Strata\Data\Cache;
 
+use Strata\Data\Exception\CacheException;
 use Strata\Data\Helper\ContentHasher;
 use Psr\Cache\CacheItemPoolInterface;
 
@@ -11,65 +12,50 @@ use Psr\Cache\CacheItemPoolInterface;
  *
  * Helps detect changes in data (must be a string or array)
  *
- * Usage:
- *
- * $history = new DataHistory($cache);
- *
- * // Find out if data has changed
- * $isChanged = $history->isChanged($id, $data);
- * $lastItem = $history->getLastItem($id);
- * $lastUpdated = $lastItem['updated'];
- *
- * // Log current data history
- * $history->log($id, $data);
- * $history->commit();
- *
- * @package Strata\Data\ContentCache
+ * @package Strata\Data\DataCache
  */
 class DataHistory
 {
-    const CACHE_KEY_PREFIX = 'DataHistory.';
-    const DAY = 86400;
-    const WEEK = 604800;
-    const MONTH = 2678400;
-    const YEAR = 31536000;
-    const DATE_FORMAT_STRING = 'c';
-    const DATE_FORMAT_KEY = 'YmdHis';
+    const CACHE_KEY_PREFIX = 'history_';
 
     private CacheItemPoolInterface $cache;
-    private int $cacheLifetime = self::YEAR;
+    private int $cacheLifetime;
     private int $maxHistoryDays = 30;
+    private array $historyItems = [];
 
     /**
      * Constructor
      *
      * @param CacheItemPoolInterface $cache PSR-6 cache
+     * @param int $lifetime Default cache lifetime for data cache, defaults to 2 months if not set
      */
-    public function __construct(CacheItemPoolInterface $cache)
+    public function __construct(CacheItemPoolInterface $cache, int $lifetime = 2 * CacheLifetime::MONTH)
     {
-        $this->setCache($cache);
+        $this->cache = $cache;
+        $this->cacheLifetime = $lifetime;
     }
 
     /**
-     * Set the cache object
+     * Return cache key with prefix
      *
-     * @param CacheItemPoolInterface $cache PSR-6 cache
+     * @param $key
+     * @return string
      */
-    public function setCache(CacheItemPoolInterface $cache): void
+    public function getKey($key): string
     {
-        $this->cache = $cache;
+        return self::CACHE_KEY_PREFIX . (string) $key;
     }
 
     /**
      * Set the cache lifetime, default is one year
      *
-     * You can use class constants DataHistory::DAY, WEEK, MONTH, YEAR
+     * You can use class constants CacheLifetime::MINUTE, HOUR, DAY, WEEK, MONTH, YEAR
      *
-     * @param int $seconds
+     * @param int $lifetime
      */
-    public function setCacheLifetime(int $seconds)
+    public function setCacheLifetime(int $lifetime)
     {
-        $this->cacheLifetime = $seconds;
+        $this->cacheLifetime = $lifetime;
     }
 
     /**
@@ -85,13 +71,13 @@ class DataHistory
     /**
      * Return the history log for this data item
      *
-     * @param string $identifier
+     * @param $key
      * @return array
      * @throws \Exception
      */
-    public function getHistory(string $identifier): array
+    public function getAll($key): array
     {
-        $item = $this->cache->getItem(self::CACHE_KEY_PREFIX . $identifier);
+        $item = $this->cache->getItem($this->getKey($key));
 
         if ($item->isHit()) {
             $history = $item->get();
@@ -105,30 +91,74 @@ class DataHistory
     /**
      * Return last history log item
      *
-     * @param string $identifier
-     * @return array|null Return last history item or null on failure
-     * @throws \Exception
+     * @param $key
+     * @param string $field Either 'updated', 'content_hash', 'metadata' or null to return array of all history data
+     * @return mixed|array|null Return last history item or null on failure
+     * @throws CacheException
      */
-    public function getLastItem(string $identifier): ?array
+    public function getLastItem($key, string $field = null)
     {
-        $history = $this->getHistory($identifier);
-        return array_pop($history);
+        $history = $this->getAll($key);
+        $item = array_pop($history);
+
+        if ($field === null) {
+            return $item;
+        }
+
+        switch ($field) {
+            case 'updated':
+                return $item['updated'];
+                break;
+            case 'content_hash':
+                return $item['content_hash'];
+                break;
+            case 'metadata':
+                return $item['metadata'];
+                break;
+            default:
+                throw new CacheException(sprintf('Cannot return history field "%s" since not set', $field));
+        }
     }
 
     /**
      * Has the data item changed since the last history log item?
      *
-     * @param string $identifier
+     * @param $key
      * @param string|array $data
      * @return bool
      */
-    public function isChanged(string $identifier, $data): bool
+    public function isChanged($key, $data): bool
     {
-        $lastItem = $this->getLastItem($identifier);
+        $lastItem = $this->getLastItem($key);
         if ($lastItem === null) {
             return true;
         }
-        return ContentHasher::hasContentChanged($lastItem['contentHash'], $data);
+        return ContentHasher::hasContentChanged($lastItem['content_hash'], $data);
+    }
+
+    /**
+     * Is the data identical to the last history item log?
+     *
+     * @param $key
+     * @param $data
+     * @return bool
+     */
+    public function isIdentical($key, $data): bool
+    {
+        return !$this->isChanged($key, $data);
+    }
+
+    /**
+     * Whether this key is new and has no history
+     *
+     * @param $key
+     * @return bool
+     * @throws \Exception
+     */
+    public function isNew($key): bool
+    {
+        $history = $history = $this->getAll($key);
+        return empty($history);
     }
 
     /**
@@ -139,40 +169,24 @@ class DataHistory
      *
      * Deletes old entries in the content history log older than DataHistory::maxHistoryDays
      *
-     * @param string $identifier
+     * @param $key
      * @param string|array $data
      * @param array $metadata Additional metadata to save in history log
      * @return bool Whether log request has been successfully added to the queue
      */
-    public function log(string $identifier, $data, array $metadata = []): bool
+    public function add($key, $data, array $metadata = []): bool
     {
         $now = new \DateTimeImmutable();
-        $item = $this->cache->getItem(self::CACHE_KEY_PREFIX . $identifier);
-
-        if ($item->isHit()) {
-            $history = $item->get();
-
-            // Purge old items
-            $oldest = $now->sub(new \DateInterval('P' . $this->maxHistoryDays . 'D'));
-            $oldest = $oldest->format(self::DATE_FORMAT_KEY);
-            foreach (array_keys($history) as $date) {
-                if ($date < $oldest) {
-                    unset($history[$date]);
-                }
-            }
-        } else {
-            $history = [];
-        }
-
-        $history[$now->format(self::DATE_FORMAT_KEY)] = [
-            'updated'       => $now->format(self::DATE_FORMAT_STRING),
-            'contentHash'   => ContentHasher::hash($data),
-            'metaData'      => $metadata,
+        $this->historyItems[] = [
+            'key'   => (string) $key,
+            'data'  => [
+                // ISO 8601 date
+                'updated'       => $now->format('c'),
+                'content_hash'  => ContentHasher::hash($data),
+                'metadata'      => $metadata,
+            ]
         ];
-
-        $item->set($history);
-        $item->expiresAfter($this->cacheLifetime);
-        return $this->cache->saveDeferred($item);
+        return true;
     }
 
     /**
@@ -182,6 +196,72 @@ class DataHistory
      */
     public function commit(): bool
     {
+        // Group by key
+        $keys = [];
+        foreach ($this->historyItems as $data) {
+            $key = $data['key'];
+            $data = $data['data'];
+
+            if (isset($keys[$key])) {
+                $history = $keys[$key];
+            } else {
+                $history = [];
+            }
+
+            $history[] = $data;
+            $keys[$key] = $history;
+        }
+
+        // Save to cache
+        foreach ($keys as $key => $newHistory) {
+            $item = $this->cache->getItem($this->getKey($key));
+
+            if ($item->isHit()) {
+                $history = $item->get();
+                $history = $this->purge($history);
+            } else {
+                $history = [];
+            }
+
+            $history = array_merge($history, $newHistory);
+            $item->set($history);
+            $item->expiresAfter($this->cacheLifetime);
+            $this->cache->saveDeferred($item);
+        }
+
+        $this->historyItems = [];
         return $this->cache->commit();
     }
+
+    /**
+     * Purge old items from a data history array
+     *
+     * @param array $history
+     * @param float $probability Set a value between 0 and 1.0 to run based on chance (0.3 = run on 40% of calls)
+     * @param ?\DateTime $now Inject current date, useful for testing
+     * @return array
+     * @throws \Exception
+     */
+    public function purge(array $history, float $probability = 0.4, ?\DateTime $now = null): array
+    {
+        $number = mt_rand(0, 10);
+        if ($number > $probability * 10) {
+            return $history;
+        }
+
+        if ($now === null) {
+            $now = new \DateTimeImmutable();
+        }
+        $oldest = $now->sub(new \DateInterval('P' . $this->maxHistoryDays . 'D'));
+
+        foreach ($history as $key => $item) {
+            $date = new \DateTimeImmutable($item['updated']);
+            if ($date < $oldest) {
+                unset($history[$key]);
+            }
+        }
+
+        return $history;
+    }
+
 }
