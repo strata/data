@@ -3,17 +3,16 @@ declare(strict_types=1);
 
 namespace Strata\Data\Event;
 
-class FailureEvent extends ResponseEventAbstract
+class FailureEvent extends RequestEventAbstract
 {
-    const NAME = 'strata.data.failure';
+    const NAME = 'data.request.failure';
 
-    private ?\Exception $exception;
+    private \Exception $exception;
 
-    public function __construct(Response $response, ?\Exception $exception, array $context = [])
+    public function __construct(\Exception $exception, string $requestId, string $uri, array $context = [])
     {
         $this->exception = $exception;
-
-        parent::__construct($response, $context);
+        parent::__construct($requestId, $uri, $context);
     }
 
     /**
@@ -25,5 +24,4 @@ class FailureEvent extends ResponseEventAbstract
     {
         return $this->exception;
     }
-
 }

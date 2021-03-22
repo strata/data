@@ -39,6 +39,16 @@ class GraphQL extends HttpAbstract
     }
 
     /**
+     * Return default decoder to use to decode responses
+     *
+     * @return DecoderInterface
+     */
+    public function getDefaultDecoder(): DecoderInterface
+    {
+        return new Json();
+    }
+
+    /**
      * Return a unique identifier safe to use for caching based on the request
      *
      * Method + URI + GET params + GraphQL query
@@ -57,49 +67,33 @@ class GraphQL extends HttpAbstract
     }
 
     /**
-     * Return decoder to decode responses
-     *
-     * @return ?DecoderStrategy Decoder
-     */
-    public function getDefaultDecoder(): ?DecoderInterface
-    {
-        return new Json();
-    }
-
-    /**
-     * Populate response with data content
-     *
-     * Populates contents of 'data' response property, or an empty array if this is missing
+     * Set raw data to response
      *
      * @param Response $response
      * @param ResponseInterface $httpResponse
      * @return void
      */
-    public function populateResponse(Response $response, ResponseInterface $httpResponse): void
+    public function setRawData(Response $response, ResponseInterface $httpResponse): void
     {
-        $httpResponse = $this->decode($httpResponse->getContent());
-
-        // Add one item since cannot parse GraphQL response
-        $data = [];
-        if (isset($httpResponse['data']) && is_array($httpResponse['data'])) {
-            $data = $httpResponse['data'];
+        $data = $this->decode($httpResponse->getContent());
+        if (isset($data['data']) && is_array($data['data'])) {
+            $response->setRawContent($data['data']);
         }
-        $item = $response->add($response->getRequestId(), $data);
 
         // Add any GraphQL errors
-        if (isset($httpResponse['errors']) && is_array($httpResponse['errors'])) {
-            $response->setMeta('errors', $httpResponse['errors']);
+        if (isset($data['errors']) && is_array($data['errors'])) {
+            $response->setMeta('errors', $data['errors']);
         }
     }
 
     /**
      * Check whether a response is failed and if so, throw a FailedRequestException
      *
-     * @param Response $response
+     * @param ResponseInterface $response
      * @return void
-     * @throws FailedRequestException
+     * @throws FailedGraphQLException
      */
-    public function throwExceptionOnFailedRequest(Response $response): void
+    public function throwExceptionOnFailedRequest(ResponseInterface $response): void
     {
         $errors = $response->getMeta('errors');
 
@@ -141,7 +135,7 @@ class GraphQL extends HttpAbstract
     public function ping(): bool
     {
         $response = $this->query('{ping}');
-        $item = $response->getItem();
+        $item = Json::decode($response);
         if ($item['ping'] === 'pong') {
             return true;
         }

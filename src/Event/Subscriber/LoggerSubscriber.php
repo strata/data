@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Strata\Data\Subscriber;
+namespace Strata\Data\Event\Subscriber;
 
 use Psr\Log\LoggerInterface;
 use Strata\Data\Event\FailureEvent;
@@ -31,21 +31,20 @@ class LoggerSubscriber implements EventSubscriberInterface
 
     public function logStart(StartEvent $event)
     {
-        $this->logger->debug(self::PREFIX . sprintf('Starting request to: %s', $event->getResponse()->getUri()), $event->getContext());
+        $this->logger->debug(self::PREFIX . sprintf('Starting request to: %s', $event->getUri()), $event->getContext());
     }
 
     public function logSuccess(SuccessEvent $event)
     {
-        $this->logger->info(self::PREFIX . sprintf('Successful request to: %s', $event->getResponse()->getUri()), $event->getContext());
+        $this->logger->info(self::PREFIX . sprintf('Successful request to: %s', $event->getUri()), $event->getContext());
     }
 
     public function logFailure(FailureEvent $event)
     {
         if ($event->getException() instanceof \Exception) {
-            $this->logger->info(self::PREFIX . sprintf('Failed request to: %s, Error: %s', $event->getResponse()->getUri(), $event->getException()->getMessage()), $event->getContext());
+            $this->logger->info(self::PREFIX . sprintf('Failed request to: %s, Error: %s', $event->getUri(), $event->getException()->getMessage()), $event->getContext());
         } else {
-            $this->logger->info(self::PREFIX . sprintf('Failed request to: %s', $event->getResponse()->getUri()), $event->getContext());
+            $this->logger->info(self::PREFIX . sprintf('Failed request to: %s', $event->getUri()), $event->getContext());
         }
     }
-
 }

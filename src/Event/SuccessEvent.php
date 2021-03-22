@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Strata\Data\Event;
 
-class SuccessEvent extends ResponseEventAbstract
+class SuccessEvent extends RequestEventAbstract
 {
-    const NAME = 'strata.data.success';
+    const NAME = 'data.request.success';
 }

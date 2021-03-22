@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Strata\Data\Event;
 
-class StartEvent extends ResponseEventAbstract
+class StartEvent extends RequestEventAbstract
 {
-    const NAME = 'strata.data.start';
+    const NAME = 'data.request.start';
 }

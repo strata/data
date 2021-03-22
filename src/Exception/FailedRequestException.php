@@ -13,7 +13,7 @@ class FailedRequestException extends \Exception
      * FailedRequestException constructor.
      *
      * @param $message
-     * @param array $errorData Error data returned by GraphQL
+     * @param array $errorData Error data returned by response
      * @param array $partialData Any partially returned data
      * @param \Exception|null $previous Previous exception
      */

@@ -16,7 +16,7 @@ You can also store additional metadata in the history log which can be retrieved
 The Data History is stored in a PSR-6 compatible cache. Rather than store raw data, the system stores a unique hash of 
 the raw data/content. This is used to efficiently check whether content has changed.
 
-## Initialising and options
+## Setup
 
 ```php 
 use Strata\Data\Cache\DataHistory;

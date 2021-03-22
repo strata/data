@@ -7,4 +7,6 @@ Strata uses Symfony [HttpClient](https://symfony.com/doc/current/components/http
 ## Documentation 
 
 * [Making API requests](making-requests.md)
+* [Event system](events.md)
+* [Validating data](validating.md)
 * [Testing API requests](testing-api-requests.md)

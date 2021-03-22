@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Strata\Data\Response;
+namespace Strata\Data\Http\Response;
 
 use Symfony\Component\HttpClient\Response\MockResponse;
 

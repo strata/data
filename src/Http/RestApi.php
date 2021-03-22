@@ -4,11 +4,8 @@ declare(strict_types=1);
 namespace Strata\Data\Http;
 
 use Strata\Data\Decode\DecoderInterface;
-use Strata\Data\Decode\DecoderStrategy;
 use Strata\Data\Decode\Json;
-use Strata\Data\Exception\FailedRequestException;
 use Strata\Data\Helper\ContentHasher;
-use Strata\Data\Model\Response;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
@@ -29,61 +26,43 @@ class RestApi extends HttpAbstract
     }
 
     /**
-     * Return a unique identifier safe to use for caching based on the request
+     * Return default decoder to use to decode responses
      *
-     * Method + URI + GET params
-     *
-     * @param $method
-     * @param $uri
-     * @param array $options
-     * @return string Hash of the identifier
+     * @return DecoderInterface
      */
-    public function getRequestIdentifier($method, $uri, array $options = []): string
-    {
-        if (!empty($options['query'])) {
-            $uri .= '?' . urlencode($options['query']);
-        }
-        return ContentHasher::hash($method . ' ' . $uri);
-    }
-
-    /**
-     * Return decoder to decode responses
-     *
-     * @return ?DecoderStrategy Decoder
-     */
-    public function getDefaultDecoder(): ?DecoderInterface
+    public function getDefaultDecoder(): DecoderInterface
     {
         return new Json();
     }
 
     /**
-     * Populate response with data content
+     * Return a unique identifier safe to use for caching based on the request
      *
-     * By default, populate array data into content
-     * Expand on this in child classes
-     *
-     * @param Response $response
-     * @param ResponseInterface $httpResponse
-     * @return void
+     * @param $method
+     * @param $uri
+     * @param array $context
+     * @return string Unique identifier for this request
      */
-    public function populateResponse(Response $response, ResponseInterface $httpResponse): void
+    public function getRequestIdentifier(string $uri, array $context = []): string
     {
-        $data = $this->decode($httpResponse->getContent());
-        //$item = $response->add($response->getRequestId(), $data);
-
-        $response->setRawContent($data);
+        if (!empty($options['query'])) {
+            $uri .= '?' . urlencode($options['query']);
+        }
+        return ContentHasher::hash($uri);
     }
 
     /**
-     * Check whether a response is failed and if so, throw a FailedRequestException
+     * Check whether a response is failed and if so, throw an exception
      *
-     * Nothing to do since RestAPI responses fail on non-200 status code which is dealt with by HTTPClient
-     *
-     * @param $response
-     * @return void
-     * @throws FailedRequestException
+     * @param ResponseInterface $response
+     * @throws \Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface
+     * @throws \Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface
+     * @throws \Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface
+     * @throws \Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface
      */
-    public function throwExceptionOnFailedRequest($response): void
+    public function throwExceptionOnFailedRequest(ResponseInterface $response): void
     {
+        // Will throw exception on error since checks for 200 status
+        $response->getHeaders();
     }
 }

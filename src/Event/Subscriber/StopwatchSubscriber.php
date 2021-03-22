@@ -1,19 +1,16 @@
 <?php
 declare(strict_types=1);
 
-namespace Strata\Data\Subscriber;
+namespace Strata\Data\Event\Subscriber;
 
-use Psr\Log\LoggerInterface;
 use Strata\Data\Event\FailureEvent;
 use Strata\Data\Event\StartEvent;
 use Strata\Data\Event\SuccessEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
 
-class LoggerSubscriber implements EventSubscriberInterface
+class StopwatchSubscriber implements EventSubscriberInterface
 {
-    const PREFIX = '(Strata Data) ';
-
     private Stopwatch $stopwatch;
 
     public function __construct(Stopwatch $stopwatch)
@@ -39,5 +36,4 @@ class LoggerSubscriber implements EventSubscriberInterface
     {
         $this->stopwatch->stop($event->getResponse()->getRequestId());
     }
-
 }

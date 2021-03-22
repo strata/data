@@ -3,127 +3,69 @@ declare(strict_types=1);
 
 namespace Strata\Data\Http;
 
-use Strata\Data\DataEvents;
-use Strata\Data\Debug;
+use Psr\Cache\CacheItemInterface;
+use Strata\Data\DataAbstract;
 use Strata\Data\Decode\DecoderInterface;
+use Strata\Data\Event\DecodeEvent;
 use Strata\Data\Event\FailureEvent;
-use Strata\Data\Event\PrepareEvent;
 use Strata\Data\Event\StartEvent;
 use Strata\Data\Event\SuccessEvent;
-use Strata\Data\Model\Response;
-use Strata\Data\Response\SuppressErrorResponse;
-use Strata\Data\Version;
-use Strata\Data\Traits\BaseUriTrait;
-use Strata\Data\Traits\CheckPermissionsTrait;
-use Symfony\Component\EventDispatcher\EventDispatcher;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\Stopwatch\StopwatchEvent;
-use Symfony\Contracts\EventDispatcher\Event;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
-use Symfony\Contracts\HttpClient\ResponseInterface;
-
-use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
-use Symfony\Component\HttpClient\Exception\ClientException;
+use Strata\Data\Exception\BaseUriException;
+use Strata\Data\Exception\CacheException;
 use Strata\Data\Exception\FailedRequestException;
 use Strata\Data\Exception\NotFoundException;
-
+use Strata\Data\Http\Response\CacheableResponse;
+use Strata\Data\Http\Response\SuppressErrorResponse;
+use Strata\Data\Version;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Contracts\HttpClient\Exception\HttpExceptionInterface;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Symfony\Contracts\HttpClient\ResponseInterface;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpClient\RetryableHttpClient;
-use Symfony\Component\HttpClient\CachingHttpClient;
 
 /**
  * Abstract class to interact with an API over HTTP
  * @package Strata\Data
  */
-abstract class HttpAbstract
+abstract class HttpAbstract extends DataAbstract
 {
-    use CheckPermissionsTrait, BaseUriTrait;
-
-    private array $defaultOptions = [
+    protected array $defaultOptions = [
         'headers' => [
             'User-Agent' => Version::USER_AGENT
         ]
     ];
 
-    private ?HttpClientInterface $client = null;
-    private EventDispatcherInterface $eventDispatcher;
-    private bool $suppressErrors = false;
-    private int $totalHttpRequests = 0;
+    protected array $cacheableMethods = ['GET', 'HEAD'];
+
+    protected ?HttpClientInterface $client = null;
+    protected int $totalHttpRequests = 0;
+    protected bool $retryFailedRequests = false;
+    protected bool $lastRetryFailedRequests = false;
 
     /**
      * Constructor
      *
      * @param ?string $baseUri Base URI to run queries against
+     * @param ?EventDispatcher $eventDispatcher
      */
-    public function __construct(?string $baseUri = null)
+    public function __construct(?string $baseUri = null, ?EventDispatcher $eventDispatcher = null)
     {
         if ($baseUri !== null) {
             $this->setBaseUri($baseUri);
         }
-
-        $this->setEventDispatcher(new EventDispatcher());
-    }
-
-    /**
-     * Set the event dispatcher
-     *
-     * @param EventDispatcherInterface $eventDispatcher
-     */
-    public function setEventDispatcher(EventDispatcherInterface $eventDispatcher)
-    {
-        $this->eventDispatcher = $eventDispatcher;
-    }
-
-    /**
-     * Return the event dispatcher
-     *
-     * @return EventDispatcherInterface
-     */
-    public function getEventDispatcher(): EventDispatcherInterface
-    {
-        return $this->eventDispatcher;
-    }
-
-    /**
-     * Adds an event listener that listens on the specified events
-     *
-     * @param string $eventName Event name
-     * @param callable $listener The listener
-     * @param int      $priority The higher this value, the earlier an event
-     *                           listener will be triggered in the chain (defaults to 0)
-     */
-    public function addListener(string $eventName, callable $listener, int $priority = 0)
-    {
-        return $this->getEventDispatcher()->addListener($eventName, $listener, $priority);
-    }
-
-    /**
-     * Adds an event subscriber
-     *
-     * @param EventSubscriberInterface $subscriber
-     * @return mixed
-     */
-    public function addSubscriber(EventSubscriberInterface $subscriber)
-    {
-        return $this->getEventDispatcher()->addSubscriber($subscriber);
-    }
-
-    /**
-     * Dispatches an event to all registered listeners
-     *
-     * @param Event $event The event to pass to the event handlers/listeners
-     * @param string $eventName The name of the event to dispatch
-     * @return Event The passed $event MUST be returned
-     */
-    public function dispatchEvent(Event $event, string $eventName): Event
-    {
-        return $this->getEventDispatcher()->dispatch($event, $eventName);
+        if ($eventDispatcher !== null) {
+            $this->setEventDispatcher($eventDispatcher);
+        } else {
+            $this->setEventDispatcher(new EventDispatcher());
+        }
     }
 
     /**
      * Setup HTTP client
      *
-     * This is the responsibility of child classes to setup a HTTP Client
+     * It is the responsibility of child classes to setup a HTTP Client
      *
      * @see https://symfony.com/doc/current/reference/configuration/framework.html#reference-http-client
      * @return HttpClientInterface
@@ -131,69 +73,89 @@ abstract class HttpAbstract
     abstract public function setupHttpClient(): HttpClientInterface;
 
     /**
-     * Return a unique identifier safe to use for caching based on the request
+     * Set HTTP methods that can be automatically cached
      *
-     * E.g. Hash of Method + URI + GET params for Rest API requests
-     * Use ContentHasher::hash($string) to return a hashed identifier
-     *
-     * @param $method
-     * @param $uri
-     * @param array $options
-     * @return string
+     * @param array $methods
+     * @throws CacheException
      */
-    abstract public function getRequestIdentifier($method, $uri, array $options = []): string;
-
-    /**
-     * Return decoder to decode responses, override this in child classes
-     *
-     * @return ?DecoderInterface Decoder or null if body is not to be processed
-     */
-    public function getDefaultDecoder(): ?DecoderInterface
+    public function setCacheableMethods(array $methods)
     {
-        return null;
+        $allowed = ['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'CONNECT', 'OPTIONS', 'PATCH', 'PURGE', 'TRACE'];
+        $diff = array_diff($methods, $allowed);
+        $valid = (count($diff) === 0);
+        if (!$valid) {
+            throw new CacheException(sprintf('Invalid HTTP method passed: %s', implode(', ', $diff)));
+        }
+
+        $this->cacheableMethods = $methods;
     }
 
     /**
-     * Decode string response into a useful format
+     * Is this request cacheable?
      *
-     * @param string $content
-     * @param DecoderInterface|null $decoder
-     * @return mixed|string
+     * Defined as cache enabled and HTTP method is cacheable
+     *
+     * @param string $method
+     * @return bool
      */
-    public function decode(string $content, ?DecoderInterface $decoder = null)
+    public function isCacheableRequest(string $method): bool
     {
-        if ($decoder === null) {
-            $decoder = $this->getDefaultDecoder();
+        if (!$this->isCacheEnabled()) {
+            return false;
         }
+        return in_array($method, $this->getCacheableMethods());
+    }
+
+    /**
+     * return cacheable HTTP methods
+     *
+     * @return array|string[]
+     */
+    public function getCacheableMethods(): array
+    {
+        return $this->cacheableMethods;
+    }
+
+    /**
+     * Decode response
+     *
+     * @param ResponseInterface $response
+     * @param DecoderInterface|null $decoder Optional decoder, if not set uses getDefaultDecoder()
+     * @return mixed
+     */
+    public function decode($response, ?DecoderInterface $decoder = null)
+    {
+        if (!($response instanceof ResponseInterface)) {
+            return $response;
+        }
+
         if ($decoder instanceof DecoderInterface) {
-            return $decoder->decode($content);
+            $data = $decoder->decode($response);
+        } else {
+            $data = $this->getDefaultDecoder()->decode($response);
         }
-        return $content;
+
+        $requestId = $response->getInfo('user_data');
+        $this->dispatchEvent(new DecodeEvent($data, $requestId, $response->getInfo('url')), DecodeEvent::NAME);
+
+        return $data;
     }
 
     /**
-     * Populate response with data content
+     * Check whether a response is failed and if so, throw a FailedRequestException exception
      *
-     * @param Response $response
-     * @param ResponseInterface $httpResponse
-     * @return void
-     */
-    abstract public function populateResponse(Response $response, ResponseInterface $httpResponse): void;
-
-    /**
-     * Check whether a response is failed and if so, throw a FailedRequestException
-     *
-     * @param Response $response
-     * @return void
+     * @param ResponseInterface $response
      * @throws FailedRequestException
+     * @return void
      */
-    abstract public function throwExceptionOnFailedRequest(Response $response): void;
+    abstract public function throwExceptionOnFailedRequest(ResponseInterface $response): void;
 
     /**
      * Set HTTP client
-     * @param HttpClient $client
+     *
+     * @param HttpClientInterface $client
      */
-    public function setClient(HttpClientInterface $client)
+    public function setHttpClient(HttpClientInterface $client)
     {
         $this->client = $client;
     }
@@ -208,9 +170,49 @@ abstract class HttpAbstract
         $this->defaultOptions = array_merge($this->defaultOptions, $option);
     }
 
+    /**
+     * Return default HTTP options
+     *
+     * @return array|array[]
+     */
     public function getDefaultOptions(): array
     {
         return $this->defaultOptions;
+    }
+
+    /**
+     * Set whether to retry failed requests up to 3 times with an exponential delay between retries
+     *
+     * @see https://symfony.com/doc/current/http_client.html#retry-failed-requests
+     * @param bool $value
+     * @return $this
+     */
+    public function retryFailedRequests(bool $value = true): DataAbstract
+    {
+        $this->lastRetryFailedRequests = $this->retryFailedRequests;
+        $this->retryFailedRequests = $value;
+        return $this;
+    }
+
+    /**
+     * Reset retry failed requests back to the previous value
+     *
+     * @return $this
+     */
+    public function resetRetryFailedRequests(): DataAbstract
+    {
+        $this->retryFailedRequests = $this->lastRetryFailedRequests;
+        return $this;
+    }
+
+    /**
+     * Whether this request should retry failed requests
+     *
+     * @return bool
+     */
+    public function isRetryFailedRequests(): bool
+    {
+        return $this->retryFailedRequests;
     }
 
     /**
@@ -222,20 +224,26 @@ abstract class HttpAbstract
     public function getHttpClient(): HttpClientInterface
     {
         if ($this->client === null) {
-            $this->setClient($this->setupHttpClient());
+            $this->setHttpClient($this->setupHttpClient());
         }
 
         return $this->client;
     }
 
     /**
-     * Whether to suppress exceptions from being raised for 3xx, 4xx, 5xx, or decoding JSON content errors
+     * Return retryable HTTP client
      *
-     * @param bool $suppress
+     * @see https://symfony.com/doc/current/http_client.html#retry-failed-requests
+     * @return RetryableHttpClient
      */
-    public function suppressErrors(bool $suppress): void
+    public function getRetryableHttpClient(): RetryableHttpClient
     {
-        $this->suppressErrors = $suppress;
+        $client = $this->getHttpClient();
+        if ($client instanceof RetryableHttpClient) {
+            return $client;
+        }
+
+        return new RetryableHttpClient($client);
     }
 
     /**
@@ -253,7 +261,7 @@ abstract class HttpAbstract
      *
      * Default options are only used if not already set, for example if you set a custom User-Agent this will not be
      * overridden.
-     * @see Symfony\Contracts\HttpClient\HttpClientInterface::OPTIONS_DEFAULTS
+     * @see HttpClientInterface::OPTIONS_DEFAULTS
      * @param array $options HTTP options to set defaults on
      * @return array
      */
@@ -281,67 +289,138 @@ abstract class HttpAbstract
     }
 
     /**
-     * Make an HTTP request
+     * Prepare a request, but do not run it. Returns a populated response if found in cache.
      *
-     * Get request
-     * Check status code
-     * Return failed
-     * Decode content
+     * You can check if a response is populated from cache via $response->isHit(). If so, the response contains
+     * full data.
+     *
+     * If cache is not used, or a cache hit is not found, run the live request via HttpAbstract::runRequest($response)
+     *
+     * Or request is automatically run when you access getHeaders(), getContent() or toArray() - however result is then
+     * not saved to cache since skips runRequest method.
+     *
+     * Dispatches the event:
+     * - data.request.start
      *
      * @param $method
-     * @param $uri
+     * @param string $uri
      * @param array $options
-     * @return Response
-     * @throws NotFoundException
-     * @throws FailedRequestException
+     * @return CacheableResponse
+     * @throws BaseUriException
+     * @throws TransportExceptionInterface
      */
-    public function request($method, $uri, array $options = []): Response
+    public function prepareRequest($method, string $uri, array $options = []): CacheableResponse
+    {
+        $options = $this->setDefaultHttpOptions($options);
+        $uri = $this->getUri($uri);
+
+        // Set request ID to user_data field
+        $requestId = $this->getRequestIdentifier($method . ' ' . $uri, $options);
+        $options['user_data'] = $requestId;
+
+        // Check cache
+        if ($this->isCacheableRequest($method)) {
+            $item = $this->getCache()->getItem($requestId);
+            if ($item->isHit()) {
+                $response = $this->cache->getResponseFromItem($item, $method, $uri, $options);
+                $response = new CacheableResponse($response, true);
+                $response->setCacheItem($item);
+                return $response;
+            }
+        }
+
+        // Retry failed requests
+        if ($this->isRetryFailedRequests()) {
+            $httpClient = $this->getRetryableHttpClient();
+        } else {
+            $httpClient = $this->getHttpClient();
+        }
+
+        $response = $httpClient->request($method, $uri, $options);
+        $this->dispatchEvent(new StartEvent($requestId, $uri, ['method' => $method]), StartEvent::NAME);
+
+        // Suppress errors if a sub-request
+        if ($this->isSuppressErrors()) {
+            $response = new SuppressErrorResponse($response);
+        }
+
+        $response = new CacheableResponse($response, false);
+
+        // Set cache item, if cache enabled
+        if ($this->isCacheableRequest($method)) {
+            $response->setCacheItem($item);
+        }
+
+        return $response;
+    }
+
+    /**
+     * Run a request
+     *
+     * Dispatches the events:
+     * - data.request.success
+     * - data.request.failure
+     *
+     * @param CacheableResponse $response
+     * @return CacheableResponse
+     * @throws FailedRequestException
+     * @throws NotFoundException
+     * @throws TransportExceptionInterface
+     */
+    public function runRequest(CacheableResponse $response): CacheableResponse
     {
         $failed = false;
-        $options = $this->setDefaultHttpOptions($options);
-        $requestId = $this->getRequestIdentifier($method, $uri, $options);
-        $response = new Response($requestId, $method . ' ' . $uri);
-        $this->dispatchEvent(new StartEvent($response, $options), StartEvent::NAME);
+        $requestId = $response->getInfo('user_data');
 
         try {
-            $httpResponse = $this->getHttpClient()->request($method, $this->getUri($uri), $options);
             $this->totalHttpRequests++;
 
-            // Add functionality to response via decorators
-            if ($this->suppressErrors) {
-                $httpResponse = new SuppressErrorResponse($httpResponse);
-            }
-
-            //$response->setRawResponse($httpResponse);
-            $response->setMetaFromArray($httpResponse->getHeaders());
-
-            $this->populateResponse($response, $httpResponse);
-
-            if ($this->suppressErrors) {
-                try {
-                    $this->throwExceptionOnFailedRequest($response);
-                } catch (FailedRequestException $e) {
-                    $failed = true;
-                    $this->dispatchEvent(new FailureEvent($response, $e, ['HTTP status' => $httpResponse->getStatusCode()]), FailureEvent::NAME);
-                }
-            } else {
-                $this->throwExceptionOnFailedRequest($response);
-            }
-        } catch (TransportExceptionInterface|ClientException $e) {
+            // Test request is successful and throw an exception if not
+            $this->throwExceptionOnFailedRequest($response);
+        } catch (TransportExceptionInterface $e) {
+            // Low-level exception (e.g. malformed URL)
             $failed = true;
-            $this->dispatchEvent(new FailureEvent($response, $e, ['HTTP status' => $httpResponse->getStatusCode()]), FailureEvent::NAME);
+            $this->dispatchEvent(new FailureEvent($e, $requestId, $response->getInfo('url')), FailureEvent::NAME);
 
-            if (!$this->suppressErrors) {
-                if (substr((string) $httpResponse->getStatusCode(), 0, 1) === '4') {
-                    throw new NotFoundException('Not Found HTTP error', $httpResponse->getStatusCode(), $e);
+            if (!$this->isSuppressErrors()) {
+                throw new FailedRequestException('Failed HTTP request', [], [], $e);
+            }
+        } catch (HttpExceptionInterface|FailedRequestException $e) {
+            // HTTP client exception (e.g. 404)
+            $failed = true;
+            $this->dispatchEvent(new FailureEvent($e, $requestId, $response->getInfo('url'), [
+                'code' => $response->getStatusCode(),
+                'message' => $this->statusMessage($response->getStatusCode()),
+            ]), FailureEvent::NAME);
+
+            if (!$this->isSuppressErrors()) {
+                if (substr((string) $response->getStatusCode(), 0, 1) === '4') {
+                    throw new NotFoundException('Not Found HTTP error', $response->getStatusCode(), $e);
                 }
-                throw new FailedRequestException('Failed HTTP request', $httpResponse->getStatusCode(), $e);
+                throw new FailedRequestException(sprintf('Failed HTTP request, HTTP status code %d', $response->getStatusCode()), [], [], $e);
             }
         }
 
         if (!$failed) {
-            $this->dispatchEvent(new SuccessEvent($response, ['HTTP status' => $httpResponse->getStatusCode()]), SuccessEvent::NAME);
+            $this->dispatchEvent(new SuccessEvent($requestId, $response->getInfo('url'), [
+                'code' => $response->getStatusCode(),
+                'message' => $this->statusMessage($response->getStatusCode()),
+            ]), SuccessEvent::NAME);
         }
+
+        // Store to cache
+        if ($response->isCacheable()) {
+            $item = $this->cache->setResponseToItem($response->getCacheItem(), $response);
+
+            // Save deferred, you need to run $this->cache->commit() to commit to cache
+            $this->cache->saveDeferred($item);
+
+            // Unset cache item on response to free memory
+            $response->unsetCacheItem();
+        }
+
+        // Set cache hit to false, since have run request
+        $response->setHit(false);
 
         return $response;
     }
@@ -352,12 +431,12 @@ abstract class HttpAbstract
      * @param string $uri URI relative to base URI
      * @param array $queryParams Array of query params to send with GET request
      * @param array $options
-     * @return Response
+     * @return CacheableResponse
      * @throws FailedRequestException
      * @throws NotFoundException
      * @throws \Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface
      */
-    public function get(string $uri, array $queryParams = [], array $options = []): Response
+    public function get(string $uri, array $queryParams = [], array $options = []): CacheableResponse
     {
         if (isset($options['query'])) {
             $options['query'] = array_merge($queryParams, $options['query']);
@@ -365,7 +444,16 @@ abstract class HttpAbstract
             $options['query'] = $queryParams;
         }
 
-        return $this->request('GET', $uri, $options);
+        $response = $this->prepareRequest('GET', $uri, $options);
+        if (!$response->isHit()) {
+            $response = $this->runRequest($response);
+        }
+
+        if ($response->isCacheable()) {
+            $this->cache->commit();
+        }
+
+        return $response;
     }
 
     /**
@@ -374,11 +462,11 @@ abstract class HttpAbstract
      * @param string $uri URI relative to base URI
      * @param array $postData Array of data to send with POST request
      * @param array $options
-     * @return Response
+     * @return CacheableResponse
      * @throws FailedRequestException
      * @throws \Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface
      */
-    public function post(string $uri, array $postData = [], array $options = []): Response
+    public function post(string $uri, array $postData = [], array $options = []): CacheableResponse
     {
         if (isset($options['body']) && is_array($options['body'])) {
             $options['body'] = array_merge($postData, $options['body']);
@@ -386,7 +474,16 @@ abstract class HttpAbstract
             $options['body'] = $postData;
         }
 
-        return $this->request('POST', $uri, $options);
+        $response = $this->prepareRequest('POST', $uri, $options);
+        if (!$response->isHit()) {
+            $response = $this->runRequest($response);
+        }
+
+        if ($response->isCacheable()) {
+            $this->cache->commit();
+        }
+
+        return $response;
     }
 
     /**
@@ -394,39 +491,110 @@ abstract class HttpAbstract
      *
      * @param string $uri URI relative to base URI
      * @param array $options
-     * @return Response
+     * @return CacheableResponse
      * @throws FailedRequestException
      * @throws \Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface
      */
-    public function head(string $uri, array $options = []): Response
+    public function head(string $uri, array $options = []): CacheableResponse
     {
-        return $this->request('HEAD', $uri, $options);
+        $response = $this->prepareRequest('HEAD', $uri, $options);
+        if (!$response->isHit()) {
+            $response = $this->runRequest($response);
+        }
+
+        if ($response->isCacheable()) {
+            $this->cache->commit();
+        }
+
+        return $response;
     }
 
     /**
-     * Output summary information to the logger
+     * Test whether a URL exists (returns 200 status)
      *
-     * @todo Test this and add sections
+     * This request is not cached
      *
-     * Typically you should call this method at the end of a set of requests
+     * This is a convenience function where you only need to test if a URL exists, it does not return body content
+     * It retries failed HTTP requests up to 3 times (first retry = 1 second; third retry: 4 seconds)
+     * It will follow redirects, up to a limit of 5 redirects
+     *
+     * @param string $uri URI to test
+     * @param array $options HTTPClient options
+     * @return bool
+     * @throws FailedRequestException
+     * @throws NotFoundException
+     * @throws TransportExceptionInterface
      */
-    public function logSummary()
+    public function exists(string $uri, array $options = []): bool
     {
-        if (!$this->hasLogger()) {
-            return;
+        if (!isset($options['max_redirects'])) {
+            $options['max_redirects'] = 5;
+        }
+        $this->suppressErrors();
+        $this->retryFailedRequests();
+        $cacheEnabled = $this->isCacheEnabled();
+        $this->disableCache();
+
+        $response = $this->get($uri, [], $options);
+        $exists = ($response->getStatusCode() === 200);
+
+        $this->resetSuppressErrors();
+        $this->resetRetryFailedRequests();
+        if ($cacheEnabled) {
+            $this->enableCache();
         }
 
-        if ($this->hasStopwatch()) {
-            $events = $this->getStopwatch()->getSectionEvents('http');
-            $totalTime = 0;
-            $totalMemory = 0;
-            array_walk($events, function (StopwatchEvent $event) use ($totalTime, $totalMemory) {
-                $totalTime += $event->getDuration();
-                $totalMemory += $event->getMemory() / 1024 / 1024;
-            });
-            $this->getLogger()->info(sprintf('Run %s HTTP requests: %.2F MiB - %d ms'), $this->totalHttpRequests, $totalMemory, $totalTime);
-        } else {
-            $this->getLogger()->info(sprintf('Run %s HTTP requests'), $this->totalHttpRequests);
+        return $exists;
+    }
+
+    /**
+     * Run a bulk set of GET requests concurrently and return a generator you can foreach over
+     *
+     * @param array $uris
+     * @param array $options
+     * @return \Generator Generator of CacheableResponse items
+     * @throws BaseUriException
+     * @throws FailedRequestException
+     * @throws NotFoundException
+     * @throws TransportExceptionInterface
+     */
+    public function getConcurrent(array $uris, array $options = []): \Generator
+    {
+        $responses = [];
+        foreach ($uris as $uri) {
+            $responses[$uri] = $this->prepareRequest('GET', $uri, $options);
         }
+
+        /** @var ResponseInterface $response */
+        foreach ($responses as $response) {
+            if (!$response->isHit()) {
+                $response = $this->runRequest($response);
+            }
+            yield $response;
+        }
+
+        if ($this->isCacheEnabled()) {
+            $this->cache->commit();
+        }
+    }
+
+    /**
+     * Return HTTP status message
+     *
+     * Usage:
+     * $this->statusMessage(301)
+     *
+     * Returns:
+     * Moved Permanently
+     *
+     * @param int $code HTTP status code
+     * @return string|null
+     */
+    public function statusMessage(int $code): ?string
+    {
+        if (isset(Response::$statusTexts[$code])) {
+            return Response::$statusTexts[$code];
+        }
+        return null;
     }
 }

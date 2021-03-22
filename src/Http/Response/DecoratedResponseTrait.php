@@ -1,31 +1,23 @@
 <?php
 declare(strict_types=1);
 
-namespace Strata\Data\Response;
+namespace Strata\Data\Http\Response;
 
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
-/**
- * Decorator class to suppress exceptions being raised in a HTTP response
- *
- * This only suppresses exceptions raised by 3xx, 4xx, 5xx, or decoding JSON content errors
- * Does not suppress TransportExceptionInterface
- *
- * @package Strata\Data\Response
- */
-class SuppressErrorResponse implements ResponseInterface
+trait DecoratedResponseTrait
 {
-    private ResponseInterface $response;
+    private ResponseInterface $decorated;
 
     /**
      * Constructor
      *
-     * @param ResponseInterface $response Response we are suppressing exceptions for
+     * @param ResponseInterface $response Response we are decorating
      */
     public function __construct(ResponseInterface $response)
     {
-        $this->response = $response;
+        $this->decorated = $response;
     }
 
     /**
@@ -35,7 +27,7 @@ class SuppressErrorResponse implements ResponseInterface
      */
     public function getStatusCode(): int
     {
-        return $this->response->getStatusCode();
+        return $this->decorated->getStatusCode();
     }
 
     /**
@@ -49,7 +41,7 @@ class SuppressErrorResponse implements ResponseInterface
      */
     public function getHeaders(bool $throw = true): array
     {
-        return $this->response->getHeaders(false);
+        return $this->decorated->getHeaders($throw);
     }
 
     /**
@@ -62,7 +54,7 @@ class SuppressErrorResponse implements ResponseInterface
      */
     public function getContent(bool $throw = true): string
     {
-        return $this->response->getContent(false);
+        return $this->decorated->getContent($throw);
     }
 
     /**
@@ -75,10 +67,7 @@ class SuppressErrorResponse implements ResponseInterface
      */
     public function toArray(bool $throw = true): array
     {
-        if ('' === $content = $this->getContent(false)) {
-            return [];
-        }
-        return $this->response->toArray(false);
+        return $this->decorated->toArray($throw);
     }
 
     /**
@@ -86,7 +75,7 @@ class SuppressErrorResponse implements ResponseInterface
      */
     public function cancel(): void
     {
-        $this->response->cancel();
+        $this->decorated->cancel();
     }
 
     /**
@@ -97,7 +86,7 @@ class SuppressErrorResponse implements ResponseInterface
      */
     public function getInfo(string $type = null)
     {
-        return $this->response->getInfo($type);
+        return $this->decorated->getInfo($type);
     }
 
     /**
@@ -107,12 +96,13 @@ class SuppressErrorResponse implements ResponseInterface
      * @return resource
      * @throws \Exception If method accessed when child $response object does not contain this method
      */
-    public function toStream(bool $throw)
+    public function toStream(bool $throw = true)
     {
-        if (method_exists($this->response, 'toStream')) {
-            return $this->response->toStream(false);
+        if (method_exists($this->decorated, 'toStream')) {
+            return $this->decorated->toStream(false);
         } else {
-            throw new \Exception('Method toStream does not exist on object ' . get_class($this->response));
+            throw new \Exception('Method toStream does not exist on object ' . get_class($this->decorated));
         }
     }
+
 }
