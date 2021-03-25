@@ -5,59 +5,95 @@ outgoing HTTP requests.
 
 Features include:
 
-* Supports PSR-6 caching
-* Tag based cache invalidation
-* Auto-pruning of expired cache entries
-* [Data history](data-history.md) to detect whether new content has changed or is new
+* Automatic caching for data requests
+* Hydrates cached HTTP responses back into a response object  
+* `isHit()` method on HTTP responses to help detect when cache is used
+* Enable and disable cache for different types of data requests
+* Set custom cache lifetime and tags for different data requests
+* For concurrent requests saves cache via the [persist queue](https://symfony.com/doc/current/components/cache/cache_pools.html#saving-cache-items) to increase performance
+* Probability-based pruning of expired cache entries to increase performance
+
+Also see [Data history](data-history.md), which also uses the cache as a storage engine, to detect whether new content 
+has changed or is new.
 
 ## Setup
 
-Set a PSR-6 compatible cache to initialise the cache. It's recommended to use a cache that supports tagging. 
+Set a [PSR-6 compatible cache adapter](https://symfony.com/doc/current/components/cache/cache_pools.html#creating-cache-pools) 
+to initialise the cache. It's recommended to use a cache that supports tagging. 
 
-Please note, setting a cache lifetime on the cache adapter has no effect since this is overwritten in the DataCache class. See 
-below on how to [alter the cache lifetime](#cache-lifetime).  
+Please note, setting a cache lifetime on the cache adapter has no effect since this is overwritten in the `DataCache` 
+class. See how to [alter the cache lifetime](#cache-lifetime).  
 
 ```php
 use Symfony\Component\Cache\Adapter\FilesystemTagAwareAdapter;
 
-/** @var \Strata\Data\DataInterface */
 $cache = new FilesystemTagAwareAdapter('cache', 0, __DIR__ . '/path/to/cache/folder');
-$data->setCache($cache);
+
+/** @var \Strata\Data\DataInterface $api */
+$api->setCache($cache);
 ```
 
 ## Using the cache
 
+The data cache automatically caches data requests if the request is cacheable. For HTTP data requests this is determined as: 
+
+* Cache is enabled
+* GET or HEAD requests
+
 To cache data simply enable the cache and then make your data request:
 
 ```php
-$data->enableCache();
-$result = $data->get('my-data');
+$api->enableCache();
+$result = $api->get('my-data');
 ```
 
-This automatically saves items to the cache via the data provider. 
+This automatically saves items to the cache via the data provider with a default cache lifetime of one hour. 
 
-For example these requests all return exactly the same data when caching is enabled. Only the first request is actually
-sent to the server.
-
-TODO DOES NOT WORK! Test this now!
+For example, these requests all return exactly the same data when caching is enabled. Only the first request is actually
+sent to httpbin.org
 
 ```php
-$data = new RestApi('http://httpbin.org/');
-$data->setCache(new FilesystemTagAwareAdapter('cache', 0, __DIR__ . '/path/to/cache/folder');
-$data->enableCache();
+$api = new RestApi('http://httpbin.org/');
+$api->setCache(new FilesystemTagAwareAdapter('cache'));
+$api->enableCache();
 
 // This returns a random UUID from httpbin.org
-echo $data->get('uuid')->toArray();
-echo $data->get('uuid')->toArray();  
+echo PHP_EOL . $api->get('uuid')->toArray()['uuid'];
+echo PHP_EOL . $api->get('uuid')->toArray()['uuid'];
 ```
 
-To disable the cache use:
+To disable the cache for future requests:
 
 ```php
-$data->disableCache();
+$api->disableCache();
 ```
 
 This allows more fine-grained caching rules, where you may want to cache some data requests and not others.
+
+### Working out if an HTTP response has been cached
+
+All HTTP data requests return `CacheableResponse` response objects. This decorates the standard HTTP response and adds 
+the method `isHit()` to a response so you can work out if response data was returned from the cache or was 
+requested fresh from the origin.
+
+```php
+$response = $api->get('uuid');
+
+if ($response->isHit()) {
+    echo "HIT";
+} else {
+    echo "MISS";
+}
+```
+
+### Caching HTTP responses
+
+When an HTTP response is returned from the cache this is hydrated via the Symfony `MockResponse` class and a valid HTTP 
+response object is returned. This restores the following data from a response:
+
+* Status code
+* Response headers
+* Body content
 
 ### Cache lifetime
 
@@ -65,7 +101,7 @@ By default the Data Cache caches data for up to one hour. You can set a custom c
 passing the number of seconds to store data in the cache:
 
 ```php
-$data->enableCache(300);
+$api->enableCache(300);
 ```
 
 You can also use the `CacheLifetime` class, which has a set of convenience constants to set cache lifetime in seconds: 
@@ -74,13 +110,19 @@ You can also use the `CacheLifetime` class, which has a set of convenience const
 
 ```php
 use Strata\Data\Cache\CacheLifetime;
-$data->enableCache(CacheLifetime::HOUR * 2);
+$api->enableCache(CacheLifetime::MINUTE * 5);
+```
+
+You can also set the cache lifetime via the cache directly:
+
+```php
+$api->getCache()->setLifetime(CacheLifetime::MINUTE * 5);
 ```
 
 ### Adding tags
 
 If your cache adapter supports tags, you can set tags to be saved against all future data requests. If your cache adapter 
-does not support tags this will throw a `CacheException` exception.
+does not support tags this will throw a `CacheException`.
 
 Pass an array of tags to save to cache items:
 
@@ -97,21 +139,23 @@ set cache tags and disables tagging for future data requests.
 $data->setCacheTags();
 ```
 
-### Accessing the cache
+## Invalidating the cache
 
-Convenience methods exist in data providers to save items in the cache, all other functionality must be accessed on the 
+### Using the Data Cache directly
+
+Convenience methods exist in data providers to save items in the cache, all other functionality must be accessed via the
 cache object itself. To directly access the DataCache use:
 
 ```php
-/** @var DataCache $cache */
+/** @var Strata\Data\Cache\DataCache $cache */
 $cache = $data->getCache();
 ```
 
-## Invalidating the cache
-
 ### Expiration based invalidation
 
-By default, all data stored by `DataCache` has a cache lifetime and cache items are removed after this lifetime has expired. 
+By default, all data stored by `DataCache` has a cache lifetime and cache items are removed after this lifetime has expired.
+However, some cache adapters (e.g. filesystem) only expire cache items when they are requested, see 
+[pruning old cache items](#pruning-old-cache-items) on how to solve this problem.
 
 ### Key invalidation
 
@@ -166,3 +210,11 @@ For example, to run 1 time in 10:
 ```php
 $data->getCache()->purge(0.1);
 ```
+
+The following cache adapters support purge requests:
+
+* [Filesystem Cache Adapter](https://symfony.com/doc/current/components/cache/adapters/filesystem_adapter.html)
+* [PDO & Doctrine DBAL Cache Adapter](https://symfony.com/doc/current/components/cache/adapters/pdo_doctrine_dbal_adapter.html)
+* [PHP Array Cache Adapter](https://symfony.com/doc/current/components/cache/adapters/php_array_cache_adapter.html)
+* [PHP Files Cache Adapter](https://symfony.com/doc/current/components/cache/adapters/php_files_adapter.html)
+

@@ -91,6 +91,10 @@ abstract class DataAbstract implements DataInterface
             throw new CacheException(sprintf('You must setup the cache via %s::setCache() before enabling it', get_class($this)));
         }
         $this->cacheEnabled = true;
+
+        if ($lifetime !== null) {
+            $this->cache->setLifetime($lifetime);
+        }
         return $this;
     }
 
