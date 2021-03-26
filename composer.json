@@ -15,15 +15,13 @@
     "php": "^7.4|^8.0",
     "ext-json": "*",
     "symfony/http-client": "^5.2",
-    "symfony/console": "^5.2",
     "spatie/yaml-front-matter": "^2.0",
     "erusev/parsedown-extra": "^0.8.1",
     "league/flysystem": "^2.0",
-    "symfony/http-kernel": "^5.2",
-    "toflar/psr6-symfony-http-cache-store": "^3.0",
     "symfony/cache": "^5.2",
     "symfony/stopwatch": "^5.2",
-    "symfony/monolog-bundle": "^3.6"
+    "symfony/monolog-bundle": "^3.6",
+    "symfony/property-access": "^5.2"
   },
   "autoload": {
     "psr-4": {
