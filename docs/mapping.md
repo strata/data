@@ -135,6 +135,8 @@ described above. In the below example `region` is set to an array of two possibl
 you to specify multiple possible old values to map data from.
 
 ```php
+use Strata\Data\Mapper\MapItem;
+
 $mapping = [
     '[name]'    => '[person_name]',
     '[age]'     => '[person_age]',
@@ -142,7 +144,7 @@ $mapping = [
         '[person_region]', '[person_town]'
     ]
 ];
-$mapper = new MapItem('person', $mapping);
+$mapper = new MapItem($mapping);
 ```
 
 You can then map incoming data to the new structure. In the below example, we've set a local data array to make this
@@ -169,12 +171,32 @@ $item = [
 As you can see any fields not found in the source data are set to null and the region is correctly mapped from the 
 `person_town` source field.
 
-### Mapping to an object
+### Mapping from a different root property
 
-You can map data to an object, by passing the object name as the second argument to the `map()` method.
+If your item data cannot be found in the root of the data array then you can specify the root property
+path to use as the second argument to the `map()` method. The following examples sets the root to `$data['item']`:
 
 ```php
-$person = $mapper->map($data, 'App\Person');
+$item = $mapper->map($data, '[item]');
+```
+
+### Mapping to an object
+
+You can map data to an object, by calling the `toObject()` method and passing the class name. You also need to 
+update the mapping to set data to object properties (using the dot notation instead of index notation):
+
+```php
+$mapping = [
+    'name'    => '[person_name]',
+    'age'     => '[person_age]',
+    'region'  => [
+        '[person_region]', '[person_town]'
+    ]
+];
+$mapper = new MapItem($mapping);
+$mapper->toObject('App\Person');
+
+$person = $mapper->map($data);
 ```
 
 Given the example class:
@@ -211,7 +233,7 @@ following is supported:
 Once data is mapped to the new object or array, you can apply transformers to change the data.
 
 When you create the mapper, you need to pass an instance of `MappingStrategy` class as the second argument. Via this class
-you can set any number of transformers which apply to mapped data on your new array or object. If you want to transform 
+you can set any number of transformers which apply to mapped data on your new array or object. Please note if you want to transform 
 data before it is mapped, you need to use the transformer on the data object directly.
 
 `MappingStrategy` takes two arguments: the first is the array of property paths to map data to, the second is an array of 
@@ -222,13 +244,13 @@ $strategy = new MappingStrategy($mapping, [
     new SetEmptyToNull(),
     new MapValues('[region]', ['Norwich' => 'East of England']),
 ]);
-$mapper = new MapItem('person', $strategy);
+$mapper = new MapItemToObject($strategy);
 ```
 
 By using the above mapper means that:
 
 ```php
-$person = $mapper->map($data, 'App\Person');
+$person = $mapper->map($data);
 ```
 
 Returns:
@@ -238,15 +260,89 @@ Returns:
 echo $person->region;
 ```
 
-### Mapping from a different root property
-
-If your item data cannot be found in the root of the data array then you can specify the root property 
-path to use. The following examples sets the root to `$data['item']`.
-
-```php
-$mapper->setRootPropertyPath('[item]');
-```
-
 ## Mapping collections
 
-TODO
+To automatically generate pagination we need to pass data about the total results, results per page and current page. 
+
+You can call the following methods to set the property path to the data field, or pass the actual value as an integer.
+
+* `totalResults()`
+* `resultsPerPage()`
+* `currentPage()` 
+
+Values for all three fields must be set in order to create a valid pagination object, with the exception of `currentPage()`
+which defaults to `1` if not set.
+
+These methods return a fluent interface so you can chain these methods together for convenience. 
+
+```php
+$mapper = new MapCollection($mapping);
+$mapper->totalResults('[meta_data][total]')
+       ->resultsPerPage(3)
+       ->currentPage(1);
+
+$collection = $mapper->map($data);
+```
+
+Some data providers set pagination information in a secondary location, for example response headers. To use this method,
+simply pass the secondary array along with property paths to point to the required pagination fields.
+
+
+```php
+$mapper = new MapCollection($mapping);
+$mapper->totalResults('[X-WP-Total]')
+       ->resultsPerPage(20)
+       ->currentPage(1)
+       ->fromPaginationData($headers);
+```
+
+### Collection object
+
+When you run the `map()` method a `Collection` object is returned that you can iterate through and access pagination via 
+`$collection->getPagination()`. Within the collection, by default each item is an array. 
+
+As with `MapItem` you can map results in a collection to an object as so:
+
+```php
+$mapper = new MapCollection($mapping);
+$mapper->totalResults('[X-WP-Total]')
+       ->resultsPerPage(20)
+       ->currentPage(1)
+       ->fromPaginationData($headers)
+       ->toObject('App\MyObject');
+```
+
+This results in a `Collection` iterator containing your custom object for each item.
+
+### A complete example
+
+```php
+$mapping = [
+    'name'    => '[item_name]',
+    'id'     => '[id]',
+];
+$mapper = new MapCollection($mapping, '[meta_data][total]', '[meta_data][per_page]');
+
+$data = [
+    'items' => [
+        0 => [
+            'item_name' => 'Apple',
+            'id' => 1
+        ],
+        1 => [
+            'item_name' => 'Banana',
+            'id' => 2
+        ],
+        2 => [
+            'item_name' => 'Orange',
+            'id' => 3
+        ]
+    ]
+    'meta_data' => [
+        'total' => 10,
+        'page' => 1,
+        'per_page' => 3
+    ]
+];
+$item = $mapper->map($data);
+```
