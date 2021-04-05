@@ -27,7 +27,7 @@ a mock response.
 
 ```php
 use Symfony\Component\HttpClient\MockHttpClient;
-use Strata\Data\Api\RestApi;
+use Strata\Data\Api_DELETE\RestApi;
 use Strata\Data\Response\MockResponseFromFile;
 
 $responses = [

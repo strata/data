@@ -262,9 +262,15 @@ echo $person->region;
 
 ## Mapping collections
 
-To automatically generate pagination we need to pass data about the total results, results per page and current page. 
+You can also map data to a collection of array items or objects. This automatically sets pagination to make it easier to 
+output pagination information or run subsequent requests.
 
-You can call the following methods to set the property path to the data field, or pass the actual value as an integer.
+### Setting pagination 
+To automatically generate pagination we need to pass data about the total results, results per page and current page. 
+You can call the following methods to set the property path to the appropriate data field, or pass the actual value as an integer.
+
+Pagination property paths are relative to the original data root, this is not affected by passing a `$rootProperty` 
+argument to the `map()` method.
 
 * `totalResults()`
 * `resultsPerPage()`
@@ -273,16 +279,16 @@ You can call the following methods to set the property path to the data field, o
 Values for all three fields must be set in order to create a valid pagination object, with the exception of `currentPage()`
 which defaults to `1` if not set.
 
-These methods return a fluent interface so you can chain these methods together for convenience. 
+These methods return a fluent interface so you can chain these methods together for convenience: 
 
 ```php
 $mapper = new MapCollection($mapping);
 $mapper->totalResults('[meta_data][total]')
        ->resultsPerPage(3)
        ->currentPage(1);
-
-$collection = $mapper->map($data);
 ```
+
+### Setting pagination data from another data source
 
 Some data providers set pagination information in a secondary location, for example response headers. To use this method,
 simply pass the secondary array along with property paths to point to the required pagination fields.
@@ -296,32 +302,55 @@ $mapper->totalResults('[X-WP-Total]')
        ->fromPaginationData($headers);
 ```
 
-### Collection object
+### Returning a collection of arrays
 
-When you run the `map()` method a `Collection` object is returned that you can iterate through and access pagination via 
-`$collection->getPagination()`. Within the collection, by default each item is an array. 
-
-As with `MapItem` you can map results in a collection to an object as so:
+When you run the `map()` method a `Collection` object is returned that you can iterate through. Within the collection, 
+by default each item is an array. You can access pagination via `$collection->getPagination()`.
 
 ```php
 $mapper = new MapCollection($mapping);
-$mapper->totalResults('[X-WP-Total]')
-       ->resultsPerPage(20)
-       ->currentPage(1)
-       ->fromPaginationData($headers)
-       ->toObject('App\MyObject');
+$mapper->totalResults('[meta_data][total]')
+       ->resultsPerPage(3)
+       ->currentPage(1);
+
+$collection = $mapper->map($data);
 ```
 
-This results in a `Collection` iterator containing your custom object for each item.
+The collection object that is returned can be iterated over and accessed like a normal array. It implements 
+`SeekableIterator`, `Countable`, and `ArrayAccess`. 
+
+### Returning a collection of objects
+
+You can map results in a collection to an object via the `toObject()` method:
+
+```php
+$mapper = new MapCollection($mapping);
+$mapper->totalResults('[meta_data][total]')
+       ->resultsPerPage(3)
+       ->currentPage(1)
+       ->toObject('App\MyObject');
+
+$collection = $mapper->map($data);
+```
 
 ### A complete example
 
 ```php
+namespace App;
+
+class Item {
+    public string $name;
+    public int $id;
+}
+
 $mapping = [
-    'name'    => '[item_name]',
+    'name'   => '[item_name]',
     'id'     => '[id]',
 ];
-$mapper = new MapCollection($mapping, '[meta_data][total]', '[meta_data][per_page]');
+$mapper = new MapCollection($mapping)
+$mapper->totalResults('[meta_data][total]')
+       ->resultsPerPage('[meta_data][per_page]')
+       ->toObject('App\Item');
 
 $data = [
     'items' => [
@@ -344,5 +373,6 @@ $data = [
         'per_page' => 3
     ]
 ];
-$item = $mapper->map($data);
+
+$collection = $mapper->map($data, '[items]');
 ```

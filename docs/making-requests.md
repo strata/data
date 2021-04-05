@@ -1,21 +1,97 @@
 # Making requests with Strata Data
 
-## Requests
+## Setting up your data connection
 
-By default, all API requests are read-only and throw an exception if a 200 HTTP status is not returned. 
-
-Example usage:
+Instantiate a data class (currently RestApi or GraphQL) by passing the base URL.
 
 ```php
-use Strata\Data\Api\RestApi;
+use Strata\Data\Http\RestApi;
 
-$data = new RestApi();
-
-// Get one item 
-$response = $data->get('https://example.com/api/posts', ['page' => 2]);
-$content = $response->toArray();
-$headers = $response->getHeaders();
+$data = new RestApi('https://example.com/api/');
 ```
+
+## Requests
+
+To make a request use a concrete method from an available Data class. RestApi supports things like get and post, GraphQL 
+has a query method. Full details on available methods appear below.
+
+```php
+$response = $data->get('posts');
+```
+
+HTTP requests only run once you access data. For example: 
+
+```php
+$item = $response->getItem();
+```
+
+At this point the HTTP request is made and if an error occurs an exception is thrown. 
+
+### Suppress exceptions on error
+The default behaviour is to throw exceptions on HTTP or JSON decoding errors (e.g. if a RestApi get request does not return a 200 status), 
+though this can be suppressed. It can be useful to do this for sub-requests which you don't want to stop the master HTTP request.
+
+You can do this via:
+
+```php
+$data->suppressErrors();
+```
+
+Which disables exceptions for TransportExceptionInterface, HttpExceptionInterface and FailedRequestException exceptions.
+
+You can switch back to the default behaviour via:
+
+```php
+// Reset back to last value
+$data->resetSuppressErrors();
+
+// Or set it explicitly:
+$data->suppressErrors(false);
+```
+
+## Running concurrent requests
+
+You can run a bulk set of GET requests quickly and efficiently by passing an array of URIs to the `getConcurrent()` method. 
+This returns a generator which can be looped over with `foreach`.
+ 
+```php
+/** @var ResponseInterface $response */
+foreach ($data->getConcurrent($uris) as $response) {
+    // ... 
+}
+```
+
+You can also manually run concurrent requests by making a request in two steps: first prepare the request, then run it.
+
+Using the example in the [Symfony docs for concurrent requests](https://symfony.com/doc/current/http_client.html#concurrent-requests) 
+this can be done as so:
+
+```php
+$data = new RestApi('https://http2.akamai.com/demo/');
+$responses = [];
+for ($i = 0; $i < 379; ++$i) {
+    $uri = "tile-$i.png";
+    $responses[] = $data->prepareRequest('GET', $uri);
+}
+
+foreach ($responses as $response) {
+    $response = $data->runRequest($response);
+    // ...
+}
+```
+
+The `runRequest()` method checks the status code to ensure the request has run successfully. 
+
+## Testing a URL exists
+
+You can use the `exists()` method to simply test a URL endpoint returns a 200 successful status code.
+
+```php
+$api = new RestApi('https://http2.akamai.com/demo/');
+$result = $api->exists('tile-101.png');
+```
+
+## OLD STUFF FROM HERE ##
 
 ### Base URI
 You optionally pass a base URI when instantiating the API object. All subsequent API calls are then made relative to the 
