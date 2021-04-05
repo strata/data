@@ -1,132 +1,7 @@
-# Transforming and mapping data
+# Mapping items
 
-You can transform and map data, which allows you to change data once it is loaded from an external source (or cache). 
-Example use cases are:
-
-* Prepare data values (e.g. strip tags, decode HTML entities)
-* Rename data fields (e.g. from "person_name" to "name")
-* Update data values to match your local values (e.g. map the category "T-Shirts" to "casual")
-* Map a single item to an object
-* Map a collection of items to a set of objects
-
-## Transformers
-
-Most of the time you'll want to transform data as it's mapped to an item. You can also use transformers to directly 
-transform your loaded data.
-
-Basic concepts of transformers are explained below. See [transformers](transformers.md) for full details on all 
-available transformers.
-
-Transformers come in two types: value transformers and data transformers.
-
-### Value transformers
-
-A value transformer loops through all data applying the transformation to each value. 
-
-For example this sets all empty values to null to help return predictable data:
-
-```php
-use Strata\Data\Transform\Values\SetEmptyToNull;
-
-$transform = new SetEmptyToNull();
-$data = $transform->transform($data);
-```
-
-### Data transformers
-
-A data transformer acts on data as a whole. 
-
-For example this maps data values stored in `$data['item']['category']` to local values: 
-
-```php
-use Strata\Data\Transform\Data\MapValues;
-
-$mapping = [
-    'T-Shirts'  => 'casual',
-    'Jeans'     => 'casual',
-    'Scarfs'    => 'outdoor',
-    'Coats'     => 'outdoor',
-];
-
-$transform = new MapValues('[item][category]', $mapping);
-$data = $transform->transform($data);
-```
-
-### What happens if data cannot be transformed?
-
-If a transformer cannot transform data it skips over it. All transformers contain a 
-`canTransform()` method which is used to check the data value is of the correct type to be transformed. This helps avoid 
-unwanted errors.
-
-### Throwing exceptions on data transform errors - IS THIS REQUIRED?
-
-You can optionally throw a `TransformException` on data transformation errors. This may be useful if you want to force data 
-to be transformed (e.g. mapping values) and you want to know if this has failed (since your data may not process properly).
-
-To enable exceptions pass:
-
-```php
-$transform->enableExceptions();
-```
-
-If you subsequently want to disable this pass `false` to the method:
-
-```php
-$transform->enableExceptions(false);
-```
-
-The [transformers](transformers.md) documentation includes details on which transformers raise exceptions when this 
-option is enabled.
-
-## Accessing properties
-
-We use Symfony's [PropertyAccess](https://symfony.com/doc/current/components/property_access.html) component to help 
-read and write data.
-
-### Array properties
-To access array properties use the index notation, specifying array keys within square brackets. 
-
-Access `$data['name']`: 
-
-```
-[name]
-```
-
-Access `$data['people']['name']`:
-
-```
-[people][name]
-```
-
-Access `$data['people']['categories'][0]`:
-
-```
-[people][categories][0]
-```
-
-### Object properties
-
-To access object properties use the dot notation, specifying object properties separated by a dot character.
-
-Access `$data->name`:
-
-```
-name
-```
-
-Access `$data->people->name`:
-
-```
-people.name
-```
-
-Access `$data->people->categories[0]`:
-
-```
-people.name.categories[0]
-```
-
-## Mapping items
+Mappers are used to map data to a new data structure so it is more useful for processing, for example
+converting an array of raw data to a collection of objects.
 
 ## An example
 
@@ -170,6 +45,28 @@ $item = [
 
 As you can see any fields not found in the source data are set to null and the region is correctly mapped from the 
 `person_town` source field.
+
+### Transforming individual values when mapping
+
+You can transform data values when mapping by using a single value transformer. Single value transformers take the 
+property path as the first argument. Some transformers accept further arguments to customise the transformer. 
+
+For example, to cast a date of birth to a `\DateTime` object, use:
+
+```php
+use Strata\Data\Mapper\MapItem;
+use Strata\Data\Transform\Value\DateTimeValue;
+
+$mapping = [
+    '[name]'          => '[person_name]',
+    '[date_of_birth]' => new DateTimeValue('[dob]'),
+];
+$mapper = new MapItem($mapping);
+```
+
+The following data value transformers are available:
+
+* DateTime
 
 ### Mapping from a different root property
 
