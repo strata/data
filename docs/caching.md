@@ -18,18 +18,24 @@ has changed or is new.
 
 ## Setup
 
-Set a [PSR-6 compatible cache adapter](https://symfony.com/doc/current/components/cache/cache_pools.html#creating-cache-pools) 
-to initialise the cache. It's recommended to use a cache that supports tagging. 
-
-Please note, setting a cache lifetime on the cache adapter has no effect since this is overwritten in the `DataCache` 
-class. See how to [alter the cache lifetime](#cache-lifetime).  
+Pass a [PSR-6 compatible cache adapter](https://symfony.com/doc/current/components/cache/cache_pools.html#creating-cache-pools) 
+to the `setCache()` method to enable caching. It's recommended to use a cache that supports tagging. 
 
 ```php
 use Symfony\Component\Cache\Adapter\FilesystemTagAwareAdapter;
 
-$cache = new FilesystemTagAwareAdapter('cache', 0, __DIR__ . '/path/to/cache/folder');
+$api->setCache(new FilesystemTagAwareAdapter());
+```
 
-/** @var \Strata\Data\DataInterface $api */
+This sets and enables the cache for all data requests.
+
+Please note, setting a cache lifetime on the cache adapter has no effect since this is overwritten in the `DataCache`
+class. See how to [alter the cache lifetime](#cache-lifetime).
+
+You can also pass further arguments to customise the cache, for example setting the cache namespace and cache path:
+
+```php
+$cache = new FilesystemTagAwareAdapter('cache', 0, __DIR__ . '/path/to/cache/folder');
 $api->setCache($cache);
 ```
 
@@ -40,10 +46,9 @@ The data cache automatically caches data requests if the request is cacheable. F
 * Cache is enabled
 * GET or HEAD requests
 
-To cache data simply enable the cache and then make your data request:
+To cache data simply set the cache and then make your data request:
 
 ```php
-$api->enableCache();
 $result = $api->get('my-data');
 ```
 
@@ -54,18 +59,23 @@ sent to httpbin.org
 
 ```php
 $api = new RestApi('http://httpbin.org/');
-$api->setCache(new FilesystemTagAwareAdapter('cache'));
-$api->enableCache();
+$api->setCache(new FilesystemTagAwareAdapter());
 
 // This returns a random UUID from httpbin.org
 echo PHP_EOL . $api->get('uuid')->toArray()['uuid'];
 echo PHP_EOL . $api->get('uuid')->toArray()['uuid'];
 ```
 
-To disable the cache for future requests:
+You can also disable the cache for future data requests:
 
 ```php
 $api->disableCache();
+```
+
+And re-enable it again when you want to use it:
+
+```php
+$api->enableCache();
 ```
 
 This allows more fine-grained caching rules, where you may want to cache some data requests and not others.

@@ -1,4 +1,4 @@
-# Accessing properties
+# How to write property paths
 
 We use Symfony's [PropertyAccess](https://symfony.com/doc/current/components/property_access.html) component to help
 read and write data.

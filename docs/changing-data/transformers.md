@@ -15,7 +15,7 @@ Single value transformers are used to transform an individual value as it is acc
 This transformer can be used when setting up [mapping fields](mapping.md#transforming-individual-values-when-mapping). 
 
 You need to pass the property path to the property you want to retrieve via a value transformer (e.g. `'[date]'`). 
-See [accessing properties](accessing-properties.md) for details on how to define a property path.
+See [how to write property paths](../property-paths.md) for details on how to define a property path.
 
 For example, this returns a DateTime object from `$data['date']`:
 

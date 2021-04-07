@@ -19,5 +19,5 @@ Example use cases are:
 * Map a single item to an object
 * Map a collection of items to a set of objects
 
-We use Symfony's PropertyAccess component to help read and write data. See [accessing properties](accessing-properties.md) 
+We use Symfony's PropertyAccess component to help read and write data. See [how to write property paths](../property-paths.md) 
 for more details.

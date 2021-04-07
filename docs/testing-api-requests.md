@@ -11,18 +11,18 @@ Allows you to load a mock request from file.
 
 ### Parameters
 
-* `$filename (string)` File to load mock response from, automatically adds `.response.json` for body file 
+* `$filename (string)` File to load mock response from
 
 ### Description 
 
-Body file is loaded from `{$filename}.response.json`
+Body file is loaded from `{$filename}`
 
 The optional info file is loaded from `{$filename}.info.php` and must contain the `$info` variable (array). By default 
 mock responses return a 200 status code which you can change by setting the `$info` array.
 
 ### Usage
 
-The following code loads `./responses/api-test.response.json` and if it exists `./responses/api-test.info.php` to create 
+The following code loads `./responses/api-test.json` and if it exists `./responses/api-test.json.info.php` to create 
 a mock response.
 
 ```php
@@ -31,7 +31,7 @@ use Strata\Data\Api_DELETE\RestApi;
 use Strata\Data\Response\MockResponseFromFile;
 
 $responses = [
-    new MockResponseFromFile(__DIR__ . '/responses/api-test'),
+    new MockResponseFromFile(__DIR__ . '/responses/api-test.json'),
 ];
  
 $api = new RestApi('https://example.com/');
@@ -49,7 +49,7 @@ echo $response->getContent();
 echo $api->getHeader($response, 'X-Total-Results');
 ```
 
-#### ./responses/api-test.response.json
+#### ./responses/api-test.json
 
 ```json
 {
@@ -57,7 +57,7 @@ echo $api->getHeader($response, 'X-Total-Results');
 }
 ```
 
-#### ./responses/api-test.info.php
+#### ./responses/api-test.json.info.php
 
 ```php
 <?php

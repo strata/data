@@ -43,11 +43,11 @@ which can listen to multiple events via the `addSubscriber(EventSubscriberInterf
 Add logging for the data request process.
 
 ```php
-use Strata\Data\Http\RestApi;
+use Strata\Data\Http\Rest;
 use Strata\Data\Event\Subscriber\LoggerSubscriber;
 use Monolog\Logger;
 
-$api = new RestApi();
+$api = new Rest();
 $api->addSubscriber(new LoggerSubscriber(new Logger('/path/to/log')));
 ```
 
@@ -56,11 +56,11 @@ $api->addSubscriber(new LoggerSubscriber(new Logger('/path/to/log')));
 Add timing profiling for the Symfony Stopwatch profiler (only recommended in development).
 
 ```php
-use Strata\Data\Http\RestApi;
+use Strata\Data\Http\Rest;
 use Strata\Data\Event\Subscriber\StopwatchSubscriber;
 use Symfony\Component\Stopwatch\Stopwatch;
 
-$api = new RestApi();
+$api = new Rest();
 $api->addSubscriber(new StopwatchSubscriber(new Stopwatch());
 ```
 

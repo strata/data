@@ -3,20 +3,20 @@
 You can validate incoming data based on a set of rules. One example validator is supplied, the [Validation rules validator](#validation-rules). 
 
 You can create a custom validator by implementing the `Strata\Data\Validate\ValidatorInterface` interface. This requires
-a `isValid($item)` method to test whether a data item is valid and a `getErrorMessage()` method to return the error message 
+a `isValid()` method to test whether data is valid and a `getErrorMessage()` method to return the error message 
 for the last validation attempt.
 
 The basic flow is:
 
 * Instantiate the validator object
-* Call the `isValid($item)` method, passing the data item object (`Strata\Data\Model\Item`) to this methodd
+* Call the `isValid($data)` method, passing the data array or object you are validating
 * Return any error message via `getErrorMessage()`  
 * Take any action you wish based on the validation result
 
 ```php
 $validator = new CustomValidator();
 
-if ($validator->isValid($item)) {
+if ($validator->isValid($data)) {
     // do something
 }
 ```
@@ -26,21 +26,21 @@ if ($validator->isValid($item)) {
 A simple validation rules system exists, inspired by [Laravel's Validation](https://laravel.com/docs/validation).
 
 Simply create a new instance of `Strata\Data\Validate\ValidationRules` and pass in the validation requirements in the 
-constructor. This is an array made up of the data property to validate (with nested array elements separated by a dot)
-and the validation rule.
+constructor. This is an array made up of the property path to the field you want to validate and the validation rule.
+See [how to write property paths](property-paths.md).
 
-Rule format is:
+The rules format is:
 
 ```
-'data property name' => 'rule|another rule:values separated by commas'
+'[data property]' => 'rule|another rule:values separated by commas'
 ```
 
 E.g.
 ```php
 $rules = [
-    'total'         => 'required|integer', 
-    'data.title'    => 'required',
-    'data.type'     => 'required|in:1,2,3',
+    '[total]'         => 'required|integer', 
+    '[data][title]'   => 'required',
+    '[data][type]'    => 'required|in:1,2,3',
 ];
 ```
 
@@ -53,9 +53,9 @@ A complete example:
 
 ```php
 $validator = new ValidationRules([
-    'total'         => 'required|integer',
-    'data.title'    => 'required',
-    'data.type'     => 'required|in:1,2,3',
+    '[total]'         => 'required|integer', 
+    '[data][title]'   => 'required',
+    '[data][type]'    => 'required|in:1,2,3',
 ];
 
 if ($validator->isValid($item)) {
@@ -109,7 +109,7 @@ Tests whether the property is a valid URL.
 ### Custom validation rules
 
 You can also define your own custom validation rule by creating a class that implements the `Strata\Data\Validate\RuleInterface`
-interface. It is recommended to extend `Strata\Data\Validate\Rule\RuleAbstract` which makes building custom rules easier.
+interface. It is recommended to extend `Strata\Data\Validate\Rule\ValidatorRuleAbstract` which makes building custom rules easier.
 
 To use a custom validation rule pass an instance of the class as the rule:  
 
