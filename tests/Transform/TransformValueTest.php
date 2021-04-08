@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tests;
@@ -30,5 +31,4 @@ final class TransformValueTest extends TestCase
         $this->assertInstanceOf('\DateTime', $valueTransformer->getValue($data));
         $this->assertSame('Mon, 05 Apr 2021 11:09:15 +0000', $valueTransformer->getValue($data)->format('r'));
     }
-
 }

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Tests;
@@ -11,13 +12,15 @@ use Strata\Data\Transform\Data\MapValues;
 use Strata\Data\Transform\Value\DateTimeValue;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 
-class Person {
+class Person
+{
     public string $name;
     public int $age;
     public string $region;
     public string $job_title;
 }
-class Person2 extends Person {
+class Person2 extends Person
+{
     public function setName($name)
     {
         $this->name = strtolower($name);
@@ -66,7 +69,7 @@ final class MapItemTest extends TestCase
             ]
         ];
         $strategy = new MappingStrategy($mapping);
-        $mapper = new MapItem( $strategy);
+        $mapper = new MapItem($strategy);
 
         $data = [
             'data' => [
@@ -173,5 +176,4 @@ final class MapItemTest extends TestCase
         $this->assertEquals('Cambridge', $item->region);
         $this->assertEquals('PHP Developer', $item->job_title);
     }
-
 }

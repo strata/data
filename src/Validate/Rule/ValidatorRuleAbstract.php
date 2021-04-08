@@ -100,5 +100,4 @@ abstract class ValidatorRuleAbstract implements ValidatorRuleInterface
         }
         return $this->getPropertyAccessor()->getValue($data, $this->propertyPath);
     }
-
 }

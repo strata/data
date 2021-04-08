@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Tests;
@@ -230,5 +231,4 @@ class HttpTest extends TestCase
 
         $this->assertEquals(5, $api->getTotalHttpRequests());
     }
-
 }

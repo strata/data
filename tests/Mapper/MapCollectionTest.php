@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tests;
@@ -6,7 +7,8 @@ namespace Tests;
 use PHPUnit\Framework\TestCase;
 use Strata\Data\Mapper\MapCollection;
 
-class Item {
+class Item
+{
     public string $name;
     public int $id;
 }
@@ -76,5 +78,4 @@ final class MapCollectionTest extends TestCase
         $item = $collection[1];
         $this->assertEquals('Banana', $item->name);
     }
-
 }

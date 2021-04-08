@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Tests;
@@ -31,5 +32,4 @@ EOD;
         $html = $decoder->decode($this->markdown);
         $this->assertStringContainsString('<h2 id="header1">Hello', $html);
     }
-
 }

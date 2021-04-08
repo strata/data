@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Tests;
@@ -51,5 +52,4 @@ final class RenameFieldsTest extends TestCase
         $this->assertTrue($rename->hasNotTransformed());
         $this->assertSame(['[category]'], $rename->getNotTransformed());
     }
-
 }

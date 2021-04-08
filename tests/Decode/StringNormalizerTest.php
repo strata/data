@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Tests;
@@ -9,7 +10,8 @@ use Strata\Data\Exception\DecoderException;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
 
-class Item {
+class Item
+{
     public function __toString(): string
     {
         return 'test3';
@@ -42,5 +44,4 @@ final class StringNormalizerTest extends TestCase
         $this->expectException(DecoderException::class);
         StringNormalizer::getString([1,2,3]);
     }
-
 }

@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 
 namespace Strata\Data\Tests;
 
@@ -152,7 +151,7 @@ query {
             new MockResponseFromFile(__DIR__ . '/graphql/query2.json'),
         ];
         $graphQL = new GraphQL('https://example.com/api');
-        $graphQL->setHttpClient(new MockHttpClient($responses,));
+        $graphQL->setHttpClient(new MockHttpClient($responses));
 
         $query = <<<'EOD'
 query ($offset: Int) {
@@ -171,7 +170,6 @@ EOD;
         $response = $graphQL->query($query, ['offset' => 2]);
         $item = $graphQL->decode($response);
         $this->assertEquals(1, count($item['entries']));
-        $this->assertEquals(8,$item['entries'][0]['id']);
+        $this->assertEquals(8, $item['entries'][0]['id']);
     }
-
 }

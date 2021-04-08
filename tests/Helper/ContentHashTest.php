@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Tests;
@@ -68,5 +69,4 @@ final class ContentHashTest extends TestCase
         $this->assertFalse(ContentHasher::hasContentChanged(ContentHasher::hash($this->arrayExamples[2]), $this->arrayExamples[3]));
         $this->assertTrue(ContentHasher::hasContentChanged(ContentHasher::hash($this->arrayExamples[2]), $this->arrayExamples[4]));
     }
-
 }

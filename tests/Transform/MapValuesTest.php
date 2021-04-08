@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Tests;
@@ -112,5 +113,4 @@ final class MapValuesTest extends TestCase
         $data = $mapper->transform($data4);
         $this->assertFalse($mapper->hasNotTransformed());
     }
-
 }

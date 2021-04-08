@@ -44,5 +44,4 @@ interface ValidatorRuleInterface extends ValidatorInterface
      * @return array
      */
     public function getValues();
-
 }

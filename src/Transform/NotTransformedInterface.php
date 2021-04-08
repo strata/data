@@ -19,5 +19,4 @@ interface NotTransformedInterface
      * @return array
      */
     public function getNotTransformed(): array;
-
 }

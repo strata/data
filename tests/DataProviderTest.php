@@ -1,12 +1,12 @@
 <?php
 
-
 namespace Tests;
 
 use PHPUnit\Framework\TestCase;
 use Strata\Data\DataProviderCommonTrait;
 
-class Base {
+class Base
+{
     use DataProviderCommonTrait;
 }
 
@@ -28,6 +28,4 @@ class DataProviderTest extends TestCase
         $this->assertEquals('https://example.com/api/list', $api->getUri('list'));
         $this->assertEquals('https://example.com/api/list', $api->getUri('/list'));
     }
-
-
 }

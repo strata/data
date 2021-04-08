@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Tests;
@@ -64,5 +65,4 @@ class ValidationRulesTest extends TestCase
 
         $this->assertTrue($validator->validate($data));
     }
-
 }

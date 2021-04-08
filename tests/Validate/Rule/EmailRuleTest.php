@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Tests;
@@ -46,5 +47,4 @@ class EmailRuleTest extends TestCase
             ['domain.com'],
         ];
     }
-
 }

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Tests;
@@ -25,5 +26,4 @@ class InRuleTest extends TestCase
         $data = ['name' => 'test5'];
         $this->assertFalse($validator->validate($data));
     }
-
 }

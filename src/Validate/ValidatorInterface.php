@@ -22,6 +22,4 @@ interface ValidatorInterface extends PropertyAccessorInterface
      * @return string
      */
     public function getErrorMessage(): string;
-
-
 }

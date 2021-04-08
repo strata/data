@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Tests;
@@ -55,5 +56,4 @@ final class TransformAllValuesTest extends TestCase
         $this->assertEquals('Testing', $transform->transform("Testing\t"));
         $this->assertEquals('Testing', $transform->transform("Testing       "));
     }
-
 }

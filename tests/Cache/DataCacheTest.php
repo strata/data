@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Cache;
@@ -210,5 +211,4 @@ class DataCacheTest extends TestCase
         $this->assertFalse($response->isHit());
         $this->assertEquals('OK 2', $response->getContent());
     }
-
 }

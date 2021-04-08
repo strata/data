@@ -708,5 +708,4 @@ class Http implements DataProviderInterface
             $this->cache->commit();
         }
     }
-
 }

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Cache;
@@ -158,5 +159,4 @@ class DataHistoryTest extends TestCase
         $entries = $history->purge($entries, 1.0, $now);
         $this->assertEquals(0, count($entries));
     }
-
 }

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Tests;
@@ -9,6 +10,7 @@ use Strata\Data\Traits\FlagsTrait;
 class TestFlags
 {
     use FlagsTrait;
+
     const OPTION_A = 1;
     const OPTION_B = 2;
     const OPTION_C = 4;
@@ -36,5 +38,4 @@ final class FlagsTest extends TestCase
         $this->assertTrue($class->flagEnabled(TestFlags::OPTION_B));
         $this->assertFalse($class->flagEnabled(TestFlags::OPTION_C));
     }
-
 }

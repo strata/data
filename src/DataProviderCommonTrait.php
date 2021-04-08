@@ -177,5 +177,4 @@ trait DataProviderCommonTrait
     {
         return $this->defaultDecoder;
     }
-
 }

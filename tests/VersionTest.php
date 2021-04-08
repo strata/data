@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Tests;
@@ -24,5 +25,4 @@ final class VersionTest extends TestCase
         $version = Version::VERSION;
         $this->assertEquals('Strata/' . $version . ' (https://github.com/strata/data)', Version::USER_AGENT);
     }
-
 }

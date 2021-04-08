@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Tests;
@@ -19,6 +20,4 @@ class UrlRuleTest extends TestCase
         $data = ['url' => 'hello@studio24.net'];
         $this->assertFalse($validator->validate($data));
     }
-
-
 }

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Transform\Value;
@@ -52,5 +53,4 @@ class BaseValue implements MapValueInterface
         $propertyAccessor = $this->getPropertyAccessor();
         return $propertyAccessor->getValue($objectOrArray, $this->propertyPath);
     }
-
 }

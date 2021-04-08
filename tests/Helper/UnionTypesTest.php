@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Tests;
@@ -27,5 +28,4 @@ final class UnionTypesTest extends TestCase
         $this->assertFalse(UnionTypes::stringOrInt(new \stdClass()));
         $this->assertFalse(UnionTypes::stringOrInt(null));
     }
-
 }

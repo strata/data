@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Tests;
@@ -22,5 +23,4 @@ class ImageRuleTest extends TestCase
         $data = ['img' => 'test'];
         $this->assertFalse($validator->validate($data));
     }
-
 }

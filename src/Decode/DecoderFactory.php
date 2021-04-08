@@ -75,5 +75,4 @@ class DecoderFactory
         }
         return null;
     }
-
 }

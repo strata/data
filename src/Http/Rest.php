@@ -22,5 +22,4 @@ class Rest extends Http
         }
         return $this->defaultDecoder;
     }
-
 }

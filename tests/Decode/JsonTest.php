@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Tests;
@@ -65,5 +66,4 @@ EOD;
         $this->expectException(DecoderException::class);
         $decoder->decode(null);
     }
-
 }

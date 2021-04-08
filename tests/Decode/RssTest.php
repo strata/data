@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Tests;
@@ -43,5 +44,4 @@ final class RssTest extends TestCase
             }
         }
     }
-
 }

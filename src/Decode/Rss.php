@@ -28,5 +28,4 @@ class Rss implements DecoderInterface
         $data = StringNormalizer::getString($data);
         return Reader::importString($data);
     }
-
 }

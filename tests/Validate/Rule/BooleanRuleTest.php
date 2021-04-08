@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Tests;
@@ -37,5 +38,4 @@ class BooleanRuleTest extends TestCase
         $data = ['data' => 'invalid'];
         $this->assertFalse($validator->validate($data));
     }
-
 }

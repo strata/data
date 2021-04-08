@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Tests;
@@ -23,5 +24,4 @@ class ArrayRuleTest extends TestCase
         $this->assertFalse($validator->validate($data));
         $this->assertStringContainsString('is not an array', $validator->getErrorMessage());
     }
-
 }
