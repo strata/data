@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Cache;
@@ -162,6 +163,18 @@ class DataHistory
     }
 
     /**
+     * Not implemented - may belong in its own class
+     *
+     * @todo Add functionality to check if a data item has been deleted: "a way to delete the data from our DB that has been removed in the external API"
+     * @param $key
+     * @return bool
+     */
+    public function isDeleted($key): bool
+    {
+        return false;
+    }
+
+    /**
      * Save a new entry in the history log for this data item
      *
      * This adds log entries to the cache commit queue for performance reasons.
@@ -234,10 +247,20 @@ class DataHistory
     }
 
     /**
+     * Clear all Data History cache entries
+     *
+     * @return bool
+     */
+    public function clear(): bool
+    {
+        return $this->cache->clear();
+    }
+
+    /**
      * Purge old items from a data history array
      *
-     * @param array $history
-     * @param float $probability Set a value between 0 and 1.0 to run based on chance (0.3 = run on 40% of calls)
+     * @param array $history Data history array to purge
+     * @param float $probability Set a value between 0 and 1.0 to run based on chance (0.4 = run on 40% of calls)
      * @param ?\DateTime $now Inject current date, useful for testing
      * @return array
      * @throws \Exception
@@ -263,5 +286,4 @@ class DataHistory
 
         return $history;
     }
-
 }

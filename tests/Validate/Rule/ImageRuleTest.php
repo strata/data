@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace Strata\Data\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Strata\Data\Model\Item;
 use Strata\Data\Validate\Rule\ImageRule;
 
 class ImageRuleTest extends TestCase
@@ -12,17 +11,16 @@ class ImageRuleTest extends TestCase
 
     public function testValidationRule()
     {
-        $validator = new ImageRule();
-        $item = new Item('test');
+        $validator = new ImageRule('[img]');
 
-        $item->setContent(['img' => 'test.webp']);
-        $this->assertTrue($validator->validate('img', $item));
+        $data = ['img' => 'test.webp'];
+        $this->assertTrue($validator->validate($data));
 
-        $item->setContent(['img' => 'TEST.JPEG']);
-        $this->assertTrue($validator->validate('img', $item));
+        $data = ['img' => 'TEST.JPEG'];
+        $this->assertTrue($validator->validate($data));
 
-        $item->setContent(['img' => 'test']);
-        $this->assertFalse($validator->validate('img', $item));
+        $data = ['img' => 'test'];
+        $this->assertFalse($validator->validate($data));
     }
 
 }

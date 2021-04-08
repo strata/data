@@ -1,25 +1,23 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Validate\Rule;
 
-use Strata\Data\Model\Item;
-
-class ArrayRule extends RuleAbstract
+class ArrayRule extends ValidatorRuleAbstract
 {
-
     /**
      * Is the item value valid?
      *
-     * @param string $propertyReference
-     * @param Item $item
+     * @param array|object $data
      * @return bool
      */
-    public function validate(string $propertyReference, Item $item): bool
+    public function validate($data): bool
     {
-        $result = is_array($item->getProperty($propertyReference));
+        $value = $this->getProperty($data);
+        $result = is_array($value);
         if (!$result) {
-            $this->setErrorMessage(sprintf('%s is not an array', $propertyReference));
+            $this->setErrorMessage(sprintf('%s is not an array', $this->getPropertyPath()));
         }
         return $result;
     }

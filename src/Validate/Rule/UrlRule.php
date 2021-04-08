@@ -1,25 +1,24 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Validate\Rule;
 
-use Strata\Data\Model\Item;
-
-class UrlRule extends RuleAbstract
+class UrlRule extends ValidatorRuleAbstract
 {
 
     /**
      * Is the item value valid?
      *
-     * @param string $propertyReference
-     * @param Item $item
+     * @param array|object $data
      * @return bool
      */
-    public function validate(string $propertyReference, Item $item): bool
+    public function validate($data): bool
     {
-        $result = filter_var($item->getProperty($propertyReference), FILTER_VALIDATE_URL);
+        $value = $this->getProperty($data);
+        $result = filter_var($value, FILTER_VALIDATE_URL);
         if ($result === false) {
-            $this->setErrorMessage(sprintf('%s is not a valid URL', $propertyReference));
+            $this->setErrorMessage(sprintf('%s is not a valid URL', $this->getPropertyPath()));
             return false;
         }
         return true;

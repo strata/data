@@ -39,7 +39,7 @@ Mappers can also build collections along with automated pagination.
 
 See [changing data](changing-data/README.md).
 
-### Data manager
+### Data manager (TODO)
 You can use data providers, validators, transformers and mappers independently of each other. 
 
 You can also wrap all this functionality up in a **Data Manager** which supports an **event system** to allow you to 

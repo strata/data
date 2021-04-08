@@ -24,7 +24,7 @@ $api->setBaseUri('https://new.com/');
 ```
 
 ## Configuration
-You can configure the data provider with default options in a number of ways. 
+You can configure the data provider with default HTTP options in a number of ways. 
 
 You can pass `$options` array when creating a new `Http` object:
 
@@ -37,6 +37,8 @@ You can also pass `$options` array when setting the current base URI:
 ```php
 $api->setBaseUri('https://example.com/', $options);
 ```
+
+Please note this overwrites any previously set default HTTP options.
 
 See [Symfony HttpClient configuration](https://symfony.com/doc/current/reference/configuration/framework.html#reference-http-client) for a reference
 for all valid options. Common options appear below.
@@ -142,6 +144,24 @@ Run a HEAD request.
     * `array $options` HTTP options to use for this request (these override default HTTP options)
 * Returns an object of type `Strata\Data\Http\Response\CacheableResponse`
 
+### Cacheable responses
+
+Most requests return responses as objects of type `CacheableResponse`. These are identical to the standard Symfony response
+object with one additional method `isHit()` which lets you know whether this response was returned from the cache or run
+live.
+
+```php
+$response = $api->get('url-path');
+
+if ($response->isHit()) {
+    echo "HIT";
+} else {
+    echo "MISS";
+}
+```
+
+See [caching](../caching.md) for more.
+
 ### exists
 
 You can use the `exists()` method to simply test a URL endpoint returns a 200 successful status code.
@@ -158,16 +178,14 @@ $result = $api->exists('tile-101.png');
 
 ### getRss
 
-You can use the `getRss()` method to get and decode an RSS feed, returning an 
+You can use the `getRss()` method to retrieve and decode an RSS feed. 
 
 ```php
 $http = new Http('https://example.com/');
 
-// See https://docs.laminas.dev/laminas-feed/reader/#retrieving-feed-information
 $feed = $http->getRss('feed.rss');
 
 foreach ($feed as $item) {
-    // See https://docs.laminas.dev/laminas-feed/reader/#retrieving-entryitem-information
     $title = $item->getTitle();
     $link = $item->getLink();
 }
@@ -178,53 +196,15 @@ foreach ($feed as $item) {
 * Returns an iterable object of type `Laminas\Feed\Reader\Feed\FeedInterface`
 
 This uses [Laminas Feed](https://docs.laminas.dev/laminas-feed/reader/) to decode the RSS feed, this supports RSS and
-Atom feeds of any version, including RDF/RSS 1.0, RSS 2.0, Atom 0.3, and Atom 1.0
+Atom feeds of any version, including RDF/RSS 1.0, RSS 2.0, Atom 0.3, and Atom 1.0.
 
-## Cacheable responses
-
-All requests return responses as objects of type `CacheableResponse`. These are identical to the standard Symfony response
-object with one additional method `isHit()` which lets you know whether this response was returned from the cache or run
-live.
-
-```php
-$response = $api->get('url-path');
-
-if ($response->isHit()) {
-    echo "HIT";
-} else {
-    echo "MISS";
-}
-```
-
-See [caching](../caching.md) for more.
-
-## Running requests manually
-
-All requests run the `prepareRequest()` and `runRequest()`, this is to help support [concurrent requests](#concurrent-requests).
-You can use these methods directly, but it's recommended to use a helper method below.
-
-### prepareRequest
-
-Prepare request (but do not run it).
-
-* Parameters
-    * `string $method` HTTP method
-  * `string $uri` URI relative to base URI
-  * `array $options` HTTP options to use for this request (these override default HTTP options)
-* Returns an object of type `Strata\Data\Http\Response\CacheableResponse`
-
-### runRequest
-
-Run a request (note Symfony HttpClient is lazy loading so this still won't actually run a HTTP request until content is accessed).
-
-* Parameters
-    * `CacheableResponse $response` Response to run
-* Returns an object of type `Strata\Data\Http\Response\CacheableResponse`
+See docs on [retrieving feed information](https://docs.laminas.dev/laminas-feed/reader/#retrieving-feed-information) 
+and [retrieving entry item information](https://docs.laminas.dev/laminas-feed/reader/#retrieving-entryitem-information).
 
 ## Concurrent requests
 
 You can run a bulk set of GET requests quickly and efficiently by passing an array of URIs to the `getConcurrent()` method.
-This returns a generator which can be looped over with `foreach`.
+This returns a [generator](https://www.php.net/generators.overview) which can be looped over with `foreach`.
 
 ```php
 /** @var ResponseInterface $response */
@@ -256,6 +236,28 @@ foreach ($responses as $response) {
 
 The `runRequest()` method checks the status code to ensure the request has run successfully.
 
+## Running requests manually
+
+All requests run the `prepareRequest()` and `runRequest()`, this is to help support [concurrent requests](#concurrent-requests).
+You can use these methods directly, but it's recommended to use a helper method above such as `get()`.
+
+### prepareRequest
+
+Prepare request (but do not run it).
+
+* Parameters
+    * `string $method` HTTP method
+    * `string $uri` URI relative to base URI
+    * `array $options` HTTP options to use for this request (these override default HTTP options)
+* Returns an object of type `Strata\Data\Http\Response\CacheableResponse`
+
+### runRequest
+
+Run a request (note Symfony HttpClient is lazy loading so this still won't actually run a HTTP request until content is accessed).
+
+* Parameters
+    * `CacheableResponse $response` Response to run
+* Returns an object of type `Strata\Data\Http\Response\CacheableResponse`
 
 ## Suppress exceptions on error
 The default behaviour of is to throw exceptions on HTTP or JSON decoding errors (e.g. if a request does not return a 200 status),

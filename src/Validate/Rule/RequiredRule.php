@@ -1,34 +1,32 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Validate\Rule;
 
-use Strata\Data\Model\Item;
-
-class RequiredRule extends RuleAbstract
+class RequiredRule extends ValidatorRuleAbstract
 {
-
     /**
      * Is the item value valid?
      *
-     * @param string $propertyReference
-     * @param Item $item
+     * @param array|object $data
      * @return bool
      */
-    public function validate(string $propertyReference, Item $item): bool
+    public function validate($data): bool
     {
         $result = true;
-        $value = $item->getProperty($propertyReference);
+
+        $value = $this->getProperty($data);
         if ($value === null) {
             $result = false;
-        } else if ($value === '') {
+        } elseif ($value === '') {
             $result = false;
-        } else if (is_array($value) && count($value) === 0) {
+        } elseif (is_array($value) && count($value) === 0) {
             $result = false;
         }
 
         if (!$result) {
-            $this->setErrorMessage(sprintf('%s does not exist or is empty', $propertyReference));
+            $this->setErrorMessage(sprintf('%s does not exist or is empty', $this->getPropertyPath()));
         }
         return $result;
     }

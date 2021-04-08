@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Traits;
@@ -101,7 +102,7 @@ trait IterableTrait
         $this->position = $position;
     }
 
-    public function count() : int
+    public function count(): int
     {
         return count($this->collection);
     }

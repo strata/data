@@ -1,89 +1,64 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Http;
 
 use Strata\Data\Decode\DecoderInterface;
-use Strata\Data\Decode\DecoderStrategy;
-use Strata\Data\Decode\Json;
-use Strata\Data\Exception\FailedApiRequestException;
+use Strata\Data\Decode\GraphQL as GraphQLDecoder;
+use Strata\Data\Exception\DecoderException;
 use Strata\Data\Exception\FailedGraphQLException;
-use Strata\Data\Exception\FailedRequestException;
 use Strata\Data\Helper\ContentHasher;
-use Strata\Data\Model\Response;
-use Strata\Data\Traits\AuthTokenTrait;
-use Symfony\Component\HttpClient\HttpClient;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Strata\Data\Version;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
-class GraphQL extends HttpAbstract
+class GraphQL extends Http
 {
+    /**
+     * Default HTTP options when creating new HttpClient objects for this data provider
+     *
+     * @see https://symfony.com/doc/current/reference/configuration/framework.html#reference-http-client
+     * @var array|array[]
+     */
+    const DEFAULT_OPTIONS = [
+        'headers' => [
+            'User-Agent' => Version::USER_AGENT,
+            'Content-Type' => 'application/json',
+        ]
+    ];
+
     private string $lastQuery;
 
     /**
-     * Setup HTTP client
-     *
-     * @see https://symfony.com/doc/current/reference/configuration/framework.html#reference-http-client
-     * @return HttpClientInterface
-     */
-    public function setupHttpClient(): HttpClientInterface
-    {
-        $options = [
-            'base_uri' => $this->getBaseUri(),
-            'headers' => [
-                'Content-Type' => 'application/json',
-            ]
-        ];
-
-        return HttpClient::create($options);
-    }
-
-    /**
      * Return default decoder to use to decode responses
+     *
+     * Returns data from 'data' property
      *
      * @return DecoderInterface
      */
     public function getDefaultDecoder(): DecoderInterface
     {
-        return new Json();
+        if (null === $this->defaultDecoder) {
+            $this->setDefaultDecoder(new GraphQLDecoder());
+        }
+        return $this->defaultDecoder;
     }
 
     /**
      * Return a unique identifier safe to use for caching based on the request
      *
-     * Method + URI + GET params + GraphQL query
+     * Hash generated from: URI + GET params + GraphQL query
      *
-     * @param $method
-     * @param $uri
-     * @param array $options
+     * @param string $uri
+     * @param array $context
      * @return string Hash of the identifier
      */
-    public function getRequestIdentifier($method, $uri, array $options = []): string
+    public function getRequestIdentifier(string $uri, array $context = []): string
     {
         if (!empty($options['query'])) {
             $uri .= '?' . urlencode($options['query']);
         }
-        return ContentHasher::hash($method . ' ' . $uri . ' ' . $options['body']);
-    }
-
-    /**
-     * Set raw data to response
-     *
-     * @param Response $response
-     * @param ResponseInterface $httpResponse
-     * @return void
-     */
-    public function setRawData(Response $response, ResponseInterface $httpResponse): void
-    {
-        $data = $this->decode($httpResponse->getContent());
-        if (isset($data['data']) && is_array($data['data'])) {
-            $response->setRawContent($data['data']);
-        }
-
-        // Add any GraphQL errors
-        if (isset($data['errors']) && is_array($data['errors'])) {
-            $response->setMeta('errors', $data['errors']);
-        }
+        return ContentHasher::hash($uri . ' ' . $context['body']['body']);
     }
 
     /**
@@ -95,18 +70,26 @@ class GraphQL extends HttpAbstract
      */
     public function throwExceptionOnFailedRequest(ResponseInterface $response): void
     {
-        $errors = $response->getMeta('errors');
+        // Throws an exception on HTTP error
+        $content = $response->toArray();
 
-        if ($errors !== null && is_array($errors)) {
-            $partialData = [];
-            if (!empty($response->getItem()->getContent())) {
-                $partialData = $response->getItem()->getContent();
-            }
-            throw new FailedGraphQLException(sprintf('GraphQL query failed: %s', $errors[0]['message']), $errors, $partialData);
+        // GraphQL errors are returned in 'errors' property
+        if (!isset($content['errors']) || !is_array($content['errors'])) {
+            return;
         }
+        $errors = $content['errors'];
+
+        try {
+            $partialData = $this->decode($response);
+        } catch (DecoderException $e) {
+            $partialData = [];
+        }
+        throw new FailedGraphQLException(sprintf('GraphQL query failed: %s', $errors[0]['message']), $errors, $partialData);
     }
 
     /**
+     * Return last GraphQL query
+     *
      * @return string
      */
     public function getLastQuery(): string
@@ -115,6 +98,8 @@ class GraphQL extends HttpAbstract
     }
 
     /**
+     * Set last GraphQL query
+     *
      * @param string $lastQuery
      */
     public function setLastQuery(string $lastQuery): void
@@ -125,8 +110,6 @@ class GraphQL extends HttpAbstract
     /**
      * Ping a GraphQL API service to check it is online
      *
-     * Sends request to baseUri
-     *
      * @return bool
      * @throws \JsonException
      * @throws \Strata\Data\Exception\BaseUriException
@@ -135,8 +118,8 @@ class GraphQL extends HttpAbstract
     public function ping(): bool
     {
         $response = $this->query('{ping}');
-        $item = Json::decode($response);
-        if ($item['ping'] === 'pong') {
+        $item = $this->decode($response);
+        if (isset($item['ping']) && $item['ping'] == 'pong') {
             return true;
         }
         return false;
@@ -151,14 +134,14 @@ class GraphQL extends HttpAbstract
      * @param array $query GraphQL query
      * @param ?array $variables Array of variables to pass to GraphQL (key & value pairs)
      * @param ?string $operationName Operation name to execute (only required if query contains multiple operations)
-     * @return Response
+     * @return ResponseInterface
      * @throws \JsonException on invalid query JSON string
      * @throws \Strata\Data\Exception\BaseUriException
      * @throws \Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface
      */
-    public function query(string $query, ?array $variables = [], ?string $operationName = null): Response
+    public function query(string $query, ?array $variables = [], ?string $operationName = null): ResponseInterface
     {
-        return $this->request('POST', '', ['body' => $this->buildQuery($query, $variables, $operationName)]);
+        return $this->post('', ['body' => $this->buildQuery($query, $variables, $operationName)]);
     }
 
     /**

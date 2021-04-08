@@ -1,19 +1,20 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Validate;
 
-use Strata\Data\Model\Item;
+use Strata\Data\Transform\PropertyAccessorInterface;
 
-interface ValidatorInterface
+interface ValidatorInterface extends PropertyAccessorInterface
 {
     /**
      * Is the item valid?
      *
-     * @param Item $item
+     * @param mixed $data
      * @return bool
      */
-    public function validate(Item $item): bool;
+    public function validate($data): bool;
 
     /**
      * Return error message from last validate() call
@@ -21,4 +22,6 @@ interface ValidatorInterface
      * @return string
      */
     public function getErrorMessage(): string;
+
+
 }

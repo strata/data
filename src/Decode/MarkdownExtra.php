@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Decode;
@@ -17,11 +18,12 @@ class MarkdownExtra implements DecoderInterface
 {
     /**
      * Filter markdown string to HTML
-     * @param string $data
+     * @param string|object $data
      * @return string
      */
-    public function decode(string $data): string
+    public function decode($data): string
     {
+        $data = StringNormalizer::getString($data);
         $parsedown = new ParsedownExtra();
         return $parsedown->text($data);
     }

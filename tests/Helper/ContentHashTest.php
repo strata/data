@@ -48,9 +48,9 @@ final class ContentHashTest extends TestCase
 
     public function testFileHash()
     {
-        $hash1 = ContentHasher::hash(file_get_contents(__DIR__ . '/../Filesystem/files/test-1.md'));
-        $hash2 = ContentHasher::hash(file_get_contents(__DIR__ . '/../Filesystem/files/test-2.md'));
-        $hash3 = ContentHasher::hash(file_get_contents(__DIR__ . '/../Filesystem/files/test-1.md'));
+        $hash1 = ContentHasher::hash(file_get_contents(__DIR__ . '/content/test1.md'));
+        $hash2 = ContentHasher::hash(file_get_contents(__DIR__ . '/content/test2.md'));
+        $hash3 = ContentHasher::hash(file_get_contents(__DIR__ . '/content/test1.md'));
 
         $this->assertFalse($hash1 == $hash2);
         $this->assertTrue($hash1 == $hash3);

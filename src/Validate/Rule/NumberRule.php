@@ -1,26 +1,24 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Validate\Rule;
 
-use Strata\Data\Model\Item;
-
-class NumberRule extends RuleAbstract
+class NumberRule extends ValidatorRuleAbstract
 {
 
     /**
      * Is the item value valid?
      *
-     * @see https://www.php.net/is-numeric
-     * @param string $propertyReference
-     * @param Item $item
+     * @param array|object $data
      * @return bool
      */
-    public function validate(string $propertyReference, Item $item): bool
+    public function validate($data): bool
     {
-        $result = is_numeric($item->getProperty($propertyReference));
+        $value = $this->getProperty($data);
+        $result = is_numeric($value);
         if (!$result) {
-            $this->setErrorMessage(sprintf('%s is not a valid number', $propertyReference));
+            $this->setErrorMessage(sprintf('%s is not a valid number', $this->getPropertyPath()));
         }
         return $result;
     }

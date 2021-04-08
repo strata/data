@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Traits;
@@ -57,5 +58,4 @@ trait FlagsTrait
     {
         return (($this->flags & $flag) !== 0);
     }
-
 }

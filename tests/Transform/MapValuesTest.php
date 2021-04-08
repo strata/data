@@ -10,11 +10,8 @@ use Strata\Data\Transform\Data\MapValues;
 final class MapValuesTest extends TestCase
 {
     public $mapping = [
-        'Engineering' => 'engineering jobs',
-        'Design & Engineering Management'  => 'engineering jobs',
-        'Construction - Engineering'                 => 'construction jobs',
-        'Construction - Project and Site Management' => 'construction jobs',
-        'Construction - Site Supervision'            => 'construction jobs',
+        'engineering jobs'  => 'Engineering',
+        'construction jobs' => ['Construction - Engineering', 'Construction - Project and Site Management'],
     ];
 
     public function testMapValues()
@@ -34,7 +31,7 @@ final class MapValuesTest extends TestCase
         $data3 = [
             'item' => [
                 'id'        => 42,
-                'category'  => ' Construction - Engineering '
+                'category'  => ' construction - project and site management '
             ]
         ];
         $data4 = [
@@ -71,24 +68,49 @@ final class MapValuesTest extends TestCase
         $data = $mapper->transform($data);
         $this->assertEquals('engineering jobs', $data['categories'][0]);
         $this->assertEquals('construction jobs', $data['categories'][1]);
+        $this->assertFalse($mapper->hasNotTransformed());
     }
 
-    public function testCallback()
+    public function testNotTransformed()
     {
-        $data = [
-            'id'        => 42,
-            'category'  => 'ENGINEERING'
+        $data1 = [
+            'categories'  => [
+                'Construction',
+                'Construction - Engineering',
+            ]
+        ];
+        $data2 = [
+            'categories'  => [
+                'Construction',
+                'Construction - Engineering',
+                'engineering jobs'
+            ]
+        ];
+        $data3 = [
+            'category'  => 'Construction'
+        ];
+        $data4 = [
+            'category'  => 'engineering jobs'
         ];
 
-        $mapping = [
-            'Engineering' => function ($value, $data, $propertyPath) {
-                return strtolower($value) . ' (' . $data['id'] . ')';
-            },
-        ];
+        $mapper = new MapValues('[categories]', $this->mapping);
+        $data = $mapper->transform($data1);
+        $this->assertTrue($mapper->hasNotTransformed());
+        $this->assertSame(['Construction'], $mapper->getNotTransformed());
 
-        $mapper = new MapValues('[category]', $mapping);
-        $data = $mapper->transform($data);
-        $this->assertEquals('engineering (42)', $data['category']);
+        $mapper = new MapValues('[categories]', $this->mapping);
+        $data = $mapper->transform($data2);
+        $this->assertTrue($mapper->hasNotTransformed());
+        $this->assertSame(['Construction'], $mapper->getNotTransformed());
+
+        $mapper = new MapValues('[category]', $this->mapping);
+        $data = $mapper->transform($data3);
+        $this->assertTrue($mapper->hasNotTransformed());
+        $this->assertSame(['Construction'], $mapper->getNotTransformed());
+
+        $mapper = new MapValues('[category]', $this->mapping);
+        $data = $mapper->transform($data4);
+        $this->assertFalse($mapper->hasNotTransformed());
     }
 
 }

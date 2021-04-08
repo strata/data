@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Http\Response;
@@ -11,7 +12,7 @@ class MockResponseFromFile extends MockResponse
     /**
      * Create mock response from a file
      *
-     * Body file is loaded from {$filename}.response.json
+     * Body file is loaded from {$filename}
      *
      * The optional info file is loaded from {$filename}.info.php and must contain the $info variable (array). By
      * default mock responses return a 200 status code, which you can change by setting the $info array.
@@ -20,14 +21,14 @@ class MockResponseFromFile extends MockResponse
      *
      * Example:
      *
-     * $reponse = new MockResponseFromFile('test1');
+     * $reponse = new MockResponseFromFile('test1.json');
      *
-     * test1.response.json
+     * test1.json
      * {
      *     "message": "OK"
      * }
      *
-     * test1.info.php
+     * test1.json.info.php
      * <?php
      * $info = [
      *     'http_code' => 200
@@ -38,7 +39,7 @@ class MockResponseFromFile extends MockResponse
      */
     public function __construct(string $filename)
     {
-        $bodyFile = realpath($filename . '.response.json');
+        $bodyFile = realpath($filename);
         $infoFile = realpath($filename . '.info.php');
         $info = [];
 

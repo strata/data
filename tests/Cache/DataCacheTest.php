@@ -5,7 +5,7 @@ namespace Cache;
 
 use PHPUnit\Framework\TestCase;
 use Strata\Data\Cache\DataCache;
-use Strata\Data\Http\RestApi;
+use Strata\Data\Http\Rest;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Cache\Adapter\FilesystemTagAwareAdapter;
 use Symfony\Component\HttpClient\MockHttpClient;
@@ -82,7 +82,7 @@ class DataCacheTest extends TestCase
             new MockResponse('OK 3'),
         ];
         $http = new MockHttpClient($responses);
-        $api = new RestApi('http://example.com/');
+        $api = new Rest('http://example.com/');
         $api->setHttpClient($http);
         $adapter = new FilesystemAdapter('cache', 0, self::CACHE_DIR);
         $api->setCache($adapter);
@@ -98,17 +98,13 @@ class DataCacheTest extends TestCase
     }
 
     /**
-     * @todo move to HttpAbstract test
+     * @todo move to Http test
      */
     public function testCacheableRequest()
     {
-        $api = new RestApi('http://example.com/');
+        $api = new Rest('http://example.com/');
         $adapter = new FilesystemAdapter('cache', 0, self::CACHE_DIR);
         $api->setCache($adapter);
-
-        $this->assertFalse($api->isCacheableRequest('GET'));
-
-        $api->enableCache();
 
         // Default settings
         $this->assertTrue($api->isCacheableRequest('GET'));
@@ -143,7 +139,7 @@ class DataCacheTest extends TestCase
             new MockResponse('OK 3'),
         ];
         $http = new MockHttpClient($responses);
-        $api = new RestApi('http://example.com/');
+        $api = new Rest('http://example.com/');
         $api->setHttpClient($http);
         $adapter = new FilesystemAdapter('cache', 0, self::CACHE_DIR);
         $api->setCache($adapter);
@@ -178,7 +174,7 @@ class DataCacheTest extends TestCase
 
     public function testTagsNotSupported()
     {
-        $api = new RestApi('http://example.com/');
+        $api = new Rest('http://example.com/');
         $adapter = new FilesystemAdapter('cache', 0, self::CACHE_DIR);
         $api->setCache($adapter);
 
@@ -193,7 +189,7 @@ class DataCacheTest extends TestCase
             new MockResponse('OK 2'),
         ];
         $http = new MockHttpClient($responses);
-        $api = new RestApi('http://example.com/');
+        $api = new Rest('http://example.com/');
         $api->setHttpClient($http);
         $adapter = new FilesystemTagAwareAdapter('cache', 0, self::CACHE_DIR);
         $api->setCache($adapter);

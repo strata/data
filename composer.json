@@ -1,6 +1,6 @@
 {
   "name": "strata/data",
-  "description": "Framework to read data over RESTful APIs",
+  "description": "Framework to read data",
   "type": "library",
   "license": "MIT",
   "authors": [
@@ -17,11 +17,11 @@
     "symfony/http-client": "^5.2",
     "spatie/yaml-front-matter": "^2.0",
     "erusev/parsedown-extra": "^0.8.1",
-    "league/flysystem": "^2.0",
     "symfony/cache": "^5.2",
     "symfony/stopwatch": "^5.2",
     "symfony/monolog-bundle": "^3.6",
-    "symfony/property-access": "^5.2"
+    "symfony/property-access": "^5.2",
+    "laminas/laminas-feed": "^2.14"
   },
   "autoload": {
     "psr-4": {

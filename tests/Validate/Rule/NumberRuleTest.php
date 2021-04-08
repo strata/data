@@ -4,25 +4,48 @@ declare(strict_types=1);
 namespace Strata\Data\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Strata\Data\Model\Item;
 use Strata\Data\Validate\Rule\NumberRule;
 
 class NumberRuleTest extends TestCase
 {
 
-    public function testValidationRule()
+    /**
+     * @dataProvider validDataProvider
+     */
+    public function testValid($number)
     {
-        $validator = new NumberRule();
-        $item = new Item('test');
+        $validator = new NumberRule('[data]');
 
-        $item->setContent(['data' => '24']);
-        $this->assertTrue($validator->validate('data', $item));
-
-        $item->setContent(['data' => '0.1']);
-        $this->assertTrue($validator->validate('data', $item));
-
-        $item->setContent(['data' => 'one']);
-        $this->assertFalse($validator->validate('data', $item));
+        $data = ['data' => $number];
+        $this->assertTrue($validator->validate($data));
     }
+
+    /**
+     * @dataProvider invalidDataProvider
+     */
+    public function testInvalid($number)
+    {
+        $validator = new NumberRule('[data]');
+
+        $data = ['data' => $number];
+        $this->assertFalse($validator->validate($data));
+    }
+
+    public function validDataProvider()
+    {
+        return [
+            [1],
+            ["10"],
+            ["0.1"],
+        ];
+    }
+
+    public function invalidDataProvider()
+    {
+        return [
+            ['one'],
+        ];
+    }
+
 
 }

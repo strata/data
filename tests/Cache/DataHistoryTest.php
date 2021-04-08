@@ -3,8 +3,6 @@ declare(strict_types=1);
 
 namespace Cache;
 
-use League\Flysystem\Filesystem;
-use League\Flysystem\Local\LocalFilesystemAdapter;
 use PHPUnit\Framework\TestCase;
 use Strata\Data\Cache\DataHistory;
 use Strata\Data\Helper\ContentHasher;
@@ -28,9 +26,8 @@ class DataHistoryTest extends TestCase
      */
     protected function tearDown(): void
     {
-        $adapter = new LocalFilesystemAdapter(self::CACHE_DIR);
-        $filesystem = new Filesystem($adapter);
-        $filesystem->deleteDirectory(self::CACHE_NAMESPACE);
+        $history = new DataHistory(new FilesystemAdapter(self::CACHE_NAMESPACE, 0, self::CACHE_DIR));
+        $history->clear();
     }
 
     public function testAddGet()

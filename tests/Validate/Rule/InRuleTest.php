@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace Strata\Data\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Strata\Data\Model\Item;
 use Strata\Data\Validate\Rule\InRule;
 
 class InRuleTest extends TestCase
@@ -12,20 +11,19 @@ class InRuleTest extends TestCase
 
     public function testValidationRule()
     {
-        $validator = new InRule(['test1', 'test2', 'test3']);
-        $item = new Item('test');
+        $validator = new InRule('[name]', ['test1', 'test2', 'test3']);
 
-        $item->setContent(['name' => 'test1']);
-        $this->assertTrue($validator->validate('name', $item));
+        $data = ['name' => 'test1'];
+        $this->assertTrue($validator->validate($data));
 
-        $item->setContent(['name' => 'test3']);
-        $this->assertTrue($validator->validate('name', $item));
+        $data = ['name' => 'test3'];
+        $this->assertTrue($validator->validate($data));
 
-        $item->setContent(['name' => 'TEST1']);
-        $this->assertFalse($validator->validate('name', $item));
+        $data = ['name' => 'TEST1'];
+        $this->assertFalse($validator->validate($data));
 
-        $item->setContent(['name' => 'test5']);
-        $this->assertFalse($validator->validate('name', $item));
+        $data = ['name' => 'test5'];
+        $this->assertFalse($validator->validate($data));
     }
 
 }

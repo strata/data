@@ -11,27 +11,45 @@ final class RenameFieldsTest extends TestCase
 {
     public function testRename()
     {
-        $propertyAccessor = PropertyAccess::createPropertyAccessor();
-
         $data = [
-            'name' => 'Fred Jones',
+            'full_name' => 'Fred Jones',
             'age' => 42,
         ];
         $rename = new RenameFields(['[name]' => '[full_name]']);
         $data = $rename->transform($data);
-        $this->assertEquals('Fred Jones', $propertyAccessor->getValue($data, '[full_name]'));
-        $this->assertArrayNotHasKey('name', $data);
+
+        $this->assertSame('Fred Jones', $data['name']);
+        $this->assertArrayNotHasKey('full_name', $data);
+        $this->assertFalse($rename->hasNotTransformed());
 
         $data = [
             'people' => [
                 'name' => 'Fred Jones',
-                'age' => 42,
+                'years' => 42,
             ]
         ];
 
-        $rename->setPropertyPaths(['[people][age]' => '[people][number]']);
+        $rename->setPropertyPaths(['[people][age]' => '[people][years]']);
         $data = $rename->transform($data);
-        $this->assertEquals(42, $propertyAccessor->getValue($data, '[people][number]'));
-        $this->assertArrayNotHasKey('age', $data['people']);
+        $this->assertSame(42, $data['people']['age']);
+        $this->assertArrayNotHasKey('years', $data['people']);
     }
+
+    public function testNotTransformed()
+    {
+        $rename = [
+            '[name]' => '[full_name]',
+            '[category]' => '[category_name]',
+        ];
+        $data = [
+            'full_name' => 'Fred Jones',
+            'age' => 42,
+        ];
+        $rename = new RenameFields($rename);
+        $data = $rename->transform($data);
+
+        $this->assertTrue($rename->hasNotTransformed());
+        $this->assertSame(['[category]'], $rename->getNotTransformed());
+    }
+
 }

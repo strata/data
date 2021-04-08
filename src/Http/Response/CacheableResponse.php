@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Http\Response;
@@ -79,5 +80,4 @@ class CacheableResponse implements ResponseInterface, StreamableInterface
     {
         return $this->cacheItem;
     }
-
 }

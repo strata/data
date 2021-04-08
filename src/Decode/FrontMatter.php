@@ -1,10 +1,11 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Decode;
 
 use Spatie\YamlFrontMatter\Document;
-use Strata\Data\Data\Item;
+use Strata\Data\Data_DELETE\Item;
 use Spatie\YamlFrontMatter\YamlFrontMatter as SpatieFrontMatter;
 
 /**
@@ -34,11 +35,12 @@ class FrontMatter implements DecoderInterface
      * or:
      * $item->matter('title')
      *
-     * @param string $data
+     * @param string|object $data
      * @return Document Array of front matter or empty array on failure
      */
-    public function decode(string $data): Document
+    public function decode($data): Document
     {
+        $data = StringNormalizer::getString($data);
         return SpatieFrontMatter::parse($data);
     }
 }

@@ -6,5 +6,4 @@ namespace Strata\Data\Exception;
 
 class NotFoundException extends \Exception
 {
-
 }

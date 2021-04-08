@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace Strata\Data\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Strata\Data\Model\Item;
 use Strata\Data\Validate\ValidationRules;
 
 class ValidationRulesTest extends TestCase
@@ -27,34 +26,33 @@ class ValidationRulesTest extends TestCase
     public function testRule()
     {
         $validator = new ValidationRules([
-            'data' => 'required',
-            'email' => 'required|email',
+            '[data]' => 'required',
+            '[email]' => 'required|email',
         ]);
-        $item = new Item('test');
-        $item->setContent([
+        $data = [
             'data' => 'something',
             'email' => 'hello@studio24.net'
-        ]);
-        $this->assertTrue($validator->validate($item));
+        ];
+        $this->assertTrue($validator->validate($data));
 
-        $item->setContent([
+        $data = [
             'data' => 'something',
             'email' => 'invalid email'
-        ]);
+        ];
 
-        $this->assertFalse($validator->validate($item));
+        $this->assertFalse($validator->validate($data));
         $this->assertStringContainsString('not a valid email', $validator->getErrorMessage());
     }
 
     public function testNestedProperty()
     {
         $validator = new ValidationRules([
-            'data.title' => 'required',
-            'data.item.type' => 'number',
-            'data.item.url' => 'required|url',
+            '[data][title]' => 'required',
+            '[data][item][type]' => 'number',
+            '[data][item][url]' => 'required|url',
         ]);
-        $item = new Item('test');
-        $item->setContent([
+
+        $data = [
             'data' => [
                 'title' => 'Testing',
                 'item' => [
@@ -62,9 +60,9 @@ class ValidationRulesTest extends TestCase
                     'url' => 'http://www.studio24.net/',
                 ]
             ]
-        ]);
+        ];
 
-        $this->assertTrue($validator->validate($item));
+        $this->assertTrue($validator->validate($data));
     }
 
 }

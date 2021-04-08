@@ -4,21 +4,27 @@ declare(strict_types=1);
 
 namespace Strata\Data\Transform\Data;
 
+use Strata\Data\Helper\UnionTypes;
+use Strata\Data\Transform\NotTransformedInterface;
+use Strata\Data\Transform\NotTransformedTrait;
+
 /**
  * Maps values in a data array to alternative values
  *
  * @package Strata\Data\Transform\Data
  */
-class MapValues extends DataAbstract
+class MapValues extends DataAbstract implements NotTransformedInterface
 {
+    use NotTransformedTrait;
+
     private string $propertyPath;
-    private array $mapping;
+    private array $newValues;
     private array $mappingLookup;
 
     /**
      * MapItem constructor.
      * @param string $propertyPath Path to root item to map values for
-     * @param array $mapping Array of old => new values or callback to calculate value with the parameters: $value, $data, $propertyPath
+     * @param array $mapping Array of new value => old value/s
      */
     public function __construct(string $propertyPath, array $mapping)
     {
@@ -37,21 +43,29 @@ class MapValues extends DataAbstract
     }
 
     /**
-     * Set mapping values (array of old => new values)
+     * Set mapping values (array of new value => old value/s)
      *
      * When mapping is performed, old values are compared case-insensitively with trailing and leading spaces trimmed.
-     * You can pass a callback as the new value, this must be a function with three parameters ($value, $data, $propertyPath)
      *
-     * @param array $mapping Array of old => new values
+     * @param array $mapping Array of new value => old value/s
      */
     public function setMapping(array $mapping)
     {
-        $this->mapping = $mapping;
-
-        // Build normalized lookup
+        // Build normalized lookup for old value => new key
         $this->mappingLookup = [];
-        foreach (array_keys($mapping) as $key) {
-            $this->mappingLookup[$this->normalize($key)] = $key;
+        foreach ($mapping as $newValue => $oldValues) {
+            $this->newValues[] = $newValue;
+            if (is_string($oldValues)) {
+                $this->mappingLookup[$this->normalize($oldValues)] = $newValue;
+                continue;
+            }
+            if (is_iterable($oldValues)) {
+                foreach ($oldValues as $oldValue) {
+                    if (is_string($oldValue)) {
+                        $this->mappingLookup[$this->normalize($oldValue)] = $newValue;
+                    }
+                }
+            }
         }
     }
 
@@ -63,7 +77,7 @@ class MapValues extends DataAbstract
      */
     public function canTransform($data): bool
     {
-        return is_array($data) || is_object($data);
+        return UnionTypes::arrayOrObject($data);
     }
 
     /**
@@ -84,6 +98,9 @@ class MapValues extends DataAbstract
         // Single value
         if (is_string($old)) {
             if (!$this->exists($old)) {
+                if (!in_array($old, $this->newValues)) {
+                    $this->addNotTransformed($old);
+                }
                 return $data;
             }
             $new = $this->lookup($old, $data);
@@ -95,6 +112,9 @@ class MapValues extends DataAbstract
         if (is_array($old)) {
             foreach ($old as $key => $value) {
                 if (!$this->exists($value)) {
+                    if (!in_array($value, $this->newValues)) {
+                        $this->addNotTransformed($value);
+                    }
                     continue;
                 }
                 $new = $this->lookup($value, $data);
@@ -137,7 +157,7 @@ class MapValues extends DataAbstract
     }
 
     /**
-     * Return new value from mapping or callback
+     * Return new value from mapping
      *
      * @param $value
      * @param $data
@@ -146,12 +166,6 @@ class MapValues extends DataAbstract
     private function lookup($value, $data)
     {
         $value = $this->normalize($value);
-        $new = $this->mapping[$this->mappingLookup[$value]];
-
-        if (is_callable($new)) {
-            return $new($value, $data, $this->propertyPath);
-        } else {
-            return $new;
-        }
+        return $this->mappingLookup[$value];
     }
 }

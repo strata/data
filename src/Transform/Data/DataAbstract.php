@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Strata\Data\Transform\Data;
 
+use Strata\Data\Transform\NotTransformedTrait;
 use Strata\Data\Transform\PropertyAccessorTrait;
 use Strata\Data\Transform\TransformInterface;
 

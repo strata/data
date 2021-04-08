@@ -1,25 +1,24 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Validate\Rule;
 
-use Strata\Data\Model\Item;
-
-class InRule extends RuleAbstract
+class InRule extends ValidatorRuleAbstract
 {
 
     /**
      * Is the item value valid?
      *
-     * @param string $propertyReference
-     * @param Item $item
+     * @param array|object $data
      * @return bool
      */
-    public function validate(string $propertyReference, Item $item): bool
+    public function validate($data): bool
     {
-        $result = in_array($item->getProperty($propertyReference), $this->getValues());
+        $value = $this->getProperty($data);
+        $result = in_array($value, $this->getValues());
         if (!$result) {
-            $this->setErrorMessage(sprintf('%s does not contain a valid value', $propertyReference));
+            $this->setErrorMessage(sprintf('%s does not contain a valid value', $this->getPropertyPath()));
         }
         return $result;
     }

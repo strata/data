@@ -6,6 +6,8 @@ namespace Strata\Data\Tests;
 use PHPUnit\Framework\TestCase;
 use Strata\Data\Decode\Json;
 use Strata\Data\Exception\DecoderException;
+use Strata\Data\Http\Response\MockResponseFromFile;
+use Symfony\Component\HttpClient\MockHttpClient;
 
 final class JsonTest extends TestCase
 {
@@ -27,8 +29,8 @@ EOD;
 
     public function testJson()
     {
-        $json = new Json();
-        $data = $json->decode($this->json);
+        $decoder = new Json();
+        $data = $decoder->decode($this->json);
 
         $this->assertIsArray($data);
         $this->assertEquals('John Smith', $data['name']);
@@ -36,12 +38,32 @@ EOD;
         $this->assertEquals('1234567', $data['tel']);
     }
 
+    public function testJsonInHttpResponse()
+    {
+        $decoder = new Json();
+        $responses = [
+            new MockResponseFromFile(__DIR__ . '/../Http/http/query.json'),
+        ];
+        $client = new MockHttpClient($responses);
+        $response = $client->request('GET', 'http://example.com/');
+        $data = $decoder->decode($response);
+
+        $this->assertEquals('Test', $data['title']);
+        $this->assertEquals(46, $data['id']);
+    }
+
     public function testInvalidJson()
     {
-        $json = new Json();
-
+        $decoder = new Json();
         $this->expectException(DecoderException::class);
-        $json->decode($this->invalidJson);
+        $decoder->decode($this->invalidJson);
+    }
+
+    public function testInvalidJson2()
+    {
+        $decoder = new Json();
+        $this->expectException(DecoderException::class);
+        $decoder->decode(null);
     }
 
 }

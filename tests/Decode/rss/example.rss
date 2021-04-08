@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" ?><rss version="2.0" xml:base="https://example.com/rss" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>News feed generator</title>
+    <link>https://example.com/rss</link>
+    <description></description>
+    <language>en</language>
+      <item>
+        <title>Article 1</title>
+        <link>https://example.com/1</link>
+        <description>Test description 1
+        </description>
+        <pubDate>Mon, 29 Mar 2021 15:00:20 +0000</pubDate>
+    </item>
+    <item>
+      <title>Article 2</title>
+      <link>https://example.com/2</link>
+      <description>Test description 2
+      </description>
+     <pubDate>Wed, 10 Mar 2021 23:30:04 +0000</pubDate>
+  </item>
+  <item>
+    <title>Digital support</title>
+    <link>https://example.com/3</link>
+    <description>Test description 3
+        </description>
+     <pubDate>Wed, 10 Feb 2021 18:00:18 +0000</pubDate>
+   </item>
+  </channel>
+</rss>

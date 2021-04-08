@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Cache;
@@ -6,7 +7,6 @@ namespace Strata\Data\Cache;
 use Psr\Cache\CacheItemInterface;
 use Psr\Cache\InvalidArgumentException;
 use Strata\Data\Exception\CacheException;
-use Strata\Data\Http\Response\CacheableResponse;
 use Symfony\Component\Cache\Adapter\TagAwareAdapterInterface;
 use Symfony\Component\Cache\CacheItem;
 use Symfony\Component\Cache\PruneableInterface;
@@ -27,7 +27,7 @@ class DataCache implements CacheItemPoolInterface, TagAwareAdapterInterface, Pru
 {
     private CacheItemPoolInterface $cache;
     protected array $tags = [];
-    protected ?int $lifetime = null;
+    protected int $lifetime;
 
     /**
      * Constructor
@@ -362,5 +362,4 @@ class DataCache implements CacheItemPoolInterface, TagAwareAdapterInterface, Pru
         /** @var PruneableInterface */
         $this->cache->prune();
     }
-
 }

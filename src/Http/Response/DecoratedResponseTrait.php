@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Http\Response;
@@ -104,5 +105,4 @@ trait DecoratedResponseTrait
             throw new \Exception('Method toStream does not exist on object ' . get_class($this->decorated));
         }
     }
-
 }

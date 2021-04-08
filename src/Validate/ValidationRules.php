@@ -1,11 +1,12 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Strata\Data\Validate;
 
 use Strata\Data\Exception\ValidatorRulesException;
-use Strata\Data\Model\Item;
-use Strata\Data\Validate\Rule\RuleInterface;
+use Strata\Data\Transform\PropertyAccessorTrait;
+use Strata\Data\Validate\Rule\ValidatorRuleInterface;
 
 /**
  * Simple example validator
@@ -14,8 +15,8 @@ use Strata\Data\Validate\Rule\RuleInterface;
  *
  * E.g.
  * $rules = new ValidationRules([
- *     'data.entries' => 'array',
- *     'data.entries.title' => 'required',
+ *     '[data][entries]' => 'array',
+ *     '[data][entries][title]' => 'required',
  * ];
  *
  * @see https://laravel.com/docs/validation Inspired by Laravel's Validation
@@ -23,7 +24,8 @@ use Strata\Data\Validate\Rule\RuleInterface;
  */
 class ValidationRules implements ValidatorInterface
 {
-    const NESTED_PROPERTY_SEPARATOR = '.';
+    use PropertyAccessorTrait;
+
     const RULE_SEPARATOR = '|';
     const RULE_VALUE_SEPARATOR = ':';
     const VALUES_SEPARATOR = ',';
@@ -54,7 +56,7 @@ class ValidationRules implements ValidatorInterface
             case 'array':
                 return '\Strata\Data\Validate\Rule\ArrayRule';
             case 'boolean':
-                return  '\Strata\Data\Validate\Rule\BooleanRule';
+                return '\Strata\Data\Validate\Rule\BooleanRule';
             case 'email':
                 return '\Strata\Data\Validate\Rule\EmailRule';
             case 'in':
@@ -100,26 +102,35 @@ class ValidationRules implements ValidatorInterface
      * Add a rule for a single data property to the validator
      *
      * @param string $propertyReference E.g. data.entries.email
-     * @param string|ValidatorInterface $rules E.g. required|email or a Validator object
+     * @param string|ValidatorRuleInterface $rules E.g. required|email or a Validator object
      * @throws ValidatorRulesException For an invalid rule
      */
     public function addRule(string $propertyReference, $rules)
     {
-        if ($rules instanceof RuleInterface) {
+        if ($rules instanceof ValidatorRuleInterface) {
             $this->rules[$propertyReference] = $rules;
         }
 
         foreach (explode(self::RULE_SEPARATOR, $rules) as $rule) {
+            // Detect rules (e.g. email) & rules with arguments (e.g. in:1,2,3)
             $elements = explode(self::RULE_VALUE_SEPARATOR, $rule);
             if (count($elements) == 1) {
                 $class = $this->getRuleClass($rule);
-                $this->rules[$propertyReference] = new $class();
+
+                /** @var ValidatorRuleInterface $validator */
+                $validator = new $class($propertyReference);
+                $validator->setPropertyAccessor($this->getPropertyAccessor());
+                $this->rules[$propertyReference] = $validator;
                 continue;
             }
             if (count($elements) == 2) {
                 $class = $this->getRuleClass($elements[0]);
                 $values = explode(self::VALUES_SEPARATOR, $elements[1]);
-                $this->rules[$propertyReference] = new $class($values);
+
+                /** @var ValidatorInterface $rule */
+                $validator = new $class($propertyReference, $values);
+                $validator->setPropertyAccessor($this->getPropertyAccessor());
+                $this->rules[$propertyReference] = $validator;
                 continue;
             }
             throw new ValidatorRulesException(sprintf('Invalid validation rule: %s (for property ref %s)', $rule, $propertyReference));
@@ -129,19 +140,19 @@ class ValidationRules implements ValidatorInterface
     /**
      * Is the item data valid?
      *
-     * @param Item $item
+     * @param array|object $data
      * @return bool
      */
-    public function validate(Item $item): bool
+    public function validate($data): bool
     {
         $valid = true;
         $this->errors = [];
 
-        foreach ($this->rules as $propertyReference => $rule) {
-            /** @var RuleInterface $rule */
-            if (!$rule->validate($propertyReference, $item)) {
+        /** @var ValidatorRuleInterface $validator */
+        foreach ($this->rules as $propertyReference => $validator) {
+            if (!$validator->validate($data)) {
                 $valid = false;
-                $this->errors[] = $rule->getErrorMessage();
+                $this->errors[] = $validator->getErrorMessage();
             }
         }
 
