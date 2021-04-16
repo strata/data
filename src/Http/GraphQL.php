@@ -22,7 +22,6 @@ class GraphQL extends Http
      */
     const DEFAULT_OPTIONS = [
         'headers' => [
-            'User-Agent' => Version::USER_AGENT,
             'Content-Type' => 'application/json',
         ]
     ];

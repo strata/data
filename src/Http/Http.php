@@ -47,12 +47,9 @@ class Http implements DataProviderInterface
      * @see https://symfony.com/doc/current/reference/configuration/framework.html#reference-http-client
      * @var array|array[]
      */
-    const DEFAULT_OPTIONS = [
-        'headers' => [
-            'User-Agent' => Version::USER_AGENT
-        ]
-    ];
+    const DEFAULT_OPTIONS = [];
 
+    protected ?string $userAgent = null;
     protected ?array $currentDefaultOptions = null;
     protected array $cacheableMethods = ['GET', 'HEAD'];
     protected ?HttpClientInterface $client = null;
@@ -76,6 +73,40 @@ class Http implements DataProviderInterface
         }
     }
 
+    /**
+     * Return user agent to use with HTTP requests
+     *
+     * @return string
+     */
+    public function getUserAgent(): string
+    {
+        if (null !== $this->userAgent) {
+            return $this->userAgent;
+        }
+
+        $version = Version::getVersion();
+        if (null !== $version) {
+            $this->userAgent = "Strata/$version (+https://github.com/strata/data)";
+        } else {
+            $this->userAgent = "Strata (+https://github.com/strata/data)";
+        }
+
+        return $this->userAgent;
+    }
+
+    /**
+     * Set user agent to use with HTTP requests
+     *
+     * @param string $userAgent
+     */
+    public function setUserAgent(string $userAgent)
+    {
+        $this->userAgent = $userAgent;
+
+        if (null !== $this->currentDefaultOptions) {
+            $this->currentDefaultOptions['headers']['User-Agent'] = $userAgent;
+        }
+    }
 
     /**
      * Set the base URI to use for all requests
@@ -175,6 +206,7 @@ class Http implements DataProviderInterface
     {
         if (null === $this->currentDefaultOptions) {
             $this->currentDefaultOptions = self::DEFAULT_OPTIONS;
+            $this->currentDefaultOptions['headers']['User-Agent'] = $this->getUserAgent();
         }
         return $this->currentDefaultOptions;
     }

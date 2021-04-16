@@ -24,10 +24,30 @@ class UnionTypes
      * Validate union type array or object
      *
      * @param $data
+     * @param ?string $class Class name
      * @return bool
      */
-    public static function arrayOrObject($data): bool
+    public static function arrayOrObject($data, ?string $class = null): bool
     {
+        if (null !== $class) {
+            return is_array($data) || ($data instanceof $class);
+        }
         return is_array($data) || is_object($data);
     }
+
+    /**
+     * Validate union type string or object
+     *
+     * @param $data
+     * @param ?string $class Class name
+     * @return bool
+     */
+    public static function stringOrObject($data, ?string $class = null): bool
+    {
+        if (null !== $class) {
+            return is_string($data) || ($data instanceof $class);
+        }
+        return is_string($data) || is_object($data);
+    }
+
 }
