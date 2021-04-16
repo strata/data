@@ -8,7 +8,7 @@ use Composer\InstalledVersions;
 
 class Version
 {
-    const PACKAGE = 'strata\data';
+    const PACKAGE = 'strata/data';
 
     /**
      * Return current version of Strata Data
