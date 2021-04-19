@@ -21,7 +21,7 @@ class HttpTest extends TestCase
         $api = new Http('https://example.com/api/');
         $version = $api->getUserAgent();
 
-        $this->assertStringContainsString('Strata', $version);
+        $this->assertStringContainsString('Strata_Data', $version);
         $this->assertStringContainsString('(+https://github.com/strata/data)', $version);
     }
 

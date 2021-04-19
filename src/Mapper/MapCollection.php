@@ -9,6 +9,7 @@ use Strata\Data\Exception\MapperException;
 use Strata\Data\Exception\PaginationException;
 use Strata\Data\Helper\UnionTypes;
 use Strata\Data\Pagination\Pagination;
+use Symfony\Component\PropertyAccess\Exception\NoSuchIndexException;
 
 class MapCollection extends MapperAbstract implements MapperInterface
 {
@@ -88,10 +89,11 @@ class MapCollection extends MapperAbstract implements MapperInterface
                 $pagination->setTotalResults($totalResults);
                 break;
             case 'string':
-                if (!$propertyAccessor->isReadable($data, $totalResults)) {
-                    throw new MapperException(sprintf('Cannot read $totalResults property %s', $totalResults));
+                try {
+                    $pagination->setTotalResults((int) $propertyAccessor->getValue($data, $totalResults));
+                } catch (NoSuchIndexException $e) {
+                    throw new MapperException(sprintf('Cannot read $totalResults property %s', $totalResults), 0, $e);
                 }
-                $pagination->setTotalResults($propertyAccessor->getValue($data, $totalResults));
                 break;
         }
         switch (gettype($resultsPerPage)) {
@@ -99,10 +101,11 @@ class MapCollection extends MapperAbstract implements MapperInterface
                 $pagination->setResultsPerPage($resultsPerPage);
                 break;
             case 'string':
-                if (!$propertyAccessor->isReadable($data, $resultsPerPage)) {
-                    throw new MapperException(sprintf('Cannot read $resultsPerPage property %s', $resultsPerPage));
+                try {
+                    $pagination->setResultsPerPage((int) $propertyAccessor->getValue($data, $resultsPerPage));
+                } catch (NoSuchIndexException $e) {
+                    throw new MapperException(sprintf('Cannot read $resultsPerPage property %s', $totalResults), 0, $e);
                 }
-                $pagination->setResultsPerPage($propertyAccessor->getValue($data, $resultsPerPage));
                 break;
         }
         switch (gettype($currentPage)) {
@@ -110,10 +113,11 @@ class MapCollection extends MapperAbstract implements MapperInterface
                 $pagination->setPage($currentPage);
                 break;
             case 'string':
-                if (!$propertyAccessor->isReadable($data, $currentPage)) {
-                    throw new MapperException(sprintf('Cannot read $currentPage property %s', $currentPage));
+                try {
+                    $pagination->setPage((int) $propertyAccessor->getValue($data, $currentPage));
+                } catch (NoSuchIndexException $e) {
+                    throw new MapperException(sprintf('Cannot read $currentPage property %s', $totalResults), 0, $e);
                 }
-                $pagination->setPage($propertyAccessor->getValue($data, $currentPage));
                 break;
         }
 
