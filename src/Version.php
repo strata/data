@@ -38,5 +38,4 @@ final class Version
         $version = $version ? '/' . $version : '';
         return 'Strata_Data' . $version . ' (+https://github.com/strata/data)';
     }
-
 }

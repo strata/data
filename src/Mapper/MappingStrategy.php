@@ -4,16 +4,21 @@ declare(strict_types=1);
 
 namespace Strata\Data\Mapper;
 
+use Strata\Data\Helper\UnionTypes;
+use Strata\Data\Transform\PropertyAccessorTrait;
 use Strata\Data\Transform\TransformerChain;
 use Strata\Data\Transform\TransformInterface;
+use Strata\Data\Transform\Value\MapValueInterface;
 
 /**
  * Class to manage strategy of mapping data to an item
  */
-class MappingStrategy
+class MappingStrategy implements MappingStrategyInterface
 {
+    use PropertyAccessorTrait;
+    use TransformerTrait;
+
     private array $propertyPaths;
-    private TransformerChain $transformerChain;
 
     /**
      * Set fields to map from data to your new array/object
@@ -24,13 +29,7 @@ class MappingStrategy
     public function __construct(array $propertyPaths, array $transformers = [])
     {
         $this->setPropertyPaths($propertyPaths);
-        $this->transformerChain = new TransformerChain();
-
-        foreach ($transformers as $transformer) {
-            if ($transformer instanceof TransformInterface) {
-                $this->addTransformer($transformer);
-            }
-        }
+        $this->setTransformers($transformers);
     }
 
     /**
@@ -61,20 +60,72 @@ class MappingStrategy
     }
 
     /**
-     * Transformer to apply to mapped data
+     * Map array of data to an item (array or object)
      *
-     * @param TransformInterface $transformer
+     * @param array $data
+     * @param array|object $item
+     * @return mixed
      */
-    public function addTransformer(TransformInterface $transformer)
+    public function mapItem(array $data, $item)
     {
-        $this->transformerChain->addTransformer($transformer);
-    }
+        if (!UnionTypes::arrayOrObject($item)) {
+            throw new \TypeError(sprintf('$item argument must be an array or object, %s passed', gettype($item)));
+        }
+        $propertyAccessor = $this->getPropertyAccessor();
 
-    /**
-     * @return TransformerChain
-     */
-    public function getTransformerChain(): TransformerChain
-    {
-        return $this->transformerChain;
+        // Loop through property paths to map to new item (destination => source)
+        foreach ($this->getPropertyPaths() as $destination => $source) {
+            // Source is a MapValue object
+            if ($source instanceof MapValueInterface) {
+                /** @var MapValueInterface $source */
+                $source->setPropertyAccessor($propertyAccessor);
+                if ($source->isReadable($data)) {
+                    $propertyAccessor->setValue($item, $destination, $source->getValue($data));
+                    continue;
+                }
+            }
+
+            // Source is a callable function/method
+            if (is_callable($source)) {
+                $propertyAccessor->setValue($item, $destination, $source($data, $destination));
+                continue;
+            }
+
+            // Source is an array, pick first match
+            if (is_array($source)) {
+                $found = false;
+                foreach ($source as $sourceValue) {
+                    if ($propertyAccessor->isReadable($data, $sourceValue)) {
+                        $source = $sourceValue;
+                        $found = true;
+                        break;
+                    }
+                }
+                if (!$found) {
+                    $propertyAccessor->setValue($item, $destination, null);
+                    continue;
+                }
+            }
+
+            // Source is a string
+            if (is_string($source)) {
+                if (!$propertyAccessor->isReadable($data, $source)) {
+                    $propertyAccessor->setValue($item, $destination, null);
+                    continue;
+                }
+                $propertyAccessor->setValue($item, $destination, $propertyAccessor->getValue($data, $source));
+                continue;
+            }
+
+            // Invalid source type
+            throw new MapperException(sprintf('Source for destination "%s" not a valid type, must be a string, array of strings or callback', $destination));
+        }
+
+        // Transform data
+        if ($this->getTransformerChain() instanceof TransformerChain) {
+            $item = $this->getTransformerChain()->transform($item);
+        }
+
+        return $item;
     }
 }

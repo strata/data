@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 use Strata\Data\Mapper\MapItem;
 use Strata\Data\Mapper\MapItemToObject;
 use Strata\Data\Mapper\MappingStrategy;
+use Strata\Data\Mapper\WildcardMappingStrategy;
 use Strata\Data\Transform\Data\MapValues;
 use Strata\Data\Transform\Value\DateTimeValue;
 use Symfony\Component\PropertyAccess\PropertyAccess;
@@ -175,5 +176,28 @@ final class MapItemTest extends TestCase
         $this->assertEquals(42, $item->age);
         $this->assertEquals('Cambridge', $item->region);
         $this->assertEquals('PHP Developer', $item->job_title);
+    }
+
+    public function testWildcardMapping()
+    {
+        $regionMapping = [
+            'East of England' => ['cambridge', 'norwich']
+        ];
+        $strategy = new WildcardMappingStrategy(['person_age'], [
+            new MapValues('[person_region]', $regionMapping)
+        ]);
+        $mapper = new MapItem($strategy);
+
+        $data = [
+            'person_name' => 'Fred Bloggs',
+            'person_age'   => '42',
+            'person_region' => 'Cambridge'
+        ];
+        $item = $mapper->map($data);
+
+        $this->assertIsArray($item);
+        $this->assertEquals('Fred Bloggs', $item['person_name']);
+        $this->assertArrayNotHasKey('person_age', $item);
+        $this->assertEquals('East of England', $item['person_region']);
     }
 }

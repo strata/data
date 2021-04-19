@@ -49,5 +49,4 @@ class UnionTypes
         }
         return is_string($data) || is_object($data);
     }
-
 }

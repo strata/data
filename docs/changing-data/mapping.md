@@ -157,6 +157,41 @@ Returns:
 echo $person->region;
 ```
 
+### Wildcard mappers
+
+The above examples are useful when you know the data fields you want to map to a new item. An alternative strategy is to
+map all data fields, except any you wish to ignore. You can do this with the `WildcardMappingStrategy`. This class takes
+two arguments: an array of fields to ignore (not map), and an array of transformers to apply to the data.
+
+E.g.
+
+```php
+use Strata\Data\Mapper\MapItem;
+use Strata\Data\Mapper\WildcardMappingStrategy;
+use Strata\Data\Transform\Value\DateTimeValue;
+
+$ignore = ['field_to_ignore'];
+$mapper = new MapItem(new WildcardMappingStrategy($ignore));
+
+$data = [
+    'name' => 'Joe Bloggs',
+    'Field_to_ignore' => '123',
+    'category' => 'fishing' 
+];
+$item = $mapper->map($data);
+```
+
+Ignored fields are case-insensitive. The above returns an array with two values:
+
+```
+$item = [
+    'name' => 'Joe Bloggs',
+    'category' => 'fishing' 
+];
+```
+
+Any transformers are applied as detailed above. Wildcard mappers can map data to an array or object.
+
 ## Mapping collections
 
 You can also map data to a collection of array items or objects. This automatically sets pagination to make it easier to 

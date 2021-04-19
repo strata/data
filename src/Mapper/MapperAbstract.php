@@ -14,19 +14,19 @@ abstract class MapperAbstract
 
     private bool $mapToObject = false;
     private ?string $className = null;
-    private MappingStrategy $strategy;
+    private MappingStrategyInterface $strategy;
 
     /**
      * MapItem constructor
      *
-     * @param array|MappingStrategy $strategy Array of mapping property paths, or MappingStrategy object
+     * @param array|MappingStrategyInterface $strategy Array of mapping property paths, or MappingStrategy object
      */
     public function __construct($strategy)
     {
         if (is_array($strategy)) {
             $this->setStrategy(new MappingStrategy($strategy));
         }
-        if ($strategy instanceof MappingStrategy) {
+        if ($strategy instanceof MappingStrategyInterface) {
             $this->setStrategy($strategy);
         }
     }
@@ -50,19 +50,20 @@ abstract class MapperAbstract
     }
 
     /**
-     * @param MappingStrategy $strategy
+     * @param MappingStrategyInterface $strategy
      * @return MapperAbstract Fluent interface
      */
-    public function setStrategy(MappingStrategy $strategy): MapperAbstract
+    public function setStrategy(MappingStrategyInterface $strategy): MapperAbstract
     {
+        $strategy->setPropertyAccessor($this->getPropertyAccessor());
         $this->strategy = $strategy;
         return $this;
     }
 
     /**
-     * @return MappingStrategy
+     * @return MappingStrategyInterface
      */
-    public function getStrategy(): MappingStrategy
+    public function getStrategy(): MappingStrategyInterface
     {
         return $this->strategy;
     }
@@ -133,60 +134,7 @@ abstract class MapperAbstract
     public function buildItemFromData(array $data)
     {
         $propertyAccessor = $this->getPropertyAccessor();
-        $strategy = $this->getStrategy();
         $item = $this->getItem();
-
-        // Loop through property paths to map to new item (destination => source)
-        foreach ($strategy->getPropertyPaths() as $destination => $source) {
-            // Source is a MapValue object
-            if ($source instanceof MapValueInterface) {
-                /** @var MapValueInterface $source */
-                $source->setPropertyAccessor($propertyAccessor);
-                if ($source->isReadable($data)) {
-                    $propertyAccessor->setValue($item, $destination, $source->getValue($data));
-                    continue;
-                }
-            }
-
-            // Source is a callable function/method
-            if (is_callable($source)) {
-                $propertyAccessor->setValue($item, $destination, $source($data, $destination));
-                continue;
-            }
-
-            // Source is an array, pick first match
-            if (is_array($source)) {
-                $found = false;
-                foreach ($source as $sourceValue) {
-                    if ($propertyAccessor->isReadable($data, $sourceValue)) {
-                        $source = $sourceValue;
-                        $found = true;
-                        break;
-                    }
-                }
-                if (!$found) {
-                    $propertyAccessor->setValue($item, $destination, null);
-                    continue;
-                }
-            }
-
-            // Source is a string
-            if (is_string($source)) {
-                if (!$propertyAccessor->isReadable($data, $source)) {
-                    $propertyAccessor->setValue($item, $destination, null);
-                    continue;
-                }
-                $propertyAccessor->setValue($item, $destination, $propertyAccessor->getValue($data, $source));
-                continue;
-            }
-
-            // Invalid source type
-            throw new MapperException(sprintf('Source for destination "%s" not a valid type, must be a string, array of strings or callback', $destination));
-        }
-
-        // Transform data in destination item
-        $item = $strategy->getTransformerChain()->transform($item);
-
-        return $item;
+        return $this->getStrategy()->mapItem($data, $item);
     }
 }
