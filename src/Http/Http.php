@@ -83,14 +83,7 @@ class Http implements DataProviderInterface
         if (null !== $this->userAgent) {
             return $this->userAgent;
         }
-
-        $version = Version::getVersion();
-        if (null !== $version) {
-            $this->userAgent = "Strata/$version (+https://github.com/strata/data)";
-        } else {
-            $this->userAgent = "Strata (+https://github.com/strata/data)";
-        }
-
+        $this->userAgent = Version::getUserAgent();
         return $this->userAgent;
     }
 
