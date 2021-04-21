@@ -16,7 +16,7 @@ Example use cases are:
 * Prepare data values (e.g. strip tags, decode HTML entities)
 * Rename data fields (e.g. from "person_name" to "name")
 * Update data values to match your local values (e.g. map the category "T-Shirts" to "casual")
-* Map a single item to an object
+* Map a single item to an object (and optionally type set item fields, e.g. to an DateTime object)
 * Map a collection of items to a set of objects
 
 We use Symfony's PropertyAccess component to help read and write data. See [how to write property paths](../property-paths.md) 

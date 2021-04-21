@@ -21,7 +21,8 @@
     "symfony/stopwatch": "^5.2",
     "symfony/monolog-bundle": "^3.6",
     "symfony/property-access": "^5.2",
-    "laminas/laminas-feed": "^2.14"
+    "laminas/laminas-feed": "^2.14",
+    "league/commonmark": "^1.5"
   },
   "autoload": {
     "psr-4": {

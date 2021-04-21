@@ -11,7 +11,7 @@ use Strata\Data\Decode\MarkdownExtra;
 final class MarkdownTest extends TestCase
 {
     protected $markdown = <<<EOD
-## Hello     {#header1}
+## Hello
 
 World
 EOD;
@@ -23,13 +23,6 @@ EOD;
         $this->assertStringContainsString('<h2>Hello', $html);
 
         $html = $decoder->decode('test string * string');
-        $this->assertEquals('<p>test string * string</p>', $html);
-    }
-
-    public function testMarkdownExtra()
-    {
-        $decoder = new MarkdownExtra();
-        $html = $decoder->decode($this->markdown);
-        $this->assertStringContainsString('<h2 id="header1">Hello', $html);
+        $this->assertStringContainsString('<p>test string * string</p>', $html);
     }
 }

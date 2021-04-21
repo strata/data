@@ -26,9 +26,7 @@ class MapCollection extends MapperAbstract implements MapperInterface
      */
     public function totalResults($totalResults): MapCollection
     {
-        if (!UnionTypes::stringOrInt($totalResults)) {
-            throw new \InvalidArgumentException('$totalResults must be a string or integer');
-        }
+        UnionTypes::assert('$totalResults', $totalResults, 'string', 'int');
         $this->totalResults = $totalResults;
         return $this;
     }
@@ -39,9 +37,7 @@ class MapCollection extends MapperAbstract implements MapperInterface
      */
     public function resultsPerPage($resultsPerPage): MapCollection
     {
-        if (!UnionTypes::stringOrInt($resultsPerPage)) {
-            throw new \InvalidArgumentException('$resultsPerPage must be a string or integer');
-        }
+        UnionTypes::assert('$resultsPerPage', $resultsPerPage, 'string', 'int');
         $this->resultsPerPage = $resultsPerPage;
         return $this;
     }
@@ -52,18 +48,14 @@ class MapCollection extends MapperAbstract implements MapperInterface
      */
     public function currentPage($currentPage): MapCollection
     {
-        if (!UnionTypes::stringOrInt($currentPage)) {
-            throw new \InvalidArgumentException('$currentPage must be a string or integer');
-        }
+        UnionTypes::assert('currentPage', $currentPage, 'string', 'int');
         $this->currentPage = $currentPage;
         return $this;
     }
 
     public function fromPaginationData($data): MapCollection
     {
-        if (!UnionTypes::arrayOrObject($data)) {
-            throw new \InvalidArgumentException('$data must be an array or object');
-        }
+        UnionTypes::assert('$data', $data, 'array', 'object');
         $this->paginationData = $data;
         return $this;
     }

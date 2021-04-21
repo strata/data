@@ -35,29 +35,18 @@ final class MapItemTest extends TestCase
         $mapping = [
             '[name]' => '[person_name]',
             '[age]' => '[person_age]',
-            '[region]' => [
-                '[person_region]', '[person_town]'
-            ]
         ];
-        $regionMapping = [
-            'East of England' => ['cambridge', 'norwich']
-        ];
-        $strategy = new MappingStrategy($mapping, [
-            new MapValues('[region]', $regionMapping)
-        ]);
-        $mapper = new MapItem($strategy);
+        $mapper = new MapItem($mapping);
 
         $data = [
             'person_name' => 'Fred Bloggs',
             'person_age'   => '42',
-            'person_region' => 'Cambridge'
         ];
         $item = $mapper->map($data);
 
         $this->assertIsArray($item);
         $this->assertEquals('Fred Bloggs', $item['name']);
         $this->assertEquals('42', $item['age']);
-        $this->assertEquals('East of England', $item['region']);
     }
 
     public function testMapFromRootProperty()
@@ -65,24 +54,20 @@ final class MapItemTest extends TestCase
         $mapping = [
             '[name]' => '[person_name]',
             '[age]' => '[person_age]',
-            '[region]' => [
-                '[person_region]', '[person_town]'
-            ]
         ];
-        $strategy = new MappingStrategy($mapping);
-        $mapper = new MapItem($strategy);
+        $mapper = new MapItem($mapping);
 
         $data = [
             'data' => [
                 'person_name' => 'Fred Bloggs',
                 'person_age'   => '42',
-                'person_region' => 'Cambridge'
             ]
         ];
         $item = $mapper->map($data, '[data]');
 
         $this->assertIsArray($item);
         $this->assertEquals('Fred Bloggs', $item['name']);
+        $this->assertEquals('42', $item['age']);
     }
 
     public function testMultipleSourcePaths()
@@ -94,8 +79,37 @@ final class MapItemTest extends TestCase
                 '[person_region]', '[person_town]'
             ]
         ];
+        $mapper = new MapItem($mapping);
+
+        $data = [
+            'person_name' => 'Fred Bloggs',
+            'person_town' => 'Norwich'
+        ];
+        $item = $mapper->map($data);
+
+        $this->assertEquals('Norwich', $item['region']);
+        $this->assertArrayNotHasKey('age', $item);
+
+        $data = [
+            'person_name' => 'Fred Bloggs',
+            'person_region' => 'Norwich'
+        ];
+        $item = $mapper->map($data);
+        $this->assertEquals('Norwich', $item['region']);
+    }
+
+    public function testMapValues()
+    {
+        $mapping = [
+            '[name]' => '[person_name]',
+            '[age]' => '[person_age]',
+            '[region]' => [
+                '[person_region]', '[person_town]'
+            ]
+        ];
         $regionMapping = [
-            'East of England' => ['cambridge', 'norwich']
+            'East of England' => ['cambridge', 'norwich'],
+            'Yorkshire and the Humber' => ['Leeds', 'Sheffield', 'Bradford'],
         ];
         $strategy = new MappingStrategy($mapping, [
             new MapValues('[region]', $regionMapping)
@@ -107,9 +121,14 @@ final class MapItemTest extends TestCase
             'person_town' => 'Norwich'
         ];
         $item = $mapper->map($data);
-
         $this->assertEquals('East of England', $item['region']);
-        $this->assertNull($item['age']);
+
+        $data = [
+            'person_name' => 'Fred Bloggs',
+            'person_town' => 'sheffield'
+        ];
+        $item = $mapper->map($data);
+        $this->assertEquals('Yorkshire and the Humber', $item['region']);
     }
 
     public function testDateTimeValue()
@@ -183,7 +202,7 @@ final class MapItemTest extends TestCase
         $regionMapping = [
             'East of England' => ['cambridge', 'norwich']
         ];
-        $strategy = new WildcardMappingStrategy(['person_age'], [
+        $strategy = new WildcardMappingStrategy(['person_age', 'invalid'], [
             new MapValues('[person_region]', $regionMapping)
         ]);
         $mapper = new MapItem($strategy);
@@ -191,7 +210,8 @@ final class MapItemTest extends TestCase
         $data = [
             'person_name' => 'Fred Bloggs',
             'person_age'   => '42',
-            'person_region' => 'Cambridge'
+            'person_region' => 'Cambridge',
+            'INVALID' => '12345'
         ];
         $item = $mapper->map($data);
 
@@ -199,5 +219,6 @@ final class MapItemTest extends TestCase
         $this->assertEquals('Fred Bloggs', $item['person_name']);
         $this->assertArrayNotHasKey('person_age', $item);
         $this->assertEquals('East of England', $item['person_region']);
+        $this->assertArrayNotHasKey('invalid', $item);
     }
 }

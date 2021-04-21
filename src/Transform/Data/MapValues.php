@@ -77,7 +77,7 @@ class MapValues extends DataAbstract implements NotTransformedInterface
      */
     public function canTransform($data): bool
     {
-        return UnionTypes::arrayOrObject($data);
+        return UnionTypes::is($data, 'array', 'object');
     }
 
     /**

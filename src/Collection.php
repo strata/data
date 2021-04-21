@@ -37,9 +37,7 @@ class Collection implements \SeekableIterator, \Countable, \ArrayAccess
      */
     public function add($item)
     {
-        if (!UnionTypes::arrayOrObject($item)) {
-            throw new \InvalidArgumentException('$item must be an array or object');
-        }
+        UnionTypes::assert('$item', $item, 'array', 'object');
         $this->collection[] = $item;
     }
 

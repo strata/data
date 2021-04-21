@@ -11,9 +11,9 @@ interface MapValueInterface
 {
     /**
      * Return property path to this value
-     * @return string
+     * @return string|array
      */
-    public function getPropertyPath(): string;
+    public function getPropertyPath();
 
     /**
      * Is the property path readable in the passed data?

@@ -2,9 +2,74 @@
 
 ## Transforming single values
 
-Single value transformers are used to transform an individual value as it is accessed from data (array or object).
+Single value transformers are used to transform an individual value as it is accessed from data. This is useful to ensure 
+data values are of an expected type.
 
-TODO
+If the value cannot be found or cannot be transformed, then null is returned.
+
+### BooleanValue
+
+Transform value to a boolean.
+
+Usage:
+
+```php
+$transformer = new BooleanValue('[question]');
+$value = $transformer->getValue($data);
+```
+
+By default, the following values are transformed to yes: 1, '1', 'true', 'yes', 'y'
+
+And the following values are transformed to no: 0, '0', 'false', 'no', 'n'
+
+Values are checked case-insensitively.
+
+You can customise this by passing your own yes and no values to the constructor:
+
+```php
+$transformer = new BooleanValue('[question]', ['yes', 'true'], ['no', 'false']);
+```
+
+### DateTimeValue
+
+Transform value to a DateTime object.
+
+Usage: 
+
+```php
+$transformer = new DateTimeValue('[date]');
+$value = $transformer->getValue($data);
+```
+
+By default this transforms a datetime string using [supported date and time formats](https://www.php.net/datetime.formats).
+
+You can pass a datetime format to transform the string from by passing the format to the constructor:
+
+```php
+$transformer = new DateTimeValue('[date]', 'YY-MM-DD');
+```
+
+### FloatValue
+
+Transform value to a float.
+
+Usage:
+
+```php
+$transformer = new FloatValue('[price]');
+$value = $transformer->getValue($data);
+```
+
+### IntegerValue
+
+Transform value to an integer.
+
+Usage:
+
+```php
+$transformer = new IntegerValue('[id]');
+$value = $transformer->getValue($data);
+```
 
 ## Transforming all values
 

@@ -41,6 +41,18 @@ class WildcardMappingStrategy implements MappingStrategyInterface
     }
 
     /**
+     * Whether a field is in the ignore list
+     *
+     * @param string $field
+     * @return bool
+     */
+    public function inIgnore(string $field): bool
+    {
+        $field = strtolower($field);
+        return in_array($field, $this->ignore);
+    }
+
+    /**
      * Map array of data to an item (array or object)
      *
      * @param array $data
@@ -49,14 +61,12 @@ class WildcardMappingStrategy implements MappingStrategyInterface
      */
     public function mapItem(array $data, $item)
     {
-        if (!UnionTypes::arrayOrObject($item)) {
-            throw new \TypeError(sprintf('$item argument must be an array or object, %s passed', gettype($item)));
-        }
+        UnionTypes::assert('$item', $item, 'array', 'object');
         $propertyAccessor = $this->getPropertyAccessor();
 
         // Loop through data to map to new item (destination => source)
         foreach ($data as $field => $value) {
-            if (in_array(strtolower($field), $this->ignore)) {
+            if ($this->inIgnore($field)) {
                 continue;
             }
             switch (gettype($item)) {

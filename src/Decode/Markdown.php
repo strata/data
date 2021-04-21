@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Strata\Data\Decode;
 
+use League\CommonMark\CommonMarkConverter;
 use Parsedown;
 
 /**
@@ -24,7 +25,7 @@ class Markdown implements DecoderInterface
     public function decode($data): string
     {
         $data = StringNormalizer::getString($data);
-        $parsedown = new Parsedown();
-        return $parsedown->text($data);
+        $converter = new CommonMarkConverter();
+        return $converter->convertToHtml($data);
     }
 }

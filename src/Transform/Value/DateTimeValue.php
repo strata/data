@@ -15,9 +15,10 @@ class DateTimeValue extends BaseValue
      * @param string|null $format Datetime format to create DateTime object from
      * @see https://www.php.net/manual/en/datetime.createfromformat.php
      */
-    public function __construct(string $propertyPath, ?string $format = null, ?\DateTimeZone $timeZone = null)
+    public function __construct($propertyPath, ?string $format = null, ?\DateTimeZone $timeZone = null)
     {
-        $this->propertyPath = $propertyPath;
+        parent::__construct($propertyPath);
+
         if (null !== $format) {
             $this->format = $format;
         }
@@ -27,18 +28,15 @@ class DateTimeValue extends BaseValue
     }
 
     /**
-     * Return property as a DateTime object from source data
+     * Return property as a DateTime object
      *
      * @param $objectOrArray Data to read property from
      * @return DateTime|null
      */
     public function getValue($objectOrArray)
     {
-        $propertyAccessor = $this->getPropertyAccessor();
-        $value = $propertyAccessor->getValue($objectOrArray, $this->propertyPath);
-        if (null === $value) {
-            return null;
-        }
+        $value = parent::getValue($objectOrArray);
+
         if (null !== $this->format) {
             $datetime = \DateTime::createFromFormat($this->format, $value, $this->timezone);
             if (!$datetime) {

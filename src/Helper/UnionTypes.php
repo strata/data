@@ -9,44 +9,87 @@ namespace Strata\Data\Helper;
  */
 class UnionTypes
 {
+
     /**
-     * Validate union type string or int
+     * Is a value is one of a number of types
      *
-     * @param $data
+     * @param mixed $value Value to check
+     * @param string ...$types One or many types to check (array, callable, bool, float, int, string, iterable, object, or classname)
      * @return bool
      */
-    public static function stringOrInt($data): bool
+    public static function is($value, string ...$types): bool
     {
-        return is_string($data) || is_int($data);
+        $valid = false;
+
+        foreach ($types as $type) {
+            switch ($type) {
+                case 'array':
+                    if (is_array($value)) {
+                        $valid = true;
+                    }
+                    break;
+                case 'callable':
+                    if (is_callable($value)) {
+                        $valid = true;
+                    }
+                    break;
+                case 'bool':
+                    if (is_bool($value)) {
+                        $valid = true;
+                    }
+                    break;
+                case 'float':
+                    if (is_float($value)) {
+                        $valid = true;
+                    }
+                    break;
+                case 'int':
+                    if (is_int($value)) {
+                        $valid = true;
+                    }
+                    break;
+                case 'string':
+                    if (is_string($value)) {
+                        $valid = true;
+                    }
+                    break;
+                case 'iterable':
+                    if (is_iterable($value)) {
+                        $valid = true;
+                    }
+                    break;
+                case 'object':
+                    if (is_object($value)) {
+                        $valid = true;
+                    }
+                    break;
+                default:
+                    if (class_exists($type)) {
+                        if ($value instanceof $type) {
+                            $valid = true;
+                        }
+                        break;
+                    }
+                    throw new \InvalidArgumentException(sprintf('Invalid type %s passed', gettype($type)));
+            }
+        }
+
+        return $valid;
     }
 
     /**
-     * Validate union type array or object
+     * Assert a value is one of a number of types
      *
-     * @param $data
-     * @param ?string $class Class name
-     * @return bool
+     * @param string $propertyName Name of the property (used for exception messages)
+     * @param mixed $value Value to check
+     * @param string ...$types One or many types to check (array, callable, bool, float, int, string, iterable, object, or classname)
+     * @throws InvalidArgumentException on error
      */
-    public static function arrayOrObject($data, ?string $class = null): bool
+    public static function assert(string $propertyName, $value, string ...$types)
     {
-        if (null !== $class) {
-            return is_array($data) || ($data instanceof $class);
+        if (!self::is($value, ...$types)) {
+            throw new \InvalidArgumentException(sprintf('%s must be a %s, %s passed', $propertyName, implode(' or ', $types), gettype($value)));
         }
-        return is_array($data) || is_object($data);
     }
 
-    /**
-     * Validate union type string or object
-     *
-     * @param $data
-     * @param ?string $class Class name
-     * @return bool
-     */
-    public static function stringOrObject($data, ?string $class = null): bool
-    {
-        if (null !== $class) {
-            return is_string($data) || ($data instanceof $class);
-        }
-        return is_string($data) || is_object($data);
-    }
 }

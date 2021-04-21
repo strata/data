@@ -66,7 +66,10 @@ $mapper = new MapItem($mapping);
 
 The following data value transformers are available:
 
-* DateTime
+* [Boolean](available-transformers.md#booleanvalue)
+* [DateTime](available-transformers.md#datetimevalue)
+* [Float](available-transformers.md#floatvalue)
+* [Integer](available-transformers.md#integervalue)
 
 ### Mapping from a different root property
 
@@ -277,7 +280,7 @@ class Item {
 
 $mapping = [
     'name'   => '[item_name]',
-    'id'     => '[id]',
+    'id'     => new IntegerValue('[id]'),
 ];
 $mapper = new MapCollection($mapping)
 $mapper->totalResults('[meta_data][total]')
@@ -288,15 +291,15 @@ $data = [
     'items' => [
         0 => [
             'item_name' => 'Apple',
-            'id' => 1
+            'id' => '1'
         ],
         1 => [
             'item_name' => 'Banana',
-            'id' => 2
+            'id' => '2'
         ],
         2 => [
             'item_name' => 'Orange',
-            'id' => 3
+            'id' => '3'
         ]
     ]
     'meta_data' => [

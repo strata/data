@@ -4,28 +4,30 @@ declare(strict_types=1);
 
 namespace Strata\Data\Transform\Value;
 
+use Strata\Data\Helper\UnionTypes;
 use Strata\Data\Transform\PropertyAccessorTrait;
 
 class BaseValue implements MapValueInterface
 {
     use PropertyAccessorTrait;
 
-    protected string $propertyPath;
+    protected $propertyPath;
 
     /**
      * BaseValue constructor.
-     * @param string $propertyPath Property path to read data from
+     * @param string|array $propertyPath Property path to read data from
      */
-    public function __construct(string $propertyPath)
+    public function __construct($propertyPath)
     {
+        UnionTypes::assert('$propertyPath', $propertyPath, 'string', 'array');
         $this->propertyPath = $propertyPath;
     }
 
     /**
      * Return property path to this value
-     * @return string
+     * @return string|array
      */
-    public function getPropertyPath(): string
+    public function getPropertyPath()
     {
         return $this->propertyPath;
     }
@@ -38,6 +40,10 @@ class BaseValue implements MapValueInterface
      */
     public function isReadable($objectOrArray)
     {
+        if (is_array($this->propertyPath)) {
+            return $this->isFirstValueReadable($objectOrArray, $this->propertyPath);
+        }
+
         $propertyAccessor = $this->getPropertyAccessor();
         return $propertyAccessor->isReadable($objectOrArray, $this->propertyPath);
     }
@@ -50,6 +56,10 @@ class BaseValue implements MapValueInterface
      */
     public function getValue($objectOrArray)
     {
+        if (is_array($this->propertyPath)) {
+            return $this->getFirstValue($objectOrArray, $this->propertyPath);
+        }
+
         $propertyAccessor = $this->getPropertyAccessor();
         return $propertyAccessor->getValue($objectOrArray, $this->propertyPath);
     }

@@ -8,6 +8,7 @@ use Strata\Data\Helper\UnionTypes;
 use Strata\Data\Transform\PropertyAccessorTrait;
 use Strata\Data\Transform\TransformerChain;
 use Strata\Data\Transform\TransformInterface;
+use Strata\Data\Transform\Value\BaseValue;
 use Strata\Data\Transform\Value\MapValueInterface;
 
 /**
@@ -68,9 +69,7 @@ class MappingStrategy implements MappingStrategyInterface
      */
     public function mapItem(array $data, $item)
     {
-        if (!UnionTypes::arrayOrObject($item)) {
-            throw new \TypeError(sprintf('$item argument must be an array or object, %s passed', gettype($item)));
-        }
+        UnionTypes::assert('$item', $item, 'array', 'object');
         $propertyAccessor = $this->getPropertyAccessor();
 
         // Loop through property paths to map to new item (destination => source)
@@ -91,34 +90,18 @@ class MappingStrategy implements MappingStrategyInterface
                 continue;
             }
 
-            // Source is an array, pick first match
-            if (is_array($source)) {
-                $found = false;
-                foreach ($source as $sourceValue) {
-                    if ($propertyAccessor->isReadable($data, $sourceValue)) {
-                        $source = $sourceValue;
-                        $found = true;
-                        break;
-                    }
-                }
-                if (!$found) {
-                    $propertyAccessor->setValue($item, $destination, null);
-                    continue;
-                }
+            // Invalid source type
+            if (!UnionTypes::is($source, 'string', 'array')) {
+                throw new MapperException(sprintf('Source for destination "%s" not a valid type, must be a string, array, MapValueInterface object, or callback', $destination));
             }
 
-            // Source is a string
-            if (is_string($source)) {
-                if (!$propertyAccessor->isReadable($data, $source)) {
-                    $propertyAccessor->setValue($item, $destination, null);
-                    continue;
-                }
-                $propertyAccessor->setValue($item, $destination, $propertyAccessor->getValue($data, $source));
+            // Default functionality maps value as is
+            $transformer = new BaseValue($source);
+            $transformer->setPropertyAccessor($propertyAccessor);
+            if ($transformer->isReadable($data)) {
+                $propertyAccessor->setValue($item, $destination, $transformer->getValue($data));
                 continue;
             }
-
-            // Invalid source type
-            throw new MapperException(sprintf('Source for destination "%s" not a valid type, must be a string, array of strings or callback', $destination));
         }
 
         // Transform data

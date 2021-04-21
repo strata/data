@@ -7,6 +7,9 @@ namespace Strata\Data\Transform;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\PropertyAccess\PropertyAccessor;
 
+/**
+ * Trait for property accessor functionality
+ */
 trait PropertyAccessorTrait
 {
     /**
@@ -46,4 +49,39 @@ trait PropertyAccessorTrait
         }
         return $this->propertyAccessor;
     }
+
+    /**
+    * Get value from first matching property path in an array of property paths
+    *
+    * @param string|array $objectOrArray Data to find matching property path in
+    * @param array $propertyPaths Array of property paths to check
+    * @return ?string Matching property path, or null on not found
+    */
+    public function getFirstValue($objectOrArray, array $propertyPaths): ?string
+    {
+        foreach ($propertyPaths as $path) {
+            if ($this->getPropertyAccessor()->isReadable($objectOrArray, $path)) {
+                return $this->getPropertyAccessor()->getValue($objectOrArray, $path);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returns whether a property path can be read from an object graph, matches first found property path
+     *
+     * @param string|array $objectOrArray Data to find matching property path in
+     * @param array $propertyPaths Array of property paths to check
+     * @return bool Whether property path found in object
+     */
+    public function isFirstValueReadable($objectOrArray, array $propertyPaths): bool
+    {
+        foreach ($propertyPaths as $path) {
+            if ($this->getPropertyAccessor()->isReadable($objectOrArray, $path)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }
