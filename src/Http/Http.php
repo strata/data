@@ -17,8 +17,9 @@ use Strata\Data\Event\SuccessEvent;
 use Strata\Data\Exception\BaseUriException;
 use Strata\Data\Exception\CacheException;
 use Strata\Data\Exception\DecoderException;
-use Strata\Data\Exception\FailedRequestException;
-use Strata\Data\Exception\NotFoundException;
+use Strata\Data\Exception\HttpException;
+use Strata\Data\Exception\HttpTransportException;
+use Strata\Data\Exception\HttpNotFoundException;
 use Strata\Data\Helper\ContentHasher;
 use Strata\Data\Http\Response\CacheableResponse;
 use Strata\Data\Http\Response\SuppressErrorResponse;
@@ -47,7 +48,7 @@ class Http implements DataProviderInterface
      * @see https://symfony.com/doc/current/reference/configuration/framework.html#reference-http-client
      * @var array|array[]
      */
-    const DEFAULT_OPTIONS = [];
+    protected $defaultOptions = [];
 
     protected ?string $userAgent = null;
     protected ?array $currentDefaultOptions = null;
@@ -55,6 +56,7 @@ class Http implements DataProviderInterface
     protected ?HttpClientInterface $client = null;
     protected int $totalHttpRequests = 0;
     protected bool $retryFailedRequests = false;
+    protected RequestTrace $requestTrace;
 
     /**
      * Constructor
@@ -71,6 +73,7 @@ class Http implements DataProviderInterface
         if (!empty($options)) {
             $this->setDefaultOptions($options);
         }
+        $this->requestTrace = new RequestTrace();
     }
 
     /**
@@ -162,7 +165,7 @@ class Http implements DataProviderInterface
      */
     public function setDefaultOptions(array $options)
     {
-        $this->currentDefaultOptions = $this->mergeHttpOptions(self::DEFAULT_OPTIONS, $options);
+        $this->currentDefaultOptions = $this->mergeHttpOptions($this->defaultOptions, $options);
     }
 
     /**
@@ -198,7 +201,7 @@ class Http implements DataProviderInterface
     public function getCurrentDefaultOptions(): array
     {
         if (null === $this->currentDefaultOptions) {
-            $this->currentDefaultOptions = self::DEFAULT_OPTIONS;
+            $this->currentDefaultOptions = $this->defaultOptions;
             $this->currentDefaultOptions['headers']['User-Agent'] = $this->getUserAgent();
         }
         return $this->currentDefaultOptions;
@@ -471,6 +474,7 @@ class Http implements DataProviderInterface
 
         $response = $httpClient->request($method, $uri, $options);
         $this->dispatchEvent(new StartEvent($requestId, $uri, ['method' => $method]), StartEvent::NAME);
+        $this->requestTrace->addRequest($requestId, $uri, $method, $options);
 
         // Suppress errors if a sub-request
         if ($this->isSuppressErrors()) {
@@ -496,8 +500,8 @@ class Http implements DataProviderInterface
      *
      * @param CacheableResponse $response
      * @return CacheableResponse
-     * @throws FailedRequestException
-     * @throws NotFoundException
+     * @throws HttpException
+     * @throws HttpNotFoundException
      * @throws TransportExceptionInterface
      */
     public function runRequest(CacheableResponse $response): CacheableResponse
@@ -516,9 +520,26 @@ class Http implements DataProviderInterface
             $this->dispatchEvent(new FailureEvent($exception, $requestId, $response->getInfo('url')), FailureEvent::NAME);
 
             if (!$this->isSuppressErrors()) {
-                throw new FailedRequestException('Failed HTTP request', [], [], $exception);
+                throw new HttpTransportException(
+                    sprintf('Failed HTTP transport request: %s', $exception->getMessage()),
+                    $this->requestTrace->getRequestUri($requestId),
+                    $this->requestTrace->getRequestMethod($requestId),
+                    $this->requestTrace->getRequestOptions($requestId),
+                    $response,
+                    [],
+                    [],
+                    $exception,
+                );
             }
-        } catch (HttpExceptionInterface | FailedRequestException $exception) {
+        } catch (HttpException $exception) {
+            // Request exception defined by child Http::throwExceptionOnFailedRequest() class
+            $failed = true;
+            $this->dispatchEvent(new FailureEvent($exception, $requestId, $response->getInfo('url')), FailureEvent::NAME);
+
+            if (!$this->isSuppressErrors()) {
+                throw $exception;
+            }
+        } catch (HttpExceptionInterface $exception) {
             // HTTP client exception (e.g. 404)
             $failed = true;
             $this->dispatchEvent(new FailureEvent($exception, $requestId, $response->getInfo('url'), [
@@ -527,12 +548,31 @@ class Http implements DataProviderInterface
             ]), FailureEvent::NAME);
 
             if (!$this->isSuppressErrors()) {
-                if (substr((string) $response->getStatusCode(), 0, 1) === '4') {
-                    throw new NotFoundException('Not Found HTTP error', $response->getStatusCode(), $exception);
+                if (substr((string) $response->getStatusCode(), 0, 3) === '404') {
+                    throw new HttpNotFoundException(
+                        'Not Found HTTP error',
+                        $this->requestTrace->getRequestUri($requestId),
+                        $this->requestTrace->getRequestMethod($requestId),
+                        $this->requestTrace->getRequestOptions($requestId),
+                        $response,
+                        [],
+                        [],
+                        $exception,
+                    );
                 }
-                throw $exception;
+                throw new HttpException(
+                    sprintf('Failed HTTP request: %s', $exception->getMessage()),
+                    $this->requestTrace->getRequestUri($requestId),
+                    $this->requestTrace->getRequestMethod($requestId),
+                    $this->requestTrace->getRequestOptions($requestId),
+                    $response,
+                    [],
+                    [],
+                    $exception
+                );
             }
         }
+
 
         if (!$failed) {
             $this->dispatchEvent(new SuccessEvent($requestId, $response->getInfo('url'), [
@@ -555,6 +595,7 @@ class Http implements DataProviderInterface
         // Set cache hit to false, since have run request
         $response->setHit(false);
 
+        $this->requestTrace->clearRequest($requestId);
         return $response;
     }
 
@@ -565,8 +606,8 @@ class Http implements DataProviderInterface
      * @param array $queryParams Array of query params to send with GET request
      * @param array $options
      * @return CacheableResponse
-     * @throws FailedRequestException
-     * @throws NotFoundException
+     * @throws HttpException
+     * @throws HttpNotFoundException
      * @throws \Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface
      */
     public function get(string $uri, array $queryParams = [], array $options = []): CacheableResponse
@@ -593,17 +634,22 @@ class Http implements DataProviderInterface
      * Make a POST request
      *
      * @param string $uri URI relative to base URI
-     * @param array $postData Array of data to send with POST request
+     * @param ?string|array $postData String body or array of data to send with POST request
      * @param array $options
      * @return CacheableResponse
-     * @throws FailedRequestException
+     * @throws HttpException
      * @throws \Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface
      */
-    public function post(string $uri, array $postData = [], array $options = []): CacheableResponse
+    public function post(string $uri, $postData = null, array $options = []): CacheableResponse
     {
-        if (isset($options['body']) && is_array($options['body'])) {
-            $options['body'] = array_merge($postData, $options['body']);
-        } else {
+        if (is_array($postData)) {
+            if (isset($options['body']) && is_array($options['body'])) {
+                $options['body'] = array_merge($postData, $options['body']);
+            } else {
+                $options['body'] = $postData;
+            }
+        }
+        if (is_string($postData)) {
             $options['body'] = $postData;
         }
 
@@ -625,7 +671,7 @@ class Http implements DataProviderInterface
      * @param string $uri URI relative to base URI
      * @param array $options
      * @return CacheableResponse
-     * @throws FailedRequestException
+     * @throws HttpException
      * @throws \Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface
      */
     public function head(string $uri, array $options = []): CacheableResponse
@@ -654,8 +700,8 @@ class Http implements DataProviderInterface
      * @param string $uri URI to test
      * @param array $options HTTPClient options
      * @return bool
-     * @throws FailedRequestException
-     * @throws NotFoundException
+     * @throws HttpException
+     * @throws HttpNotFoundException
      * @throws TransportExceptionInterface
      */
     public function exists(string $uri, array $options = []): bool
@@ -693,8 +739,8 @@ class Http implements DataProviderInterface
      * @param string $uri
      * @param array $options
      * @return FeedInterface
-     * @throws FailedRequestException
-     * @throws NotFoundException
+     * @throws HttpException
+     * @throws HttpNotFoundException
      * @throws TransportExceptionInterface
      */
     public function getRss(string $uri, array $options = []): FeedInterface
@@ -710,8 +756,8 @@ class Http implements DataProviderInterface
      * @param array $options
      * @return \Generator Generator of CacheableResponse items
      * @throws BaseUriException
-     * @throws FailedRequestException
-     * @throws NotFoundException
+     * @throws HttpException
+     * @throws HttpNotFoundException
      * @throws TransportExceptionInterface
      */
     public function getConcurrent(array $uris, array $options = []): \Generator

@@ -91,5 +91,4 @@ class UnionTypes
             throw new \InvalidArgumentException(sprintf('%s must be a %s, %s passed', $propertyName, implode(' or ', $types), gettype($value)));
         }
     }
-
 }

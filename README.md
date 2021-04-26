@@ -118,10 +118,10 @@ try {
     $item = $graphQl->query($query);
     $data = $item->getData();
     
-} catch (\Strata\Data\Exception\NotFoundException) {
+} catch (\Strata\Data\Exception\HttpNotFoundException) {
     // @todo No results found for query
     
-} catch (\Strata\Data\Exception\FailedRequestException $e) {
+} catch (\Strata\Data\Exception\HttpException $e) {
     // HTTP request error
     $response = $response->getErrorMessage();
     $errorData = $response->getErrorData();

@@ -3,13 +3,23 @@
 namespace Strata\Data\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Strata\Data\Exception\FailedGraphQLException;
+use Strata\Data\Exception\GraphQLException;
 use Strata\Data\Http\GraphQL;
+use Strata\Data\Http\Http;
 use Strata\Data\Http\Response\MockResponseFromFile;
+use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Component\HttpClient\MockHttpClient;
 
 class GraphQLTest extends TestCase
 {
+
+    public function testDefaultHttpOptions()
+    {
+        $graphQL = new GraphQL('https://example.com/api');
+        $options = $graphQL->getCurrentDefaultOptions();
+        $this->assertSame('application/json', $options['headers']['Content-Type']);
+    }
+
     /**
      * Test valid GraphQL query building
      */
@@ -82,7 +92,7 @@ EOD;
 
         $this->assertTrue($graphQL->ping());
 
-        $this->expectException('\Strata\Data\Exception\NotFoundException');
+        $this->expectException('\Strata\Data\Exception\HttpNotFoundException');
         $graphQL->ping();
     }
 
@@ -112,10 +122,10 @@ EOD;
 
         try {
             $response = $graphQL->query('invalid');
-        } catch (FailedGraphQLException $e) {
+        } catch (GraphQLException $e) {
             $foundException = true;
             $this->assertStringContainsString('Syntax Error', $e->getMessage());
-            $this->assertEquals('graphql', $e->getErrorData()[0]['category']);
+            $this->assertEquals('graphql', $e->getResponseErrorData()[0]['category']);
         }
 
         $this->assertTrue($foundException);

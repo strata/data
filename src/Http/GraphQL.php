@@ -7,9 +7,8 @@ namespace Strata\Data\Http;
 use Strata\Data\Decode\DecoderInterface;
 use Strata\Data\Decode\GraphQL as GraphQLDecoder;
 use Strata\Data\Exception\DecoderException;
-use Strata\Data\Exception\FailedGraphQLException;
+use Strata\Data\Exception\GraphQLException;
 use Strata\Data\Helper\ContentHasher;
-use Strata\Data\Version;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 class GraphQL extends Http
@@ -20,7 +19,7 @@ class GraphQL extends Http
      * @see https://symfony.com/doc/current/reference/configuration/framework.html#reference-http-client
      * @var array|array[]
      */
-    const DEFAULT_OPTIONS = [
+    protected $defaultOptions = [
         'headers' => [
             'Content-Type' => 'application/json',
         ]
@@ -57,15 +56,19 @@ class GraphQL extends Http
         if (!empty($options['query'])) {
             $uri .= '?' . urlencode($options['query']);
         }
-        return ContentHasher::hash($uri . ' ' . $context['body']['body']);
+        if (is_array($context['body'])) {
+            return ContentHasher::hash($uri . ' ' . http_build_query($context['body']));
+        } else {
+            return ContentHasher::hash($uri . ' ' . (string) $context['body']);
+        }
     }
 
     /**
-     * Check whether a response is failed and if so, throw a FailedRequestException
+     * Check whether a response is failed and if so, throw a Strata\Data\Exception\HttpException
      *
      * @param ResponseInterface $response
      * @return void
-     * @throws FailedGraphQLException
+     * @throws GraphQLException
      */
     public function throwExceptionOnFailedRequest(ResponseInterface $response): void
     {
@@ -78,14 +81,24 @@ class GraphQL extends Http
         }
 
         // Error response, errors set
+        $requestId = $response->getInfo('user_data');
         $errorData = $content['errors'];
+        $errorData['last_query'] = $this->getLastQuery();
 
         try {
             $partialData = $this->decode($response);
         } catch (DecoderException $e) {
             $partialData = [];
         }
-        throw new FailedGraphQLException(sprintf('GraphQL query failed, error message from API: %s', $errorData[0]['message']), $this->getLastQuery(), $errorData, $partialData);
+        throw new GraphQLException(
+            $errorData[0]['message'],
+            $this->requestTrace->getRequestUri($requestId),
+            $this->requestTrace->getRequestMethod($requestId),
+            $this->requestTrace->getRequestOptions($requestId),
+            $response,
+            $errorData,
+            $partialData
+        );
     }
 
     /**
@@ -142,7 +155,7 @@ class GraphQL extends Http
      */
     public function query(string $query, ?array $variables = [], ?string $operationName = null): ResponseInterface
     {
-        return $this->post('', ['body' => $this->buildQuery($query, $variables, $operationName)]);
+        return $this->post('', $this->buildQuery($query, $variables, $operationName));
     }
 
     /**

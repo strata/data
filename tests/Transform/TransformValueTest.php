@@ -63,5 +63,4 @@ final class TransformValueTest extends TestCase
         $this->assertFalse($valueTransformer->getValue(['question' => 'NO']));
         $this->assertNull($valueTransformer->getValue(['question' => 'true']));
     }
-
 }

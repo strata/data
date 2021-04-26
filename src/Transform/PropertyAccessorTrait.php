@@ -83,5 +83,4 @@ trait PropertyAccessorTrait
         }
         return false;
     }
-
 }

@@ -46,7 +46,7 @@ class HttpTest extends TestCase
         $api = new Rest('https://example.com/api/');
         $api->setHttpClient(new MockHttpClient($responses));
 
-        $this->expectException('\Strata\Data\Exception\NotFoundException');
+        $this->expectException('\Strata\Data\Exception\HttpNotFoundException');
         $response = $api->get('test');
     }
 
