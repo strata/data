@@ -72,18 +72,20 @@ class GraphQL extends Http
         // Throws an exception on HTTP error
         $content = $response->toArray();
 
-        // GraphQL errors are returned in 'errors' property
+        // OK response, errors not set
         if (!isset($content['errors']) || !is_array($content['errors'])) {
             return;
         }
-        $errors = $content['errors'];
+
+        // Error response, errors set
+        $errorData = $content['errors'];
 
         try {
             $partialData = $this->decode($response);
         } catch (DecoderException $e) {
             $partialData = [];
         }
-        throw new FailedGraphQLException(sprintf('GraphQL query failed: %s', $errors[0]['message']), $errors, $partialData);
+        throw new FailedGraphQLException(sprintf('GraphQL query failed, error message from API: %s', $errorData[0]['message']), $this->getLastQuery(), $errorData, $partialData);
     }
 
     /**
