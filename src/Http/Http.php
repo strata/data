@@ -534,7 +534,10 @@ class Http implements DataProviderInterface
         } catch (HttpException $exception) {
             // Request exception defined by child Http::throwExceptionOnFailedRequest() class
             $failed = true;
-            $this->dispatchEvent(new FailureEvent($exception, $requestId, $response->getInfo('url')), FailureEvent::NAME);
+            $context = [
+                'request_trace' => $exception->getRequestTrace()
+            ];
+            $this->dispatchEvent(new FailureEvent($exception, $requestId, $response->getInfo('url'), $context), FailureEvent::NAME);
 
             if (!$this->isSuppressErrors()) {
                 throw $exception;

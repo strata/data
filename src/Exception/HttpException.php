@@ -17,6 +17,7 @@ class HttpException extends \Exception
     private array $responseErrorData;
     private array $responseData;
     private ResponseInterface $response;
+    private string $requestTrace = '';
 
     /**
      * HttpException
@@ -41,6 +42,18 @@ class HttpException extends \Exception
         $this->responseErrorData = $errorData;
         $this->responseData = $responseData;
 
+        // Append error data if set
+        $message .= $this->getErrorDataSummary($errorData);
+        $message = trim($message);
+
+        // Create request trace to aid debugging
+        $this->createRequestTrace($uri, $method, $options, $response, $errorData);
+
+        parent::__construct($message, 0, $previous);
+    }
+
+    public function createRequestTrace(string $uri, string $method, array $options, ResponseInterface $response, array $errorData = [])
+    {
         // Append info on HTTP request and response
         $httpInfo = 'Request: ' . $method . ' ' . $uri . PHP_EOL;
         foreach ($options as $name => $values) {
@@ -78,9 +91,12 @@ class HttpException extends \Exception
         } catch (HttpExceptionInterface $e) {
             // continue
         }
-        $message .= PHP_EOL . PHP_EOL . $httpInfo;
+        $this->requestTrace = $httpInfo;
+    }
 
-        parent::__construct($message, 0, $previous);
+    public function getRequestTrace(): string
+    {
+        return $this->requestTrace;
     }
 
     /**
@@ -104,13 +120,26 @@ class HttpException extends \Exception
     }
 
     /**
-     * Return errors formatted as a string
+     * Return errors formatted as an expanded multiline string
      * @param array $errors
      * @return string
      */
     public function expandErrorValues(array $errors): string
     {
         return print_r($errors, true);
+    }
+
+    /**
+     * Return errors as a short string for use in exception message
+     *
+     * Implement in child exception classes
+     *
+     * @param array $errors
+     * @return string
+     */
+    public function getErrorDataSummary(array $errors): string
+    {
+        return '';
     }
 
     /**
