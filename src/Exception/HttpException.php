@@ -43,7 +43,7 @@ class HttpException extends \Exception
         $this->responseData = $responseData;
 
         // Append error data if set
-        $message .= $this->getErrorDataSummary($errorData);
+        $message .= $this->getMessageFromErrorData($errorData);
         $message = trim($message);
 
         // Create request trace to aid debugging
@@ -130,14 +130,14 @@ class HttpException extends \Exception
     }
 
     /**
-     * Return errors as a short string for use in exception message
+     * Return exception message from error data
      *
      * Implement in child exception classes
      *
-     * @param array $errors
+     * @param array $errorData
      * @return string
      */
-    public function getErrorDataSummary(array $errors): string
+    public function getMessageFromErrorData(array $errorData): string
     {
         return '';
     }

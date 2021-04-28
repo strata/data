@@ -124,8 +124,12 @@ EOD;
             $response = $graphQL->query('invalid');
         } catch (GraphQLException $e) {
             $foundException = true;
-            $this->assertStringContainsString('Syntax Error', $e->getMessage());
+            $this->assertSame('GraphQL errors: Syntax Error: Unexpected Name "invalid" on line 1, column 1.', $e->getMessage());
             $this->assertEquals('graphql', $e->getResponseErrorData()[0]['category']);
+            $this->assertStringContainsString('Request: POST https://example.com/api', $e->getRequestTrace());
+            $this->assertStringContainsString('Request headers: Content-Type: application/json', $e->getRequestTrace());
+            $this->assertStringContainsString('Response status: 200', $e->getRequestTrace());
+            $this->assertStringContainsString('GraphQL error: Syntax Error: Unexpected Name "invalid"', $e->getRequestTrace());
         }
 
         $this->assertTrue($foundException);

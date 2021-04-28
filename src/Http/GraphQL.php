@@ -90,8 +90,9 @@ class GraphQL extends Http
         } catch (DecoderException $e) {
             $partialData = [];
         }
+        // Exception message is generated from $errorData
         throw new GraphQLException(
-            $errorData[0]['message'],
+            '',
             $this->requestTrace->getRequestUri($requestId),
             $this->requestTrace->getRequestMethod($requestId),
             $this->requestTrace->getRequestOptions($requestId),

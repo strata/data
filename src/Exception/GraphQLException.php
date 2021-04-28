@@ -7,15 +7,15 @@ namespace Strata\Data\Exception;
 class GraphQLException extends HttpException
 {
     /**
-     * Return errors as a short string for use in exception message
+     * Return exception message from error data
      *
-     * @param array $errors
+     * @param array $errorData
      * @return string
      */
-    public function getErrorDataSummary(array $errors): string
+    public function getMessageFromErrorData(array $errorData): string
     {
         $errorContent = [];
-        foreach ($errors as $error) {
+        foreach ($errorData as $error) {
             if (!isset($error['message'])) {
                 continue;
             }
