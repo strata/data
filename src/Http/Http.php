@@ -48,7 +48,7 @@ class Http implements DataProviderInterface
      * @see https://symfony.com/doc/current/reference/configuration/framework.html#reference-http-client
      * @var array|array[]
      */
-    protected $defaultOptions = [];
+    protected array $defaultOptions = [];
 
     protected ?string $userAgent = null;
     protected ?array $currentDefaultOptions = null;

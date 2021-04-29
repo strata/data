@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Strata\Data\Mapper;
 
+use Strata\Data\Exception\MapperException;
 use Strata\Data\Helper\UnionTypes;
 use Strata\Data\Transform\PropertyAccessorTrait;
 use Strata\Data\Transform\TransformerChain;

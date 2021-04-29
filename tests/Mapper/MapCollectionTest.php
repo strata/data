@@ -37,6 +37,26 @@ final class MapCollectionTest extends TestCase
         ]
     ];
 
+    public function testEmptyArray()
+    {
+        $mapping = [
+            '[name]'   => '[item_name]',
+            '[id]'     => '[id]',
+        ];
+        $mapper = new MapCollection($mapping);
+        $mapper->totalResults('[data][total]');
+
+        $data = [
+            'data' => [
+                'total' => 0,
+                'items' => []
+            ]
+        ];
+        $collection = $mapper->map($data, '[data][items]');
+
+        $this->assertEquals(0, count($collection));
+    }
+
     public function testMapToArray()
     {
         $mapping = [
