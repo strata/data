@@ -19,7 +19,7 @@ class GraphQL extends Http
      * @see https://symfony.com/doc/current/reference/configuration/framework.html#reference-http-client
      * @var array|array[]
      */
-    protected $defaultOptions = [
+    protected array $defaultOptions = [
         'headers' => [
             'Content-Type' => 'application/json',
         ]
