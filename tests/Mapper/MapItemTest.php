@@ -150,25 +150,6 @@ final class MapItemTest extends TestCase
         $this->assertSame('Thu, 15 Oct 1981 00:00:00 +0000', $item['date_of_birth']->format('r'));
     }
 
-    public function testCallback()
-    {
-        $mapping = [
-            '[name]' => '[person_name]',
-            '[code]' => function ($data) {
-                return $data['person_town'] . '_' . $data['person_name'];
-            },
-        ];
-        $mapper = new MapItem($mapping);
-
-        $data = [
-            'person_name' => 'Fred Bloggs',
-            'person_town' => 'Norwich'
-        ];
-        $item = $mapper->map($data);
-
-        $this->assertEquals('Norwich_Fred Bloggs', $item['code']);
-    }
-
     public function testMapClass()
     {
         $mapping = [

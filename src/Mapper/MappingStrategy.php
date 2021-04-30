@@ -6,16 +6,18 @@ namespace Strata\Data\Mapper;
 
 use Strata\Data\Exception\MapperException;
 use Strata\Data\Helper\UnionTypes;
+use Strata\Data\Transform\Data\CallableData;
+use Strata\Data\Transform\PropertyAccessorInterface;
 use Strata\Data\Transform\PropertyAccessorTrait;
 use Strata\Data\Transform\TransformerChain;
-use Strata\Data\Transform\TransformInterface;
 use Strata\Data\Transform\Value\BaseValue;
+use Strata\Data\Transform\Value\CallableValue;
 use Strata\Data\Transform\Value\MapValueInterface;
 
 /**
  * Class to manage strategy of mapping data to an item
  */
-class MappingStrategy implements MappingStrategyInterface
+class MappingStrategy implements MappingStrategyInterface, PropertyAccessorInterface
 {
     use PropertyAccessorTrait;
     use TransformerTrait;
@@ -64,7 +66,7 @@ class MappingStrategy implements MappingStrategyInterface
     /**
      * Map array of data to an item (array or object)
      *
-     * @param array $data
+     * @param array $data Source data
      * @param array|object $item
      * @return mixed
      */
@@ -75,6 +77,15 @@ class MappingStrategy implements MappingStrategyInterface
 
         // Loop through property paths to map to new item (destination => source)
         foreach ($this->getPropertyPaths() as $destination => $source) {
+            // Source is a callable function/method
+            if ($source instanceof CallableValue || $source instanceof CallableData) {
+                if ($source->getCallable() instanceof PropertyAccessorInterface) {
+                    $source->getCallable()->setPropertyAccessor($this->getPropertyAccessor());
+                }
+                $propertyAccessor->setValue($item, $destination, $source($data, $destination, $item));
+                continue;
+            }
+
             // Source is a MapValue object
             if ($source instanceof MapValueInterface) {
                 /** @var MapValueInterface $source */
@@ -85,15 +96,13 @@ class MappingStrategy implements MappingStrategyInterface
                 continue;
             }
 
-            // Source is a callable function/method
-            if (is_callable($source)) {
-                $propertyAccessor->setValue($item, $destination, $source($data, $destination));
-                continue;
-            }
-
             // Invalid source type
             if (!UnionTypes::is($source, 'string', 'array')) {
-                throw new MapperException(sprintf('Source for destination "%s" not a valid type, must be a string, array, MapValueInterface object, or callback', $destination));
+                $type = gettype($source);
+                if ($type === 'object') {
+                    $type = get_class($source);
+                }
+                throw new MapperException(sprintf('Source for destination "%s" not a valid type. Must be a string, array, CallableValue, CallableData, or MapValueInterface object. %s passed.', $destination, $type));
             }
 
             // Default functionality maps value as is

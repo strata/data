@@ -5,13 +5,16 @@ converting an array of raw data to a collection of objects.
 
 ## An example
 
-You can setup mapping by passing an array of new fields to old fields, using the property access syntax
+You can set up mapping by passing an array of new fields to old fields, using the property access syntax
 described above. In the below example `region` is set to an array of two possible old field options, this allows 
 you to specify multiple possible old values to map data from.
+
+Please note the new location and source location are written as [property paths](../property-paths.md).
 
 ```php
 use Strata\Data\Mapper\MapItem;
 
+// Map new location from source location
 $mapping = [
     '[name]'    => '[person_name]',
     '[age]'     => '[person_age]',
@@ -46,6 +49,19 @@ $item = [
 As you can see any fields not found in the source data are set to null and the region is correctly mapped from the 
 `person_town` source field.
 
+### Specifying multiple source fields
+
+Some APIs use multiple source field names for the same data, you can pass multiple source property paths in an array and 
+the mapper will take the first match it finds.
+
+```php
+$data = [
+    'title'     => ['title', 'post_title'],
+    'urlSlug'   => '[slug]',
+];
+$item = $mapper->map($data);
+```
+
 ### Transforming individual values when mapping
 
 You can transform data values when mapping by using a single value transformer. Single value transformers take the 
@@ -70,6 +86,101 @@ The following data value transformers are available:
 * [DateTime](available-transformers.md#datetimevalue)
 * [Float](available-transformers.md#floatvalue)
 * [Integer](available-transformers.md#integervalue)
+
+### Using a callback to map data
+
+You can also write PHP code to help map more complex data from source to your destination by using callables.
+
+#### CallableValue
+
+To transform one value using a callback use `CallableValue`, this takes two arguments: the property path of the source 
+data and the [callable](https://www.php.net/language.types.callable) to run to return the transformed value.
+
+When called via the mapper the callable is passed the following arguments:
+* `$value` Source value (read from the source property path)
+
+For example, to use the built-in `strtoupper()` function: 
+
+```php
+$data = [
+    '[title]'  => '[title]',
+    '[name]'   => new CallableValue('[first_name]', 'strtoupper')
+;
+$item = $mapper->map($data);
+```
+
+#### CallableData
+
+For more complex operations, you can use `CallableData` which can run transformations across any values from the source 
+data. This class takes one argument: the [callable](https://www.php.net/language.types.callable) to run to return transformed data.
+
+The callable will be passed the source `$data` array as the first argument, all other arguments
+are optional. When called via the mapper the callable is passed the following arguments:
+* array `$data` Source data
+* `string $destination` Destination property path
+* `array|object $item` The destination item data is mapped to
+
+The callable function must return data which is then written to the destination property path in your destination item
+(array or object). The callable function does not need to write the data, just return it.
+
+For example, this mapping strategy uses a callback for the `$item['name']` field: 
+
+```php
+$data = [
+    '[title]'  => '[title]',
+    '[name]'   => new CallableData(function(array $data) {
+        // return content to map to source item
+        return ucfirst($data['first_name']) . ' ' . ucfirst($data['last_name']);
+     });
+$item = $mapper->map($data);
+```
+
+This results in the following data after mapping:
+
+```php
+$data = [
+    'first_name' => 'simon'
+];
+
+$item = $mapper->map($data);
+
+// returns: Simon
+echo $item->name;
+```
+
+It is recommended to use classes for callables, e.g.
+
+```php
+$data = [
+    '[title]'  => '[title]',
+    '[name]'   => new CallableData([$object, 'methodName'])
+];
+```
+
+Or for static methods:
+
+```php
+$data = [
+    '[title]'  => '[title]',
+    '[name]'   => new CallableData(['MyNamespace\ClassName', 'methodName'])
+];
+```
+
+### Using the property accessor in your own classes
+
+If you have a class and you want to use the [property accessor](https://symfony.com/doc/current/components/property_access.html) 
+simply use the `PropertyAccessorTrait` trait and you'll have access to methods such as `getPropertyAccessor()`. 
+Additionally, if your class implements `PropertyAccessorInterface` then an instance of the property accessor will be automatically 
+passed to your class from the mapper.
+
+```angular2html
+use Strata\Data\Transform\PropertyAccessorInterface;
+use Strata\Data\Transform\PropertyAccessorTrait;
+
+class MyClass implements PropertyAccessorInterface {
+    use PropertyAccessorTrait;
+}
+```
 
 ### Mapping from a different root property
 
