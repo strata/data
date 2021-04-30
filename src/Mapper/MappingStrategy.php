@@ -81,8 +81,8 @@ class MappingStrategy implements MappingStrategyInterface
                 $source->setPropertyAccessor($propertyAccessor);
                 if ($source->isReadable($data)) {
                     $propertyAccessor->setValue($item, $destination, $source->getValue($data));
-                    continue;
                 }
+                continue;
             }
 
             // Source is a callable function/method
