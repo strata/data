@@ -5,12 +5,24 @@ declare(strict_types=1);
 namespace Tests;
 
 use PHPUnit\Framework\TestCase;
+use Strata\Data\Collection;
 use Strata\Data\Mapper\MapCollection;
+use Strata\Data\Mapper\MapperAbstract;
 
 class Item
 {
     public string $name;
     public int $id;
+}
+
+class MyCollection extends Collection
+{
+
+}
+
+class InvalidCollection
+{
+
 }
 
 final class MapCollectionTest extends TestCase
@@ -91,11 +103,42 @@ final class MapCollectionTest extends TestCase
             ->toObject('Tests\Item');
 
         $collection = $mapper->map($this->data, '[items]');
+        $this->assertTrue($collection instanceof Collection);
 
         $item = $collection->current();
         $this->assertEquals('Apple', $item->name);
 
         $item = $collection[1];
         $this->assertEquals('Banana', $item->name);
+    }
+
+    public function testMapToCustomClass()
+    {
+        $mapping = [
+            'name'   => '[item_name]',
+            'id'     => '[id]',
+        ];
+        $mapper = new MapCollection($mapping);
+        $mapper->totalResults('[meta_data][total]')
+            ->resultsPerPage('[meta_data][per_page]')
+            ->toObject('Tests\Item')
+            ->setCollectionClass('Tests\MyCollection');
+
+        $collection = $mapper->map($this->data, '[items]');
+        $this->assertTrue($collection instanceof MyCollection);
+        $item = $collection->current();
+        $this->assertEquals('Apple', $item->name);
+
+        $item = $collection[1];
+        $this->assertEquals('Banana', $item->name);
+    }
+
+    public function testInvalidCustomClass()
+    {
+        $this->expectException('Strata\Data\Exception\MapperException');
+
+        $mapper = new MapCollection([]);
+        $mapper->toObject('Tests\Item')
+               ->setCollectionClass('Tests\InvalidCollection');
     }
 }

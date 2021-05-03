@@ -13,7 +13,7 @@ use Strata\Data\Traits\IterableTrait;
  *
  * @package Strata\Data\Model
  */
-class Collection implements \SeekableIterator, \Countable, \ArrayAccess
+class Collection implements CollectionInterface
 {
     use IterableTrait;
 

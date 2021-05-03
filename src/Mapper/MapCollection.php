@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Strata\Data\Mapper;
 
 use Strata\Data\Collection;
+use Strata\Data\CollectionInterface;
 use Strata\Data\Exception\MapperException;
 use Strata\Data\Exception\PaginationException;
 use Strata\Data\Helper\UnionTypes;
@@ -123,10 +124,10 @@ class MapCollection extends MapperAbstract implements MapperInterface
      *
      * @param array $data Data to map from
      * @param string|null $rootProperty Root property to map data from
-     * @return Collection Mapped collection of arrays or objects
+     * @return CollectionInterface Mapped collection of arrays or objects
      * @throws MapperException
      */
-    public function map(array $data, ?string $rootProperty = null): Collection
+    public function map(array $data, ?string $rootProperty = null): CollectionInterface
     {
         $collectionData = $this->getRootData($data, $rootProperty);
 
@@ -138,7 +139,8 @@ class MapCollection extends MapperAbstract implements MapperInterface
             throw new MapperException('Cannot build a collection from $data, not iterable');
         }
 
-        $collection = new Collection();
+        $className = $this->getCollectionClass();
+        $collection = new $className();
         foreach ($collectionData as $item) {
             $collection->add($this->buildItemFromData($item));
         }

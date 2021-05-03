@@ -6,7 +6,9 @@ namespace Strata\Data;
 
 use Strata\Data\Cache\DataCache;
 use Strata\Data\Decode\DecoderInterface;
+use Strata\Data\Exception\CacheException;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\EventDispatcher\Event;
 
 interface DataProviderInterface
@@ -67,11 +69,45 @@ interface DataProviderInterface
     public function isCacheEnabled(): bool;
 
     /**
+     * Set and enable the cache
+     *
+     * @param CacheInterface $cache
+     * @param int $defaultLifetime Default cache lifetime
+     */
+    public function setCache(CacheInterface $cache, ?int $defaultLifetime = null);
+
+    /**
      * Return the cache
      *
      * @return DataCache
      */
     public function getCache(): DataCache;
+
+    /**
+     * Enable cache for subsequent data requests
+     *
+     * @param ?int $lifetime
+     * @return DataProviderCommonTrait Fluent interface
+     * @throws CacheException If cache not set
+     */
+    public function enableCache(?int $lifetime = null);
+
+    /**
+     * Disable cache for subsequent data requests
+     *
+     * @return DataProviderCommonTrait Fluent interface
+     */
+    public function disableCache();
+
+    /**
+     * Set cache tags to apply to all future saved cache items
+     *
+     * To remove tags do not pass any arguments and tags will be reset to an empty array
+     *
+     * @param array $tags
+     * @throws CacheException
+     */
+    public function setCacheTags(array $tags = []);
 
     /**
      * Adds an event listener that listens on the specified event

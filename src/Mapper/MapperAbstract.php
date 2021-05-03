@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Strata\Data\Mapper;
 
+use Strata\Data\CollectionInterface;
 use Strata\Data\Exception\MapperException;
 use Strata\Data\Transform\PropertyAccessorTrait;
-use Strata\Data\Transform\Value\MapValueInterface;
 
 abstract class MapperAbstract
 {
@@ -14,6 +14,7 @@ abstract class MapperAbstract
 
     private bool $mapToObject = false;
     private ?string $className = null;
+    private string $collectionClass = 'Strata\Data\Collection';
     private MappingStrategyInterface $strategy;
 
     /**
@@ -32,7 +33,7 @@ abstract class MapperAbstract
     }
 
     /**
-     * Set class name to map data to
+     * Map data to an object of class name
      *
      * @param string $className
      * @return MapperAbstract Fluent interface
@@ -45,6 +46,27 @@ abstract class MapperAbstract
         }
         $this->className = $className;
         $this->mapToObject = true;
+
+        return $this;
+    }
+
+    /**
+     * Set class name to use for a collection
+     *
+     * @param string $className
+     * @return MapperAbstract Fluent interface
+     * @throws MapperException
+     */
+    public function setCollectionClass(string $className): MapperAbstract
+    {
+        if (!class_exists($className)) {
+            throw new MapperException(sprintf('Cannot set collection class name to %s since class not found', $className));
+        }
+        $test = new $className();
+        if (!($test instanceof CollectionInterface)) {
+            throw new MapperException(sprintf('%s must implement Strata\Data\CollectionInterface', $className));
+        }
+        $this->collectionClass = $className;
 
         return $this;
     }
@@ -79,13 +101,23 @@ abstract class MapperAbstract
     }
 
     /**
-     * Return class name to map data to
+     * Return class name to map item data to
      *
      * @return string|null
      */
     public function getClassName(): ?string
     {
         return $this->className;
+    }
+
+    /**
+     * Return collection class name to use for a collection
+     *
+     * @return string
+     */
+    public function getCollectionClass(): string
+    {
+        return $this->collectionClass;
     }
 
     /**
