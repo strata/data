@@ -83,13 +83,13 @@ class GraphQL extends Http
         // Error response, errors set
         $requestId = $response->getInfo('user_data');
         $errorData = $content['errors'];
-        $errorData['last_query'] = $this->getLastQuery();
 
         try {
             $partialData = $this->decode($response);
         } catch (DecoderException $e) {
             $partialData = [];
         }
+
         // Exception message is generated from $errorData
         throw new GraphQLException(
             '',
@@ -98,7 +98,9 @@ class GraphQL extends Http
             $this->requestTrace->getRequestOptions($requestId),
             $response,
             $errorData,
-            $partialData
+            $partialData,
+            null,
+            $this->getLastQuery()
         );
     }
 

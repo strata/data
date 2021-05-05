@@ -4,8 +4,51 @@ declare(strict_types=1);
 
 namespace Strata\Data\Exception;
 
+use Symfony\Contracts\HttpClient\ResponseInterface;
+
 class GraphQLException extends HttpException
 {
+    private string $lastQuery;
+
+    /**
+     * HttpException
+     *
+     * Outputs key HTTP request and response data with exception, data can also be accessed via getters
+     *
+     * @param $message
+     * @param string $uri
+     * @param string $method
+     * @param array $options
+     * @param ResponseInterface $response
+     * @param array $errorData
+     * @param array $responseData
+     * @param ?string $lastQuery
+     * @param \Exception|null $previous
+     */
+    public function __construct(string $message, string $uri, string $method, array $options, ResponseInterface $response, array $errorData = [], array $responseData = [], \Exception $previous = null, ?string $lastQuery = null)
+    {
+        if (null !== $lastQuery) {
+            $this->setLastQuery($lastQuery);
+        }
+        parent::__construct($message, $uri, $method, $options, $response, $errorData, $responseData, $previous);
+    }
+
+    /**
+     * @return string
+     */
+    public function getLastQuery(): string
+    {
+        return $this->lastQuery;
+    }
+
+    /**
+     * @param string $lastQuery
+     */
+    public function setLastQuery(string $lastQuery): void
+    {
+        $this->lastQuery = $lastQuery;
+    }
+
     /**
      * Return exception message from error data
      *

@@ -130,6 +130,13 @@ EOD;
             $this->assertStringContainsString('Request headers: Content-Type: application/json', $e->getRequestTrace());
             $this->assertStringContainsString('Response status: 200', $e->getRequestTrace());
             $this->assertStringContainsString('GraphQL error: Syntax Error: Unexpected Name "invalid"', $e->getRequestTrace());
+            $expected = <<<EOD
+{
+    "query": "invalid"
+}
+EOD;
+
+            $this->assertSame($expected, $e->getLastQuery());
         }
 
         $this->assertTrue($foundException);
