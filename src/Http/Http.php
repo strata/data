@@ -18,12 +18,14 @@ use Strata\Data\Exception\BaseUriException;
 use Strata\Data\Exception\CacheException;
 use Strata\Data\Exception\DecoderException;
 use Strata\Data\Exception\HttpException;
+use Strata\Data\Exception\HttpOptionException;
 use Strata\Data\Exception\HttpTransportException;
 use Strata\Data\Exception\HttpNotFoundException;
 use Strata\Data\Helper\ContentHasher;
 use Strata\Data\Http\Response\CacheableResponse;
 use Strata\Data\Http\Response\SuppressErrorResponse;
 use Strata\Data\Traits\EventDispatcherTrait;
+use Strata\Data\Transform\PropertyAccessorTrait;
 use Strata\Data\Version;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Contracts\HttpClient\Exception\HttpExceptionInterface;
@@ -159,13 +161,35 @@ class Http implements DataProviderInterface
     }
 
     /**
-     * Set default HTTP options, merging passed options in with fixed HTTP options for this data provider
+     * Set default HTTP options for all subsequent HTTP requests
      *
      * @param array $options
      */
     public function setDefaultOptions(array $options)
     {
-        $this->currentDefaultOptions = $this->mergeHttpOptions($this->defaultOptions, $options);
+        $this->currentDefaultOptions = $this->mergeHttpOptions($this->getCurrentDefaultOptions(), $options);
+    }
+
+    /**
+     * Remove a default HTTP option from all subsequent HTTP requests
+     * @param string|array $option String option name (e.g. 'auth_bearer') or array to represent a multidimensional option (e.g. ['headers', 'User-Agent']
+     */
+    public function removeDefaultOption($option)
+    {
+        if (is_string($option)) {
+            if (isset($this->currentDefaultOptions[$option])) {
+                unset($this->currentDefaultOptions[$option]);
+            }
+            return;
+        }
+        if (is_array($option)) {
+            $parent = $option[0];
+            $child = $option[1];
+            if (isset($this->currentDefaultOptions[$parent][$child])) {
+                unset($this->currentDefaultOptions[$parent][$child]);
+            }
+            return;
+        }
     }
 
     /**
@@ -178,16 +202,19 @@ class Http implements DataProviderInterface
      */
     public function mergeHttpOptions(array $options, array $newOptions): array
     {
-        foreach (array_keys(HttpClientInterface::OPTIONS_DEFAULTS) as $optionName) {
-            if (!isset($newOptions[$optionName])) {
+        foreach (HttpClientInterface::OPTIONS_DEFAULTS as $httpOption => $httpOptionValue) {
+            if (!isset($newOptions[$httpOption])) {
                 continue;
             }
-            if (in_array($optionName, ['query', 'headers', 'extra'])) {
-                foreach ($newOptions[$optionName] as $item => $value) {
-                    $options[$optionName][$item] = $value;
+            if (is_array($httpOptionValue)) {
+                if (!is_array($newOptions[$httpOption])) {
+                    continue;
+                }
+                foreach ($newOptions[$httpOption] as $item => $value) {
+                    $options[$httpOption][$item] = $value;
                 }
             } else {
-                $options[$optionName] = $newOptions[$optionName];
+                $options[$httpOption] = $newOptions[$httpOption];
             }
         }
         return $options;
@@ -200,6 +227,7 @@ class Http implements DataProviderInterface
      */
     public function getCurrentDefaultOptions(): array
     {
+        // Set defaults the first time this is called
         if (null === $this->currentDefaultOptions) {
             $this->currentDefaultOptions = $this->defaultOptions;
             $this->currentDefaultOptions['headers']['User-Agent'] = $this->getUserAgent();

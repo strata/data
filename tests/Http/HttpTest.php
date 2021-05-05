@@ -16,6 +16,59 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
 class HttpTest extends TestCase
 {
 
+    public function testDefaultOptions()
+    {
+        $api = new Http('https://example.com/api/');
+
+        $expected = [
+            'headers' => [
+                'User-Agent' => $api->getUserAgent()
+            ]
+        ];
+        $this->assertSame($expected, $api->getCurrentDefaultOptions());
+
+        $api->setDefaultOptions(['query' => ['foo' => 'bar']]);
+        $expected = [
+            'headers' => [
+                'User-Agent' => $api->getUserAgent(),
+            ],
+            'query' => [
+                'foo' => 'bar'
+            ]
+        ];
+        $test = $api->getCurrentDefaultOptions();
+        $this->assertSame($expected, $api->getCurrentDefaultOptions());
+
+        $api->setDefaultOptions(['headers' => ['Authorization' => 'testing123']]);
+        $expected = [
+            'headers' => [
+                'User-Agent' => $api->getUserAgent(),
+                'Authorization' => 'testing123'
+            ],
+            'query' => [
+                'foo' => 'bar'
+            ]
+        ];
+        $this->assertSame($expected, $api->getCurrentDefaultOptions());
+
+        $api->removeDefaultOption('query');
+        $expected = [
+            'headers' => [
+                'User-Agent' => $api->getUserAgent(),
+                'Authorization' => 'testing123'
+            ]
+        ];
+        $this->assertSame($expected, $api->getCurrentDefaultOptions());
+
+        $api->removeDefaultOption(['headers', 'Authorization']);
+        $expected = [
+            'headers' => [
+                'User-Agent' => $api->getUserAgent()
+            ]
+        ];
+        $this->assertSame($expected, $api->getCurrentDefaultOptions());
+    }
+
     public function testUserAgent()
     {
         $api = new Http('https://example.com/api/');
