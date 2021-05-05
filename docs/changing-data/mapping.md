@@ -1,15 +1,12 @@
-# Mapping items
+# Mapping data
 
-Mappers are used to map data to a new data structure so it is more useful for processing, for example
-converting an array of raw data to a collection of objects.
+Mappers are used to map data to a new data structure so it is more useful for processing, for example converting an array of raw data to a collection of objects.
 
 ## An example
 
-You can set up mapping by passing an array of new fields to old fields, using the property access syntax
-described above. In the below example `region` is set to an array of two possible old field options, this allows 
-you to specify multiple possible old values to map data from.
+You can set up mapping by passing an array of new fields to old fields, using the property access syntax described above. In the below example `region` is set to an array of two possible old field options, this allows you to specify multiple possible old values to map data from.
 
-Please note the new location and source location are written as [property paths](../property-paths.md).
+Please note the new location and source location are written as [property paths](property-paths.md).
 
 ```php
 use Strata\Data\Mapper\MapItem;
@@ -25,8 +22,7 @@ $mapping = [
 $mapper = new MapItem($mapping);
 ```
 
-You can then map incoming data to the new structure. In the below example, we've set a local data array to make this
-example concise. In reality, you'd be retrieving data from an external data provider.
+You can then map incoming data to the new structure. In the below example, we've set a local data array to make this example concise. In reality, you'd be retrieving data from an external data provider.
 
 ```php
 $data = [
@@ -38,7 +34,7 @@ $item = $mapper->map($data);
 
 This returns:
 
-```
+```text
 $item = [
     'name'      => 'Fred Bloggs',
     'age'       => null,
@@ -46,13 +42,11 @@ $item = [
 ];
 ```
 
-As you can see any fields not found in the source data are set to null and the region is correctly mapped from the 
-`person_town` source field.
+As you can see any fields not found in the source data are set to null and the region is correctly mapped from the `person_town` source field.
 
 ### Specifying multiple source fields
 
-Some APIs use multiple source field names for the same data, you can pass multiple source property paths in an array and 
-the mapper will take the first match it finds.
+Some APIs use multiple source field names for the same data, you can pass multiple source property paths in an array and the mapper will take the first match it finds.
 
 ```php
 $data = [
@@ -64,8 +58,7 @@ $item = $mapper->map($data);
 
 ### Transforming individual values when mapping
 
-You can transform data values when mapping by using a single value transformer. Single value transformers take the 
-property path as the first argument. Some transformers accept further arguments to customise the transformer. 
+You can transform data values when mapping by using a single value transformer. Single value transformers take the property path as the first argument. Some transformers accept further arguments to customise the transformer.
 
 For example, to cast a date of birth to a `\DateTime` object, use:
 
@@ -93,13 +86,13 @@ You can also write PHP code to help map more complex data from source to your de
 
 #### CallableValue
 
-To transform one value using a callback use `CallableValue`, this takes two arguments: the property path of the source 
-data and the [callable](https://www.php.net/language.types.callable) to run to return the transformed value.
+To transform one value using a callback use `CallableValue`, this takes two arguments: the property path of the source data and the [callable](https://www.php.net/language.types.callable) to run to return the transformed value.
 
 When called via the mapper the callable is passed the following arguments:
-* `$value` Source value (read from the source property path)
 
-For example, to use the built-in `strtoupper()` function: 
+* `$value` Source value \(read from the source property path\)
+
+For example, to use the built-in `strtoupper()` function:
 
 ```php
 $data = [
@@ -111,19 +104,17 @@ $item = $mapper->map($data);
 
 #### CallableData
 
-For more complex operations, you can use `CallableData` which can run transformations across any values from the source 
-data. This class takes one argument: the [callable](https://www.php.net/language.types.callable) to run to return transformed data.
+For more complex operations, you can use `CallableData` which can run transformations across any values from the source data. This class takes one argument: the [callable](https://www.php.net/language.types.callable) to run to return transformed data.
 
-The callable will be passed the source `$data` array as the first argument, all other arguments
-are optional. When called via the mapper the callable is passed the following arguments:
+The callable will be passed the source `$data` array as the first argument, all other arguments are optional. When called via the mapper the callable is passed the following arguments:
+
 * array `$data` Source data
 * `string $destination` Destination property path
 * `array|object $item` The destination item data is mapped to
 
-The callable function must return data which is then written to the destination property path in your destination item
-(array or object). The callable function does not need to write the data, just return it.
+The callable function must return data which is then written to the destination property path in your destination item \(array or object\). The callable function does not need to write the data, just return it.
 
-For example, this mapping strategy uses a callback for the `$item['name']` field: 
+For example, this mapping strategy uses a callback for the `$item['name']` field:
 
 ```php
 $data = [
@@ -168,12 +159,9 @@ $data = [
 
 ### Using the property accessor in your own classes
 
-If you have a class and you want to use the [property accessor](https://symfony.com/doc/current/components/property_access.html) 
-simply use the `PropertyAccessorTrait` trait and you'll have access to methods such as `getPropertyAccessor()`. 
-Additionally, if your class implements `PropertyAccessorInterface` then an instance of the property accessor will be automatically 
-passed to your class from the mapper.
+If you have a class and you want to use the [property accessor](https://symfony.com/doc/current/components/property_access.html) simply use the `PropertyAccessorTrait` trait and you'll have access to methods such as `getPropertyAccessor()`. Additionally, if your class implements `PropertyAccessorInterface` then an instance of the property accessor will be automatically passed to your class from the mapper.
 
-```angular2html
+```text
 use Strata\Data\Transform\PropertyAccessorInterface;
 use Strata\Data\Transform\PropertyAccessorTrait;
 
@@ -184,8 +172,7 @@ class MyClass implements PropertyAccessorInterface {
 
 ### Mapping from a different root property
 
-If your item data cannot be found in the root of the data array then you can specify the root property
-path to use as the second argument to the `map()` method. The following examples sets the root to `$data['item']`:
+If your item data cannot be found in the root of the data array then you can specify the root property path to use as the second argument to the `map()` method. The following examples sets the root to `$data['item']`:
 
 ```php
 $item = $mapper->map($data, '[item]');
@@ -193,8 +180,7 @@ $item = $mapper->map($data, '[item]');
 
 ### Mapping to an object
 
-You can map data to an object, by calling the `toObject()` method and passing the class name. You also need to 
-update the mapping to set data to object properties (using the dot notation instead of index notation):
+You can map data to an object, by calling the `toObject()` method and passing the class name. You also need to update the mapping to set data to object properties \(using the dot notation instead of index notation\):
 
 ```php
 $mapping = [
@@ -232,23 +218,19 @@ echo $person->name;
 echo $person->region;
 ```
 
-The neat thing about Symfony's PropertyAccess component is it can use a variety of ways to populate an object. The 
-following is supported:
+The neat thing about Symfony's PropertyAccess component is it can use a variety of ways to populate an object. The following is supported:
 
 * Public properties
-* Setters (e.g. `setName()`)
+* Setters \(e.g. `setName()`\)
 * Magic `__set()` method
 
 ### Adding transformers
 
 Once data is mapped to the new object or array, you can apply transformers to change the data.
 
-When you create the mapper, you need to pass an instance of `MappingStrategy` class as the second argument. Via this class
-you can set any number of transformers which apply to mapped data on your new array or object. Please note if you want to transform 
-data before it is mapped, you need to use the transformer on the data object directly.
+When you create the mapper, you need to pass an instance of `MappingStrategy` class as the second argument. Via this class you can set any number of transformers which apply to mapped data on your new array or object. Please note if you want to transform data before it is mapped, you need to use the transformer on the data object directly.
 
-`MappingStrategy` takes two arguments: the first is the array of property paths to map data to, the second is an array of 
-transformers you wish to use (transformers must implement `TransformInterface`). 
+`MappingStrategy` takes two arguments: the first is the array of property paths to map data to, the second is an array of transformers you wish to use \(transformers must implement `TransformInterface`\).
 
 ```php
 $strategy = new MappingStrategy($mapping, [
@@ -273,9 +255,7 @@ echo $person->region;
 
 ### Wildcard mappers
 
-The above examples are useful when you know the data fields you want to map to a new item. An alternative strategy is to
-map all data fields, except any you wish to ignore. You can do this with the `WildcardMappingStrategy`. This class takes
-two arguments: an array of fields to ignore (not map), and an array of transformers to apply to the data.
+The above examples are useful when you know the data fields you want to map to a new item. An alternative strategy is to map all data fields, except any you wish to ignore. You can do this with the `WildcardMappingStrategy`. This class takes two arguments: an array of fields to ignore \(not map\), and an array of transformers to apply to the data.
 
 E.g.
 
@@ -297,7 +277,7 @@ $item = $mapper->map($data);
 
 Ignored fields are case-insensitive. The above returns an array with two values:
 
-```
+```text
 $item = [
     'name' => 'Joe Bloggs',
     'category' => 'fishing' 
@@ -308,24 +288,21 @@ Any transformers are applied as detailed above. Wildcard mappers can map data to
 
 ## Mapping collections
 
-You can also map data to a collection of array items or objects. This automatically sets pagination to make it easier to 
-output pagination information or run subsequent requests.
+You can also map data to a collection of array items or objects. This automatically sets pagination to make it easier to output pagination information or run subsequent requests.
 
-### Setting pagination 
-To automatically generate pagination we need to pass data about the total results, results per page and current page. 
-You can call the following methods to set the property path to the appropriate data field, or pass the actual value as an integer.
+### Setting pagination
 
-Pagination property paths are relative to the original data root, this is not affected by passing a `$rootProperty` 
-argument to the `map()` method.
+To automatically generate pagination we need to pass data about the total results, results per page and current page. You can call the following methods to set the property path to the appropriate data field, or pass the actual value as an integer.
+
+Pagination property paths are relative to the original data root, this is not affected by passing a `$rootProperty` argument to the `map()` method.
 
 * `totalResults()`
 * `resultsPerPage()`
 * `currentPage()` 
 
-Values for all three fields must be set in order to create a valid pagination object, with the exception of `currentPage()`
-which defaults to `1` if not set.
+Values for all three fields must be set in order to create a valid pagination object, with the exception of `currentPage()` which defaults to `1` if not set.
 
-These methods return a fluent interface so you can chain these methods together for convenience: 
+These methods return a fluent interface so you can chain these methods together for convenience:
 
 ```php
 $mapper = new MapCollection($mapping);
@@ -336,9 +313,7 @@ $mapper->totalResults('[meta_data][total]')
 
 ### Setting pagination data from another data source
 
-Some data providers set pagination information in a secondary location, for example response headers. To use this method,
-simply pass the secondary array along with property paths to point to the required pagination fields.
-
+Some data providers set pagination information in a secondary location, for example response headers. To use this method, simply pass the secondary array along with property paths to point to the required pagination fields.
 
 ```php
 $mapper = new MapCollection($mapping);
@@ -350,8 +325,7 @@ $mapper->totalResults('[X-WP-Total]')
 
 ### Returning a collection of arrays
 
-When you run the `map()` method a `Collection` object is returned that you can iterate through. Within the collection, 
-by default each item is an array. You can access pagination via `$collection->getPagination()`.
+When you run the `map()` method a `Collection` object is returned that you can iterate through. Within the collection, by default each item is an array. You can access pagination via `$collection->getPagination()`.
 
 ```php
 $mapper = new MapCollection($mapping);
@@ -362,8 +336,7 @@ $mapper->totalResults('[meta_data][total]')
 $collection = $mapper->map($data);
 ```
 
-The collection object that is returned can be iterated over and accessed like a normal array. It implements 
-`SeekableIterator`, `Countable`, and `ArrayAccess`. 
+The collection object that is returned can be iterated over and accessed like a normal array. It implements `SeekableIterator`, `Countable`, and `ArrayAccess`.
 
 ### Returning a collection of objects
 
@@ -422,3 +395,4 @@ $data = [
 
 $collection = $mapper->map($data, '[items]');
 ```
+

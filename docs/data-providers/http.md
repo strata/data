@@ -1,4 +1,4 @@
-# Http data provider
+# Http
 
 ## Setting up your data connection
 
@@ -24,7 +24,8 @@ $api->setBaseUri('https://new.com/');
 ```
 
 ## Configuration
-You can configure the data provider with default HTTP options in a number of ways. 
+
+You can configure the data provider with default HTTP options in a number of ways.
 
 You can pass `$options` array when creating a new `Http` object:
 
@@ -32,7 +33,7 @@ You can pass `$options` array when creating a new `Http` object:
 $api = new Http('https://example.com/', $options);
 ```
 
-You can also pass `$options` array when setting the current base URI: 
+You can also pass `$options` array when setting the current base URI:
 
 ```php
 $api->setBaseUri('https://example.com/', $options);
@@ -40,8 +41,7 @@ $api->setBaseUri('https://example.com/', $options);
 
 Please note this overwrites any previously set default HTTP options.
 
-See [Symfony HttpClient configuration](https://symfony.com/doc/current/reference/configuration/framework.html#reference-http-client) for a reference
-for all valid options. Common options appear below.
+See [Symfony HttpClient configuration](https://symfony.com/doc/current/reference/configuration/framework.html#reference-http-client) for a reference for all valid options. Common options appear below.
 
 ### Authentication
 
@@ -63,7 +63,7 @@ $api = new Http('https://example.com/', [
 
 See [Symfony HTTP authentication](https://symfony.com/doc/current/http_client.html#authentication).
 
-It's also common for APIs to also set API tokens via query string parameters (see below).
+It's also common for APIs to also set API tokens via query string parameters \(see below\).
 
 ### Query String Parameters
 
@@ -91,11 +91,9 @@ $api = new Http('https://example.com/', [
 
 ## Symfony HttpClient
 
-The `Http` data provider uses [Symfony HttpClient](https://symfony.com/doc/current/http_client.html) to make requests.
-This is automatically created when it's needed. If you need to, you can set this up yourself and set via `setHttpClient()`.
+The `Http` data provider uses [Symfony HttpClient](https://symfony.com/doc/current/http_client.html) to make requests. This is automatically created when it's needed. If you need to, you can set this up yourself and set via `setHttpClient()`.
 
-An example usage would be if you want to set up a [scoping client](https://symfony.com/doc/current/http_client.html#scoping-client)
-to setup default options for different URL patterns:
+An example usage would be if you want to set up a [scoping client](https://symfony.com/doc/current/http_client.html#scoping-client) to setup default options for different URL patterns:
 
 ```php
 $client = HttpClient::create();
@@ -120,9 +118,9 @@ $api->setHttpClient($client);
 Run a GET request.
 
 * Parameters
-    * `string $uri` URI relative to base URI
-    * `array $queryParams` Array of query params to send with GET request
-    * `array $options` HTTP options to use for this request (these override default HTTP options)
+  * `string $uri` URI relative to base URI
+  * `array $queryParams` Array of query params to send with GET request
+  * `array $options` HTTP options to use for this request \(these override default HTTP options\)
 * Returns an object of type `Strata\Data\Http\Response\CacheableResponse`
 
 ### post
@@ -130,9 +128,9 @@ Run a GET request.
 Run a POST request.
 
 * Parameters
-    * `string $uri` URI relative to base URI
-    * `array $postData` Array of data to send with POST request
-    * `array $options` HTTP options to use for this request (these override default HTTP options)
+  * `string $uri` URI relative to base URI
+  * `array $postData` Array of data to send with POST request
+  * `array $options` HTTP options to use for this request \(these override default HTTP options\)
 * Returns an object of type `Strata\Data\Http\Response\CacheableResponse`
 
 ### head
@@ -140,15 +138,13 @@ Run a POST request.
 Run a HEAD request.
 
 * Parameters
-    * `string $uri` URI relative to base URI
-    * `array $options` HTTP options to use for this request (these override default HTTP options)
+  * `string $uri` URI relative to base URI
+  * `array $options` HTTP options to use for this request \(these override default HTTP options\)
 * Returns an object of type `Strata\Data\Http\Response\CacheableResponse`
 
 ### Cacheable responses
 
-Most requests return responses as objects of type `CacheableResponse`. These are identical to the standard Symfony response
-object with one additional method `isHit()` which lets you know whether this response was returned from the cache or run
-live.
+Most requests return responses as objects of type `CacheableResponse`. These are identical to the standard Symfony response object with one additional method `isHit()` which lets you know whether this response was returned from the cache or run live.
 
 ```php
 $response = $api->get('url-path');
@@ -160,7 +156,7 @@ if ($response->isHit()) {
 }
 ```
 
-See [caching](../caching.md) for more.
+See [caching](../usage/caching.md) for more.
 
 ### exists
 
@@ -172,13 +168,13 @@ $result = $api->exists('tile-101.png');
 ```
 
 * Parameters
-    * `string $uri` URI relative to base URI
-    * `array $options` HTTP options to use for this request (these override default HTTP options)
+  * `string $uri` URI relative to base URI
+  * `array $options` HTTP options to use for this request \(these override default HTTP options\)
 * Returns a boolean
 
 ### getRss
 
-You can use the `getRss()` method to retrieve and decode an RSS feed. 
+You can use the `getRss()` method to retrieve and decode an RSS feed.
 
 ```php
 $http = new Http('https://example.com/');
@@ -190,21 +186,19 @@ foreach ($feed as $item) {
     $link = $item->getLink();
 }
 ```
+
 * Parameters
-    * `string $uri` URI relative to base URI
-    * `array $options` HTTP options to use for this request (these override default HTTP options)
+  * `string $uri` URI relative to base URI
+  * `array $options` HTTP options to use for this request \(these override default HTTP options\)
 * Returns an iterable object of type `Laminas\Feed\Reader\Feed\FeedInterface`
 
-This uses [Laminas Feed](https://docs.laminas.dev/laminas-feed/reader/) to decode the RSS feed, this supports RSS and
-Atom feeds of any version, including RDF/RSS 1.0, RSS 2.0, Atom 0.3, and Atom 1.0.
+This uses [Laminas Feed](https://docs.laminas.dev/laminas-feed/reader/) to decode the RSS feed, this supports RSS and Atom feeds of any version, including RDF/RSS 1.0, RSS 2.0, Atom 0.3, and Atom 1.0.
 
-See docs on [retrieving feed information](https://docs.laminas.dev/laminas-feed/reader/#retrieving-feed-information) 
-and [retrieving entry item information](https://docs.laminas.dev/laminas-feed/reader/#retrieving-entryitem-information).
+See docs on [retrieving feed information](https://docs.laminas.dev/laminas-feed/reader/#retrieving-feed-information) and [retrieving entry item information](https://docs.laminas.dev/laminas-feed/reader/#retrieving-entryitem-information).
 
 ## Concurrent requests
 
-You can run a bulk set of GET requests quickly and efficiently by passing an array of URIs to the `getConcurrent()` method.
-This returns a [generator](https://www.php.net/generators.overview) which can be looped over with `foreach`.
+You can run a bulk set of GET requests quickly and efficiently by passing an array of URIs to the `getConcurrent()` method. This returns a [generator](https://www.php.net/generators.overview) which can be looped over with `foreach`.
 
 ```php
 /** @var ResponseInterface $response */
@@ -217,8 +211,7 @@ foreach ($api->getConcurrent($uris) as $response) {
 
 You can also manually run concurrent requests by making a request in two steps: first prepare the request, then run it.
 
-Using the example in the [Symfony docs for concurrent requests](https://symfony.com/doc/current/http_client.html#concurrent-requests)
-this can be done as so:
+Using the example in the [Symfony docs for concurrent requests](https://symfony.com/doc/current/http_client.html#concurrent-requests) this can be done as so:
 
 ```php
 $api = new Http('https://http2.akamai.com/demo/');
@@ -238,30 +231,29 @@ The `runRequest()` method checks the status code to ensure the request has run s
 
 ## Running requests manually
 
-All requests run the `prepareRequest()` and `runRequest()`, this is to help support [concurrent requests](#concurrent-requests).
-You can use these methods directly, but it's recommended to use a helper method above such as `get()`.
+All requests run the `prepareRequest()` and `runRequest()`, this is to help support [concurrent requests](http.md#concurrent-requests). You can use these methods directly, but it's recommended to use a helper method above such as `get()`.
 
 ### prepareRequest
 
-Prepare request (but do not run it).
+Prepare request \(but do not run it\).
 
 * Parameters
-    * `string $method` HTTP method
-    * `string $uri` URI relative to base URI
-    * `array $options` HTTP options to use for this request (these override default HTTP options)
+  * `string $method` HTTP method
+  * `string $uri` URI relative to base URI
+  * `array $options` HTTP options to use for this request \(these override default HTTP options\)
 * Returns an object of type `Strata\Data\Http\Response\CacheableResponse`
 
 ### runRequest
 
-Run a request (note Symfony HttpClient is lazy loading so this still won't actually run a HTTP request until content is accessed).
+Run a request \(note Symfony HttpClient is lazy loading so this still won't actually run a HTTP request until content is accessed\).
 
 * Parameters
-    * `CacheableResponse $response` Response to run
+  * `CacheableResponse $response` Response to run
 * Returns an object of type `Strata\Data\Http\Response\CacheableResponse`
 
 ## Suppress exceptions on error
-The default behaviour of is to throw exceptions on HTTP or JSON decoding errors (e.g. if a request does not return a 200 status),
-though this can be suppressed. It can be useful to do this for sub-requests which you don't want to stop the master HTTP request.
+
+The default behaviour of is to throw exceptions on HTTP or JSON decoding errors \(e.g. if a request does not return a 200 status\), though this can be suppressed. It can be useful to do this for sub-requests which you don't want to stop the master HTTP request.
 
 You can do this via:
 
@@ -276,3 +268,4 @@ You can turn off this error suppression via:
 ```php
 $data->suppressErrors(false);
 ```
+

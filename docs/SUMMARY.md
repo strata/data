@@ -1,29 +1,33 @@
-# Summary
+# Table of contents
 
+* [Introduction](README.md)
 * [Principles](principles.md)
 
 ## Usage
 
-* Installation
-* [Making a request](making-requests.md)
-* [Caching](caching.md)
-* [Validation](validating.md)
+* [Installation](usage/installation.md)
+* [Making a request](usage/making-requests.md)
+* [Caching](usage/caching.md)
+* [Validation](usage/validating.md)
 
 ## Data providers
-* [Intro](data-providers/README.md)
+
+* [Intro](data-providers/data-providers.md)
 * [Http](data-providers/http.md)
 * [Rest](data-providers/rest.md)
 * [GraphQL](data-providers/graphql.md)
 
 ## Changing data
-* [Transforming and mapping data](changing-data/README.md)
-* [Accessing properties](property-paths.md)
+
+* [Transforming and mapping data](changing-data/changing-data.md)
+* [Accessing properties](changing-data/property-paths.md)
 * [Transforming data](changing-data/transformers.md)
 * [Available transformers](changing-data/available-transformers.md)
 * [Mapping data](changing-data/mapping.md)
-  
+
 ## Advanced usage
 
-* [Data History](data-history.md)
-* [Events](events.md)
-* [Testing API requests](testing-api-requests.md)
+* [Data History](advanced-usage/data-history.md)
+* [Events](advanced-usage/events.md)
+* [Testing API requests](advanced-usage/testing-api-requests.md)
+
