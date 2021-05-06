@@ -369,8 +369,8 @@ class Http implements DataProviderInterface
      */
     public function getRequestIdentifier(string $uri, array $context = []): string
     {
-        if (!empty($options['query'])) {
-            $uri .= '?' . urlencode($options['query']);
+        if (!empty($context['query'])) {
+            $uri .= '?' . urlencode($context['query']);
         }
         return ContentHasher::hash($uri);
     }

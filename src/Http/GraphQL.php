@@ -53,8 +53,8 @@ class GraphQL extends Http
      */
     public function getRequestIdentifier(string $uri, array $context = []): string
     {
-        if (!empty($options['query'])) {
-            $uri .= '?' . urlencode($options['query']);
+        if (!empty($context['query'])) {
+            $uri .= '?' . urlencode($context['query']);
         }
         if (is_array($context['body'])) {
             return ContentHasher::hash($uri . ' ' . http_build_query($context['body']));

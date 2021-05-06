@@ -76,9 +76,9 @@ class Permissions
      * Return string name of permission
      *
      * @param int $action
-     * @return string
+     * @return ?string
      */
-    public function getName(int $action): string
+    public function getName(int $action): ?string
     {
         switch ($action) {
             case self::READ:
@@ -97,6 +97,7 @@ class Permissions
                 return 'DELETE';
                 break;
         }
+        return null;
     }
 
     /**
