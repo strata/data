@@ -4,10 +4,9 @@ namespace Strata\Data\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Strata\Data\Exception\GraphQLException;
+use Strata\Data\Helper\ContentHasher;
 use Strata\Data\Http\GraphQL;
-use Strata\Data\Http\Http;
 use Strata\Data\Http\Response\MockResponseFromFile;
-use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Component\HttpClient\MockHttpClient;
 
 class GraphQLTest extends TestCase
@@ -18,6 +17,35 @@ class GraphQLTest extends TestCase
         $graphQL = new GraphQL('https://example.com/api');
         $options = $graphQL->getCurrentDefaultOptions();
         $this->assertSame('application/json', $options['headers']['Content-Type']);
+    }
+
+    /**
+     * ID is based on method, URI, query params and GraphQL query body
+     */
+    public function testRequestIdentifier()
+    {
+        $responses = [
+            new MockResponseFromFile(__DIR__ . '/graphql/ping.json'),
+            new MockResponseFromFile(__DIR__ . '/graphql/ping.json'),
+            new MockResponseFromFile(__DIR__ . '/graphql/ping.json'),
+            new MockResponseFromFile(__DIR__ . '/graphql/ping.json'),
+        ];
+        $api = new GraphQL('https://example.com/api/');
+        $api->setHttpClient(new MockHttpClient($responses));
+
+        $query = 'query { entries(section: "news", limit: 2) { id } }';
+        $response = $api->query($query);
+        $expected = ContentHasher::hash('GET https://example.com/api/test ' . $query);
+        $options = $api->mergeHttpOptions($api->getCurrentDefaultOptions(), ['body' => $query]);
+        $this->assertSame($expected, $api->getRequestIdentifier('GET ' . $api->getUri('test'), $options));
+
+        $query = 'query { entries(section: "news", limit: 2, page: $id) { id } }';
+        $variables = ['page' => 42];
+        $response = $api->query('test', $variables);
+        $query = 'query { entries(section: "news", limit: 2, page: $id) { id } } variables { id: 42}';
+        $expected = ContentHasher::hash('GET https://example.com/api/test ' . $query);
+        $options = $api->mergeHttpOptions($api->getCurrentDefaultOptions(), ['body' => $query]);
+        $this->assertSame($expected, $api->getRequestIdentifier('GET ' . $api->getUri('test'), $options));
     }
 
     /**

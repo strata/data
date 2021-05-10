@@ -15,6 +15,7 @@ abstract class RequestEventAbstract extends Event
 
     public function __construct(string $requestId, string $uri, array $context = [])
     {
+        $this->requestId = $requestId;
         $this->uri = $uri;
         $this->context = $context;
     }

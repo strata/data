@@ -370,7 +370,7 @@ class Http implements DataProviderInterface
     public function getRequestIdentifier(string $uri, array $context = []): string
     {
         if (!empty($context['query'])) {
-            $uri .= '?' . urlencode($context['query']);
+            $uri .= '?' . http_build_query($context['query']);
         }
         return ContentHasher::hash($uri);
     }
@@ -483,7 +483,8 @@ class Http implements DataProviderInterface
         $options['user_data'] = $requestId;
 
         // Check cache
-        if ($this->isCacheableRequest($method)) {
+        $cacheable = $this->isCacheableRequest($method);
+        if ($cacheable) {
             $item = $this->getCache()->getItem($requestId);
             if ($item->isHit()) {
                 $response = $this->cache->getResponseFromItem($item, $method, $uri, $options);
@@ -512,7 +513,7 @@ class Http implements DataProviderInterface
         $response = new CacheableResponse($response, false);
 
         // Set cache item, if cache enabled
-        if ($this->isCacheableRequest($method)) {
+        if ($cacheable) {
             $response->setCacheItem($item);
         }
 

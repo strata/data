@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Strata\Data\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Strata\Data\Helper\ContentHasher;
 use Strata\Data\Http\Http;
 use Strata\Data\Http\Rest;
 use Strata\Data\Mapper\MapCollection;
@@ -76,6 +77,43 @@ class HttpTest extends TestCase
 
         $this->assertStringContainsString('Strata_Data', $version);
         $this->assertStringContainsString('(+https://github.com/strata/data)', $version);
+    }
+
+    /**
+     * ID is based on method, URI and query params
+     */
+    public function testRequestIdentifier()
+    {
+        $responses = [
+            new MockResponseFromFile(__DIR__ . '/http/query.json'),
+            new MockResponseFromFile(__DIR__ . '/http/query.json'),
+            new MockResponseFromFile(__DIR__ . '/http/query.json'),
+            new MockResponseFromFile(__DIR__ . '/http/query.json'),
+        ];
+        $api = new Http('https://example.com/api/');
+        $api->setHttpClient(new MockHttpClient($responses));
+
+        $response = $api->get('test');
+        $expected = ContentHasher::hash('GET https://example.com/api/test');
+        $this->assertSame($expected, $api->getRequestIdentifier('GET ' . $api->getUri('test'), $api->getCurrentDefaultOptions()));
+
+        $query = ['apikey' => 'ABC123'];
+        $response = $api->get('test', $query);
+        $expected = ContentHasher::hash('GET https://example.com/api/test?' . http_build_query($query));
+        $options = $api->mergeHttpOptions($api->getCurrentDefaultOptions(), ['query' => $query]);
+        $this->assertSame($expected, $api->getRequestIdentifier('GET ' . $api->getUri('test'), $options));
+
+        $query = ['foo' => 'bar', 'page' => 2];
+        $response = $api->get('test', $query);
+        $expected = ContentHasher::hash('GET https://example.com/api/test?' . http_build_query($query));
+        $options = $api->mergeHttpOptions($api->getCurrentDefaultOptions(), ['query' => $query]);
+        $this->assertSame($expected, $api->getRequestIdentifier('GET ' . $api->getUri('test'), $options));
+
+        $options = ['headers' => ['X-Foo' => 'Bar'], 'auth_basic' => 'user:pass'];
+        $response = $api->get('test', $query, $options);
+        $expected = ContentHasher::hash('GET https://example.com/api/test?' . http_build_query($query));
+        $options = $api->mergeHttpOptions($api->getCurrentDefaultOptions(), ['query' => $query]);
+        $this->assertSame($expected, $api->getRequestIdentifier('GET ' . $api->getUri('test'), $options));
     }
 
     public function testRss()
@@ -204,6 +242,7 @@ class HttpTest extends TestCase
         foreach ($api->getConcurrent($responses) as $response) {
         }
 
+        /** @phpstan-ignore-next-line */
         $this->assertEquals('https://example.com/api/file-378.html', $response->getInfo('url'));
         $this->assertEquals(379, $api->getTotalHttpRequests());
     }
@@ -228,6 +267,7 @@ class HttpTest extends TestCase
             $response = $api->runRequest($response);
         }
 
+        /** @phpstan-ignore-next-line */
         $this->assertEquals('https://example.com/api/file-378.html', $response->getInfo('url'));
         $this->assertEquals(379, $api->getTotalHttpRequests());
     }
