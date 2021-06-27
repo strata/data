@@ -247,6 +247,36 @@ class HttpTest extends TestCase
         $this->assertEquals(379, $api->getTotalHttpRequests());
     }
 
+    public function testConcurrentWithOptions()
+    {
+        $mockResponses = [];
+        for ($i = 0; $i < 379; ++$i) {
+            $mockResponses[] = new MockResponse('OK');
+        }
+
+        $api = new Rest('https://example.com/api/');
+        $api->setHttpClient(new MockHttpClient($mockResponses));
+
+        $requests = [];
+        for ($i = 0; $i < 379; ++$i) {
+            $uri = "file-$i.html";
+            $requests[] = [
+                'uri' => $uri,
+                'options' => [
+                    'query' => ['page' => $i, 'foo' => 'bar']
+                ]
+            ];
+        }
+
+        /** @var ResponseInterface $response */
+        foreach ($api->getConcurrent($requests) as $response) {
+        }
+
+        /** @phpstan-ignore-next-line */
+        $this->assertEquals('https://example.com/api/file-378.html?page=378&foo=bar', $response->getInfo('url'));
+        $this->assertEquals(379, $api->getTotalHttpRequests());
+    }
+
     public function testManualConcurrent()
     {
         $mockResponses = [];

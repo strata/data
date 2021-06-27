@@ -784,19 +784,25 @@ class Http implements DataProviderInterface
     /**
      * Run a bulk set of GET requests concurrently and return a generator you can foreach over
      *
-     * @param array $uris
-     * @param array $options
+     * @param array $uris Array of URI strings to query, or array of ['uri', 'options'] to run for each query
+     * @param array $defaultOptions
      * @return \Generator Generator of CacheableResponse items
      * @throws BaseUriException
      * @throws HttpException
      * @throws HttpNotFoundException
      * @throws TransportExceptionInterface
      */
-    public function getConcurrent(array $uris, array $options = []): \Generator
+    public function getConcurrent(array $uris, array $defaultOptions = []): \Generator
     {
         $responses = [];
         foreach ($uris as $uri) {
-            $responses[$uri] = $this->prepareRequest('GET', $uri, $options);
+            if (is_string($uri)) {
+                $responses[] = $this->prepareRequest('GET', $uri, $defaultOptions);
+            }
+            if (is_array($uri) && isset($uri['uri']) && isset($uri['options'])) {
+                $options = $this->mergeHttpOptions($defaultOptions, $uri['options']);
+                $responses[] = $this->prepareRequest('GET', $uri['uri'], $options);
+            }
         }
 
         /** @var ResponseInterface $response */

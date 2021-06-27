@@ -198,14 +198,39 @@ See docs on [retrieving feed information](https://docs.laminas.dev/laminas-feed/
 
 ## Concurrent requests
 
-You can run a bulk set of GET requests quickly and efficiently by passing an array of URIs to the `getConcurrent()` method. This returns a [generator](https://www.php.net/generators.overview) which can be looped over with `foreach`.
+You can run a bulk set of GET requests quickly and efficiently by passing an array of URIs to the `getConcurrent()` method. This returns a [generator](https://www.php.net/generators.overview) which can be looped over with `foreach`.   
 
 ```php
+$uris = [
+    'https://example.com/uri-1',
+    'https://example.com/uri-2',
+];
+
 /** @var ResponseInterface $response */
 foreach ($api->getConcurrent($uris) as $response) {
     // ... 
 }
 ```
+
+You can pass default options to use with all requests via the second parameter `array $options`.
+
+```php
+foreach ($api->getConcurrent($uris, $options) as $response) { }
+```
+
+If each request needs custom options (e.g. query params) then you can pass an array of arrays, with each request 
+having two keys (`uri`, `options`).
+
+```php
+$uris = [
+    ['uri' => 'https://example.com/uri-1', 'options' => ['query' => ['page' => 1]]],
+    ['uri' => 'https://example.com/uri-2', 'options' => ['query' => ['page' => 2]]],
+];
+foreach ($api->getConcurrent($uris) as $response) { }
+```
+
+If any default options are passed to `getConcurrent()` these are used with requests and merged with any request options 
+set for individual requests. Please note, options in individual requests override default options.
 
 ### Manually running concurrent requests
 
