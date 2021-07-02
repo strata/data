@@ -20,13 +20,13 @@ trait IterableTrait
      * Array of collection data
      * @var array
      */
-    protected $collection = [];
+    protected array $collection = [];
 
     /**
      * Current position in collection
      * @var int
      */
-    protected $position = 0;
+    protected int $position = 0;
 
     /**
      * Set collection array

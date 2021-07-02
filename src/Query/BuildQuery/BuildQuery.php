@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Strata\Data\Query;
+namespace Strata\Data\Query\BuildQuery;
 
 use Strata\Data\Http\Http;
 use Strata\Data\Http\Response\CacheableResponse;
+use Strata\Data\Query\Query;
 
 /**
  * Class to help build REST API HTTP requests

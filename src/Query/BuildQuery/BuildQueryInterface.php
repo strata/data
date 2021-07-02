@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Strata\Data\Query;
+namespace Strata\Data\Query\BuildQuery;
 
 use Strata\Data\DataProviderInterface;
 use Strata\Data\Http\Response\CacheableResponse;
+use Strata\Data\Query\Query;
 
 interface BuildQueryInterface
 {

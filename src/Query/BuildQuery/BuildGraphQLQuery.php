@@ -2,11 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Strata\Data\Query;
+namespace Strata\Data\Query\BuildQuery;
 
 use Strata\Data\Exception\GraphQLQueryException;
 use Strata\Data\Http\GraphQL;
 use Strata\Data\Http\Response\CacheableResponse;
+use Strata\Data\Query\GraphQLQuery;
+use Strata\Data\Query\Query;
 
 /**
  * Class to help build REST API HTTP requests
@@ -38,10 +40,10 @@ class BuildGraphQLQuery implements BuildQueryInterface
     /**
      * Return parameters (key: "values") for use in an GraphQL query
      *
-     * @param Query $query
+     * @param GraphQLQuery $query
      * @return array
      */
-    public function getGraphQLParameters(Query $query): string
+    public function getGraphQLParameters(GraphQLQuery $query): string
     {
         $params = [];
 
@@ -180,6 +182,8 @@ class BuildGraphQLQuery implements BuildQueryInterface
         }
 
         $graphQL = $this->buildGraphQL($query);
+
+        // @todo this runs request immediately and doesn't support concurrent multiple queries, can we improve on this?
         return $this->dataProvider->query($graphQL, $query->getVariables());
     }
 

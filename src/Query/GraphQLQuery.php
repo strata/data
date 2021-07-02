@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace Strata\Data\Query;
 
-use Strata\Data\DataProviderInterface;
 use Strata\Data\Exception\GraphQLQueryException;
-use Strata\Data\Exception\QueryException;
-use Strata\Data\Http\Response\CacheableResponse;
 use Strata\Data\Query\GraphQL\Fragment;
 use Strata\Data\Query\GraphQL\GraphQLTrait;
 
@@ -38,32 +35,17 @@ class GraphQLQuery extends Query
 
     /**
      * Constructor
-     * @param string $fileOrName Filename (ending .graphql) of GraphQL query, or name of GraphQL query
-     * @throws GraphQLQueryException
+     * @param string|null $name Query name
+     * @param string|null $filename Filename to load raw GraphQL query
      */
-    public function __construct(?string $fileOrName = null)
+    public function __construct(?string $name = null, ?string $filename = null)
     {
-        if ($fileOrName === null) {
-            return;
+        if ($name !== null) {
+            $this->setName($name);
         }
-        if (preg_match('/\.graphql$/', $fileOrName)) {
-            $this->setGraphQLFromFile($fileOrName);
-        } else {
-            $this->setName($fileOrName);
+        if ($filename !== null) {
+            $this->setGraphQLFromFile($filename);
         }
-    }
-
-    /**
-     * Prepare the request and populate the response object (does not run the request)
-     * @param DataProviderInterface $dataProvider
-     * @return CacheableResponse
-     * @throws QueryException
-     */
-    public function prepareRequest(DataProviderInterface $dataProvider): CacheableResponse
-    {
-        $buildQuery = new BuildGraphQLQuery($dataProvider);
-        $this->setResponse($buildQuery->prepareRequest($this));
-        return $this->getResponse();
     }
 
     /**
@@ -142,9 +124,6 @@ class GraphQLQuery extends Query
     {
         if ($type !== null) {
             $this->defineVariable($name, $type);
-        }
-        if (!$this->isVariableDefined($name)) {
-            throw new GraphQLQueryException(sprintf('Cannot add variable $%s since this is not defined', $name));
         }
         $this->variables[$name] = $value;
         return $this;

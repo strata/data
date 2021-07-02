@@ -4,11 +4,6 @@ declare(strict_types=1);
 
 namespace Strata\Data\Query;
 
-use Strata\Data\Cache\CacheLifetime;
-use Strata\Data\DataProviderInterface;
-use Strata\Data\Exception\QueryException;
-use Strata\Data\Http\GraphQL;
-use Strata\Data\Http\Http;
 use Strata\Data\Http\Response\CacheableResponse;
 
 /**
@@ -18,7 +13,6 @@ use Strata\Data\Http\Response\CacheableResponse;
  */
 class Query
 {
-    private ?CacheableResponse $response = null;
     private bool $enableCache = false;
     private ?int $cacheLifetime = null;
     private ?string $name = null;
@@ -77,6 +71,17 @@ class Query
      */
     public string $resultsPerPagePropertyPath = '[page]';
 
+    /**
+     * Constructor
+     * @param string|null $name Query name
+     */
+    public function __construct(?string $name = null)
+    {
+        if ($name !== null) {
+            $this->setName($name);
+        }
+    }
+
     public function enableCache(?int $lifetime = null): Query
     {
         $this->enableCache = true;
@@ -101,70 +106,6 @@ class Query
     }
 
     /**
-     * Prepare the request and populate the response object (does not run the request)
-     * @param DataProviderInterface $dataProvider
-     * @return CacheableResponse
-     * @throws QueryException
-     */
-    public function prepareRequest(DataProviderInterface $dataProvider): CacheableResponse
-    {
-        $buildQuery = new BuildQuery($dataProvider);
-        $this->setResponse($buildQuery->prepareRequest($this));
-        return $this->getResponse();
-    }
-
-    /**
-     * Set response object
-     * @return Query Fluent interface
-     */
-    public function setResponse(CacheableResponse $response): Query
-    {
-        $this->response = $response;
-        return $this;
-    }
-
-    /**
-     * Clear the response and mark it to be re-run
-     * @return Query Fluent interface
-     */
-    public function clearResponse(): Query
-    {
-        $this->response = null;
-        return $this;
-    }
-
-    /**
-     * Whether the query has run and has a response
-     * @return bool
-     */
-    public function hasResponse(): bool
-    {
-        return ($this->response instanceof CacheableResponse);
-    }
-
-    /**
-     * Whether the response has actually run
-     *
-     * Checks for the existence of the HTTP status code, only populated once the request has run
-     */
-    public function hasResponseRun(): bool
-    {
-        if (!$this->hasResponse()) {
-            return false;
-        }
-        return (!empty($this->response->getInfo('http_code')));
-    }
-
-    /**
-     * Return response object
-     * @return CacheableResponse|null
-     */
-    public function getResponse(): ?CacheableResponse
-    {
-        return $this->response;
-    }
-
-    /**
      * Return query name
      *
      * @param string|null $name
@@ -174,6 +115,15 @@ class Query
     {
         $this->name = $name;
         return $this;
+    }
+
+    /**
+     * Whether this query has a name
+     * @return bool
+     */
+    public function hasName(): bool
+    {
+        return (!empty($this->name));
     }
 
     /**
