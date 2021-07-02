@@ -10,6 +10,7 @@ use Strata\Data\Transform\Data\CallableData;
 use Strata\Data\Transform\PropertyAccessorInterface;
 use Strata\Data\Transform\PropertyAccessorTrait;
 use Strata\Data\Transform\TransformerChain;
+use Strata\Data\Transform\TransformInterface;
 use Strata\Data\Transform\Value\BaseValue;
 use Strata\Data\Transform\Value\CallableValue;
 use Strata\Data\Transform\Value\MapValueInterface;
@@ -83,6 +84,14 @@ class MappingStrategy implements MappingStrategyInterface, PropertyAccessorInter
                     $source->getCallable()->setPropertyAccessor($this->getPropertyAccessor());
                 }
                 $propertyAccessor->setValue($item, $destination, $source($data, $destination, $item));
+                continue;
+            }
+
+            if ($source instanceof TransformInterface) {
+                if ($source instanceof PropertyAccessorInterface) {
+                    $source->setPropertyAccessor($this->getPropertyAccessor());
+                }
+                $propertyAccessor->setValue($item, $destination, $source->transform($data));
                 continue;
             }
 
