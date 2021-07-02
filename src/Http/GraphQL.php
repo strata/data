@@ -9,6 +9,7 @@ use Strata\Data\Decode\GraphQL as GraphQLDecoder;
 use Strata\Data\Exception\DecoderException;
 use Strata\Data\Exception\GraphQLException;
 use Strata\Data\Helper\ContentHasher;
+use Strata\Data\Http\Response\CacheableResponse;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 class GraphQL extends Http
@@ -156,7 +157,7 @@ class GraphQL extends Http
      * @throws \Strata\Data\Exception\BaseUriException
      * @throws \Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface
      */
-    public function query(string $query, ?array $variables = [], ?string $operationName = null): ResponseInterface
+    public function query(string $query, ?array $variables = [], ?string $operationName = null): CacheableResponse
     {
         return $this->post('', $this->buildQuery($query, $variables, $operationName));
     }

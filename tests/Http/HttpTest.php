@@ -277,6 +277,13 @@ class HttpTest extends TestCase
         $this->assertEquals(379, $api->getTotalHttpRequests());
     }
 
+    /**
+     * Note: live test of this with example used on https://symfony.com/doc/current/http_client.html#concurrent-requests
+     * returns times of:
+     *
+     * Concurrent: 0.69 to 2.2 seconds for 380 requests
+     * Not concurrent (multiple get() requests): 5.4 to 6.8 seconds for 380 requests
+     */
     public function testManualConcurrent()
     {
         $mockResponses = [];

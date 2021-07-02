@@ -23,6 +23,7 @@ use Strata\Data\Exception\HttpTransportException;
 use Strata\Data\Exception\HttpNotFoundException;
 use Strata\Data\Helper\ContentHasher;
 use Strata\Data\Http\Response\CacheableResponse;
+use Strata\Data\Http\Response\DecoratedResponseTrait;
 use Strata\Data\Http\Response\SuppressErrorResponse;
 use Strata\Data\Traits\EventDispatcherTrait;
 use Strata\Data\Transform\PropertyAccessorTrait;

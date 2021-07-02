@@ -20,7 +20,7 @@ The data provider layer is custom and has methods that make sense for data retri
 
 Once data is returned from the data provider, it's ready to use. If returned data contains multiple values \(e.g. a JSON array\) then it is expected that data is accessible from the data provider as an array.
 
-See [data providers](data-providers/data-providers.md), [caching](usage/caching.md) and [data history](advanced-usage/data-history.md).
+See [data providers](retrieving-data/data-providers.md), [caching](usage/caching.md) and [data history](advanced-usage/data-history.md).
 
 ### Validating data
 

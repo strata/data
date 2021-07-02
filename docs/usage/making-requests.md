@@ -2,7 +2,7 @@
 
 ## Setting up your data connection
 
-Instantiate a [data provider](../data-providers/data-providers.md), for example using the generic Http data provider:
+Instantiate a [data provider](../retrieving-data/data-providers.md), for example using the generic Http data provider:
 
 ```php
 use Strata\Data\Http\Http;
@@ -14,11 +14,11 @@ If you need to setup any See authentication
 
 ## Requests
 
-To make a request use a concrete method from the data provider, these are different for different types of providers. See [data providers](../data-providers/data-providers.md) for documentation.
+To make a request use a concrete method from the data provider, these are different for different types of providers. See [data providers](../retrieving-data/data-providers.md) for documentation.
 
-The generic [Http data provider](../data-providers/http.md) supports request methods such as `get()`, `post()` and `exists()`.
+The generic [Http data provider](../retrieving-data/http.md) supports request methods such as `get()`, `post()` and `exists()`.
 
-The [Rest data provider](../data-providers/rest.md) automatically decodes data as JSON.
+The [Rest data provider](../retrieving-data/rest.md) automatically decodes data as JSON.
 
 The [GraphQL data provider]() supports request methods such as `ping()` and `query()`.
 

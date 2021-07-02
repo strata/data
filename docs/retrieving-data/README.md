@@ -1,4 +1,16 @@
-# Data providers
+# Retrieving data
+
+You can retrieve data in two ways.
+
+[Data providers](data-providers.md) are classes designed to integrate against a type of API/data provider. They provide 
+the core functionality to send data requests, decode response data, deal with errors, and have support for caching and 
+attaching services to different steps. 
+
+[Query managers](query-manager.md) are wrappers on top of a data provider, which give you helpers to build queries and 
+return structured content. You can write custom query managers to encapsulate common functionality for your API, to make 
+building queries easier. 
+
+---
 
 Data providers are the core means to access external data. These are classes which use custom methods to access 
 data. 

@@ -39,6 +39,15 @@ interface DataProviderInterface
     public function getRequestIdentifier(string $uri, array $context = []): string;
 
     /**
+     * Suppress errors for this request
+     *
+     * Useful for sub-requests from the main request
+     *
+     * @param bool $value
+     */
+    public function suppressErrors(bool $value = true);
+
+    /**
      * Whether errors are suppressed
      *
      * @return bool

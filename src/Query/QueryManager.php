@@ -6,197 +6,189 @@ namespace Strata\Data\Query;
 
 use Strata\Data\Collection;
 use Strata\Data\DataProviderInterface;
-use Strata\Data\Exception\QueryException;
+use Strata\Data\Exception\QueryManagerException;
 use Strata\Data\Http\Response\CacheableResponse;
-use Strata\Data\Http\Rest;
 use Strata\Data\Mapper\MapCollection;
 use Strata\Data\Mapper\WildcardMappingStrategy;
-use Strata\Data\Transform\PropertyAccessorTrait;
 
 /**
- * Class to help manage running queries
- *
- * Use a child class for different types of APIs to help automate things like sending params & collections
- * Default behaviour is for a REST API
- *
- * @package Strata\Data\Query
+ * Class to help manage running queries against APIs
  */
 class QueryManager
 {
-    use PropertyAccessorTrait;
-
-    protected DataProviderInterface $dataProvider;
+    /** @var Query[]  */
     private array $queries = [];
-    private array $responses = [];
+
+    /** @var DataProviderInterface[] */
+    private array $dataProviders = [];
+
+    /** @var string[] */
+    private array $dataProvidersForQueries = [];
 
     /**
-     * Name of the query parameter to set data fields to return
-     * @var string
-     */
-    private string $fieldParameter = 'fields';
-
-    /**
-     * Name of the query parameter to set number of results to return per page
-     * @var string
-     */
-    private string $resultsPerPageParam = 'limit';
-
-    /**
-     * Name of the query parameter to set page of results to return
-     * @var string
-     */
-    private string $pageParam = 'page';
-
-    /**
-     * Total results data property path
-     * @var string
-     */
-    private string $totalResultsPropertyPath = '[total]';
-
-    /**
-     * Current page data property path
-     * @var string
-     */
-    private string $currentPagePropertyPath = '[page]';
-
-    /**
-     * Results per page data property path
-     * @var string
-     */
-    private string $resultsPerPagePropertyPath = '[page]';
-
-    /**
-     * Separator to separate array values in parameters
-     *
-     * E.g. ?param_field=one,two,three
-     * @var string
-     */
-    private string $multipleValuesSeparator = ',';
-
-    /**
-     * Constructor, automatically sets the data provider
-     *
-     * @param string|null $baseUri
-     * @param array $options
-     */
-    public function __construct(?string $baseUri = null, array $options = [])
-    {
-        $this->dataProvider = new Rest($baseUri, $options);
-    }
-
-    /**
-     * Set the data provider used to run API queries
-     *
+     * Add a data provider to use with queries
+     * @param string $name
      * @param DataProviderInterface $dataProvider
      */
-    public function setDataProvider(DataProviderInterface $dataProvider)
+    public function addDataProvider(string $name, DataProviderInterface $dataProvider)
     {
-        $this->dataProvider = $dataProvider;
+        $this->dataProviders[$name] = $dataProvider;
     }
 
     /**
-     * Return the data provider used to run API queries
-     *
+     * Does the named data provider exist?
+     * @param string $name
+     * @return bool
+     */
+    public function hasDataProvider(string $name): bool
+    {
+        return (isset($this->dataProviders[$name]));
+    }
+
+    /**
+     * Return named data provider
+     * @param string $name
+     * @return DataProviderInterface|null
+     */
+    public function getDataProvider(string $name): ?DataProviderInterface
+    {
+        if ($this->hasDataProvider($name)) {
+            return $this->dataProviders[$name];
+        }
+        return null;
+    }
+
+    /**
+     * Return data provider to use with a named query
+     * @param string $queryName
      * @return DataProviderInterface
      */
-    public function getDataProvider(): DataProviderInterface
+    public function getDataProviderForQuery(string $queryName): DataProviderInterface
     {
-        return $this->dataProvider;
+        $dataProvider = null;
+        if (isset($this->dataProvidersForQueries[$queryName])) {
+            $dataProvider = $this->getDataProvider($this->dataProvidersForQueries[$queryName]);
+        }
+
+        if (!($dataProvider instanceof DataProviderInterface)) {
+            throw new QueryManagerException(sprintf('Cannot find data provider for query name %s', $queryName));
+        }
+
+        return $dataProvider;
     }
 
     /**
      * Add a query (does not run the query, this happens on data access)
      *
+     * @param string $dataProviderName
      * @param Query $query
+     * @param string|null $queryName
+     * @throws QueryManagerException
      */
-    public function add(Query $query)
+    public function add(string $dataProviderName, Query $query, ?string $queryName = null)
     {
-        if (array_key_exists($query->getName(), $this->queries)) {
-            throw new QueryException(sprintf('Cannot add query since query with same name "%s" already exists', $query->getName()));
+        // Get query name from parameters or query object
+        if ($queryName === null) {
+            $queryName = $query->getName();
         }
-        $this->queries[$query->getName()] = $query;
-    }
+        if (array_key_exists($queryName, $this->queries)) {
+            throw new QueryManagerException(sprintf('Cannot add query since query with same name "%s" already exists', $query->getName()));
+        }
 
-    /**
-     * Return parameters (key => values) for use in an API query
-     *
-     * @param Query $query
-     * @return array
-     */
-    public function getParameters(Query $query): array
-    {
-        $params = $query->getParams();
-        if ($query->hasFields()) {
-            $params[$this->fieldParameter] = $query->getFields();
+        // Check data provider
+        if (!$this->hasDataProvider($dataProviderName)) {
+            throw new QueryManagerException(sprintf('Data provider %s not found, please add this first via QueryManagerOld::addDataProvider()', $dataProviderName));
         }
-        foreach ($params as $key => $values) {
-            if (is_array($values)) {
-                $params[$key] = implode($this->multipleValuesSeparator, $values);
-            }
+        $dataProvider = $this->getDataProvider($dataProviderName);
+        if (!$query->checkDataProvider($dataProvider)) {
+            throw new QueryManagerException(sprintf('Data provider %s is not compatible with passed query %s', $dataProviderName, $queryName));
         }
-        return $params;
+
+        // Prepare request
+        $query->prepareRequest($this->getDataProvider($dataProviderName));
+
+        $this->queries[$queryName] = $query;
+        $this->dataProvidersForQueries[$queryName] = $dataProviderName;
     }
 
     /**
      * Run queries on data access
      *
-     * Only runs a query once, though you can force a query to be re-run via $query->setRun(false)
+     * Only runs a query once, you can force a query to be re-run via $query->clearResponse()
      */
     protected function runQueries()
     {
+        // Build array of concurrent queries for all responses that have not been executed
         $concurrent = [];
-
-        /** @var Query $query */
-        foreach ($this->queries as $query) {
-            if ($query->hasRun()) {
+        foreach ($this->getQueries() as $queryName => $query) {
+            if (!$query->hasResponse() || $query->hasResponseRun()) {
                 continue;
             }
-
-            // Build query
-            if ($query->isSubRequest()) {
-                $this->getDataProvider()->suppressErrors();
-            } else {
-                $this->getDataProvider()->suppressErrors(false);
-            }
-            $options = [
-                'query' => $this->getParameters($query)
-            ];
-            $concurrent[$query->getName()] = $this->getDataProvider()->prepareRequest('GET', $query->getUri(), $options);
+            $concurrent[$queryName] = $query;
         }
 
         // Run multiple queries concurrently for performance
-        foreach ($concurrent as $name => $response) {
-            $this->responses[$name] = $this->getDataProvider()->runRequest($response);
-
-            // Mark query as run
-            $this->getQuery($name)->setRun(true);
+        foreach ($concurrent as $queryName => $query) {
+            $dataProvider = $this->getDataProviderForQuery($queryName);
+            if ($query->isSubRequest()) {
+                $dataProvider->suppressErrors();
+            } else {
+                $dataProvider->suppressErrors(false);
+            }
+            $dataProvider->runRequest($query->getResponse());
         }
     }
 
+    /**
+     * Return all queries
+     * @return Query[]
+     */
     public function getQueries(): array
     {
         return $this->queries;
     }
 
+    /**
+     * Does a named query exist?
+     * @param string $name
+     * @return bool
+     */
+    public function hasQuery(string $name): bool
+    {
+        return (isset($this->queries[$name]));
+    }
+
+    /**
+     * Return a query by name
+     * @param string $name
+     * @return Query|null
+     */
     public function getQuery(string $name): ?Query
     {
-        if (array_key_exists($name, $this->queries)) {
+        if ($this->hasQuery($name)) {
             return $this->queries[$name];
         }
         return null;
     }
 
-    public function getResponses(): array
+    /**
+     * Get response by query name
+     * @param string $name
+     * @return CacheableResponse
+     * @throws QueryManagerException
+     */
+    public function getResponse(string $queryName): CacheableResponse
     {
-        return $this->responses;
-    }
-
-    public function getResponse(string $name): ?CacheableResponse
-    {
-        if (array_key_exists($name, $this->responses)) {
-            return $this->responses[$name];
+        if (!$this->hasQuery($queryName)) {
+            throw new QueryManagerException(sprintf('Cannot find query with query name "%s"', $queryName));
         }
-        return null;
+        $query = $this->getQuery($queryName);
+        $this->runQueries();
+        if (!$query->hasResponseRun()) {
+            throw new QueryManagerException(sprintf('Response has not run for query name "%s"', $queryName));
+        }
+
+        return $query->getResponse();
     }
 
     /**
@@ -204,20 +196,26 @@ class QueryManager
      *
      * Default functionality is to return decoded data as an array
      *
-     * @param string $name
-     * @throws QueryException
+     * @param string $queryName
+     * @throws QueryManagerException
+     *@todo Create an Item object to return (which is cache aware)
      */
-    public function getItem(string $name): array
+    public function getItem(string $queryName): array
     {
+        if (!$this->hasQuery($queryName)) {
+            throw new QueryManagerException(sprintf('Cannot find query with query name "%s"', $queryName));
+        }
+
         // Run queries
+        $dataProvider = $this->getDataProviderForQuery($queryName);
         $this->runQueries();
-        if (!array_key_exists($name, $this->responses)) {
-            throw new QueryException(sprintf('Cannot find query response for query name "%s"', $name));
+        $query = $this->getQuery($queryName);
+        if (!$query->hasResponseRun()) {
+            throw new QueryManagerException(sprintf('Response has not run for query name "%s"', $queryName));
         }
 
         // Return decoded data
-        $response = $this->responses[$name];
-        return $this->getDataProvider()->decode($response);
+        return $dataProvider->decode($query->getResponse());
     }
 
     /**
@@ -225,39 +223,34 @@ class QueryManager
      *
      * Default functionality is to return decoded data as an array with pagination
      *
-     * @param string $name
-     * @param ?int $page
-     * @param ?int $resultsPerPage
+     * @param string $queryName
+     * @throws QueryManagerException
      */
-    public function getCollection(string $name, ?int $page = null, ?int $resultsPerPage = null): Collection
+    public function getCollection(string $queryName): Collection
     {
-        // Allow queries to be re-run with collection parameters
-        if ($page !== null) {
-            $query = $this->getQuery($name);
-            $query->addParam($this->pageParam, $page);
-            $query->setRun(false);
+        if (!$this->hasQuery($queryName)) {
+            throw new QueryManagerException(sprintf('Cannot find query with query name "%s"', $queryName));
         }
-        if ($resultsPerPage !== null) {
-            $query = $this->getQuery($name);
-            $query->addParam($this->resultsPerPageParam, $resultsPerPage);
-            $query->setRun(false);
-        }
+        $query = $this->getQuery($queryName);
+        $dataProvider = $this->getDataProviderForQuery($queryName);
 
         // Run queries
         $this->runQueries();
-        if (!array_key_exists($name, $this->responses)) {
-            throw new QueryException(sprintf('Cannot find query response for query name "%s"', $name));
+        if (!$query->hasResponseRun()) {
+            throw new QueryManagerException(sprintf('Response has not run for query name "%s"', $queryName));
         }
 
         // Return collections object with decoded data & pagination
-        /** @var CacheableResponse $response */
-        $response = $this->responses[$name];
-        $data = $this->getDataProvider()->decode($response);
+        $response = $query->getResponse();
+        $data = $dataProvider->decode($response);
 
         $mapper = new MapCollection(new WildcardMappingStrategy());
-        $mapper->totalResults($this->totalResultsPropertyPath)
-               ->resultsPerPage($this->resultsPerPagePropertyPath)
-               ->currentPage($this->currentPagePropertyPath);
+        $mapper->totalResults($query->totalResultsPropertyPath)
+                ->resultsPerPage($query->resultsPerPagePropertyPath)
+                ->currentPage($query->currentPagePropertyPath);
+        if ($query->paginationDataFromHeaders) {
+            $mapper->fromPaginationData($response->getHeaders());
+        }
 
         return $mapper->map($data);
     }

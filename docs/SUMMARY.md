@@ -12,10 +12,10 @@
 
 ## Data providers
 
-* [Intro](data-providers/data-providers.md)
-* [Http](data-providers/http.md)
-* [Rest](data-providers/rest.md)
-* [GraphQL](data-providers/graphql.md)
+* [Intro](retrieving-data/data-providers.md)
+* [Http](retrieving-data/http.md)
+* [Rest](retrieving-data/rest.md)
+* [GraphQL](retrieving-data/graphql.md)
 
 ## Changing data
 
