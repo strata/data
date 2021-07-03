@@ -23,7 +23,7 @@ class Query
     private array $fields = [];
 
     /**
-     * What data provider class is required for use with this query?
+     * Data provider class required for use with this query
      * @var string
      */
     public string $requireDataProviderClass = Rest::class;

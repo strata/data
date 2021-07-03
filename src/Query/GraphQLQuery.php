@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Strata\Data\Query;
 
 use Strata\Data\Exception\GraphQLQueryException;
+use Strata\Data\Http\GraphQL;
 use Strata\Data\Query\GraphQL\Fragment;
 use Strata\Data\Query\GraphQL\GraphQLTrait;
 
@@ -32,6 +33,12 @@ class GraphQLQuery extends Query
     private array $definedVariables = [];
     private array $variables = [];
     private array $fragments = [];
+
+    /**
+     * Data provider class required for use with this query
+     * @var string
+     */
+    public string $requireDataProviderClass = GraphQL::class;
 
     /**
      * Constructor

@@ -328,11 +328,11 @@ class QueryManager
      * Default functionality is to return decoded data as an array
      *
      * @param string $queryName
-     * @param string|null $rootPropertyPath Property path to root element to select data from
+     * @param string|null $rootPropertyPath Property path to root element to select data from, null if no data returned
      * @throws QueryManagerException
      *@todo Create an Item object to return (which is cache aware)
      */
-    public function getItem(string $queryName, ?string $rootPropertyPath = null): array
+    public function getItem(string $queryName, ?string $rootPropertyPath = null): ?array
     {
         if (!$this->queryStack->exists($queryName)) {
             throw new QueryManagerException(sprintf('Cannot find query with query name "%s"', $queryName));
