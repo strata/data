@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Strata\Data\Query\GraphQL;
 
 use Strata\Data\Exception\GraphQLQueryException;
+use Strata\Data\Http\GraphQL;
 
 trait GraphQLTrait
 {
@@ -19,9 +20,9 @@ trait GraphQLTrait
      * alias: queryName(params): { fields }
      *
      * @param string|null $graphQL
-     * @return Fluent interface
+     * @return self Fluent interface
      */
-    public function setGraphQL(?string $graphQL)
+    public function setGraphQL(?string $graphQL): self
     {
         $this->graphQL = $graphQL;
         return $this;
@@ -30,10 +31,10 @@ trait GraphQLTrait
     /**
      * Load GraphQL from file
      * @param string $filename
-     * @return Fluent interface
+     * @return self Fluent interface
      * @throws GraphQLQueryException
      */
-    public function setGraphQLFromFile(string $filename)
+    public function setGraphQLFromFile(string $filename): self
     {
         $graphQl = file_get_contents($filename);
         if ($graphQl === false) {

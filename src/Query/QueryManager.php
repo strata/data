@@ -69,7 +69,7 @@ class QueryManager
             // If cache tags exist, add them to data provider
             $dataProvider->setCacheTags($this->cacheTags);
         }
-        
+
         $this->dataProviders[$name] = $dataProvider;
         $this->lastDataProviderName = $name;
     }
@@ -82,7 +82,7 @@ class QueryManager
      */
     public function setCache(CacheInterface $cache, ?int $defaultLifetime = null)
     {
-        $this->cache = new DataCache($cache, $defaultLifetime);
+        $this->cache = $cache;
         $this->cacheEnabled = true;
 
         foreach ($this->dataProviders as $dataProvider) {

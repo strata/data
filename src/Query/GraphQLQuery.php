@@ -201,6 +201,7 @@ class GraphQLQuery extends Query
         $fragment = new Fragment();
         $fragment->setGraphQLFromFile($filename);
         $this->fragments[] = $fragment;
+        return $this;
     }
 
     /**
