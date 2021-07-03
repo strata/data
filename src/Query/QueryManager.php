@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Strata\Data\Query;
 
+use Strata\Data\Cache\DataCache;
 use Strata\Data\Collection;
+use Strata\Data\DataProviderCommonTrait;
 use Strata\Data\DataProviderInterface;
+use Strata\Data\Exception\CacheException;
 use Strata\Data\Exception\QueryManagerException;
 use Strata\Data\Http\Http;
 use Strata\Data\Http\Response\CacheableResponse;
@@ -16,6 +19,7 @@ use Strata\Data\Query\BuildQuery\BuildGraphQLQuery;
 use Strata\Data\Query\BuildQuery\BuildQuery;
 use Strata\Data\Query\QueryManager\QueryStack;
 use Strata\Data\Query\QueryManager\StackItem;
+use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
@@ -32,6 +36,11 @@ class QueryManager
     /** @var QueryStack  */
     private QueryStack $queryStack;
 
+    private bool $cacheEnabled = false;
+    private ?CacheInterface $cache = null;
+    private ?int $cacheLifetime = null;
+    private array $cacheTags = [];
+
     /**
      * QueryManager constructor.
      */
@@ -47,8 +56,81 @@ class QueryManager
      */
     public function addDataProvider(string $name, DataProviderInterface $dataProvider)
     {
+        if ($this->cacheEnabled) {
+            // Enable cache on data provider
+            $dataProvider->setCache($this->cache, $this->cacheLifetime);
+
+        } elseif ($this->cache instanceof CacheInterface) {
+            // If cache exists but disabled, add to data provider but disable it
+            $dataProvider->setCache($this->cache, $this->cacheLifetime);
+            $dataProvider->disableCache();
+        }
+        if (!empty($this->cacheTags)) {
+            // If cache tags exist, add them to data provider
+            $dataProvider->setCacheTags($this->cacheTags);
+        }
+        
         $this->dataProviders[$name] = $dataProvider;
         $this->lastDataProviderName = $name;
+    }
+
+    /**
+     * Set and enable the cache
+     *
+     * @param CacheInterface $cache
+     * @param int $defaultLifetime Default cache lifetime
+     */
+    public function setCache(CacheInterface $cache, ?int $defaultLifetime = null)
+    {
+        $this->cache = new DataCache($cache, $defaultLifetime);
+        $this->cacheEnabled = true;
+
+        foreach ($this->dataProviders as $dataProvider) {
+            $dataProvider->setCache($this->cache, $defaultLifetime);
+        }
+    }
+
+    /**
+     * Enable cache for subsequent data requests
+     *
+     * @param ?int $lifetime
+     * @throws CacheException If cache not set
+     */
+    public function enableCache(?int $lifetime = null)
+    {
+        $this->cacheEnabled = true;
+        $this->cacheLifetime = $lifetime;
+        foreach ($this->dataProviders as $dataProvider) {
+            $dataProvider->enableCache($lifetime);
+        }
+    }
+
+    /**
+     * Disable cache for subsequent data requests
+     *
+     */
+    public function disableCache()
+    {
+        $this->cacheEnabled = false;
+        foreach ($this->dataProviders as $dataProvider) {
+            $dataProvider->disableCache();
+        }
+    }
+
+    /**
+     * Set cache tags to apply to all future saved cache items
+     *
+     * To remove tags do not pass any arguments and tags will be reset to an empty array
+     *
+     * @param array $tags
+     * @throws CacheException
+     */
+    public function setCacheTags(array $tags = [])
+    {
+        $this->cacheTags = $tags;
+        foreach ($this->dataProviders as $dataProvider) {
+            $dataProvider->getCache()->setTags($tags);
+        }
     }
 
     /**

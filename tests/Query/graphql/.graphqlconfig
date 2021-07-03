@@ -1,0 +1,15 @@
+{
+  "name": "Remote Schema",
+  "schemaPath": "remote-schema.graphql",
+  "extensions": {
+    "endpoints": {
+      "CraftCMS GraphQL Endpoint": {
+        "url": "https://cms-dev.w3.org/api",
+        "headers": {
+          "user-agent": "JS GraphQL"
+        },
+        "introspect": true
+      }
+    }
+  }
+}
