@@ -21,12 +21,18 @@ class MapItem extends MapperAbstract implements MapperInterface
      * @see https://symfony.com/doc/current/components/property_access.html#writing-to-objects
      * @param array $data Data to map from
      * @param string|null $rootProperty Root property to map data from
-     * @return array|object Mapped array or object
+     * @return array|object|null Mapped array or object, or null if request returned no data
      * @throws MapperException
      */
     public function map(array $data, ?string $rootProperty = null)
     {
         $data = $this->getRootData($data, $rootProperty);
+
+        // No data returned
+        if ($data === null) {
+            return null;
+        }
+
         return $this->buildItemFromData($data);
     }
 }

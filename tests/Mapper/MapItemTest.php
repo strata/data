@@ -70,6 +70,18 @@ final class MapItemTest extends TestCase
         $this->assertEquals('42', $item['age']);
     }
 
+    public function testNullData()
+    {
+        $mapper = new MapItem(new WildcardMappingStrategy());
+        $data = [
+            'data' => null
+        ];
+
+        $item = $mapper->map($data, '[data]');
+
+        $this->assertNull($item);
+    }
+
     public function testMultipleSourcePaths()
     {
         $mapping = [

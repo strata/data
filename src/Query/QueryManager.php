@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Strata\Data\Query;
 
-use Strata\Data\Cache\DataCache;
 use Strata\Data\Collection;
-use Strata\Data\DataProviderCommonTrait;
 use Strata\Data\DataProviderInterface;
 use Strata\Data\Exception\CacheException;
 use Strata\Data\Exception\QueryManagerException;
@@ -187,6 +185,19 @@ class QueryManager
     }
 
     /**
+     * Whether the data provider name supports this type of query
+     * @param string $dataProviderName
+     * @param Query $query
+     * @return bool
+     * @throws QueryManagerException
+     */
+    public function dataProviderSupportsQuery(string $dataProviderName, Query $query): bool
+    {
+        $dataProvider = $this->getDataProvider($dataProviderName);
+        return ($dataProvider instanceof $query->requireDataProviderClass);
+    }
+
+    /**
      * Add a query (does not run the query, this happens on data access)
      *
      * @param Query $query Query
@@ -200,6 +211,11 @@ class QueryManager
         }
         if ($this->queryStack->offsetExists($query->getName())) {
             throw new QueryManagerException(sprintf('Query name %s already exists in the Query Manager, please give this query a unique name', $query->getName()));
+        }
+
+        // Is query compatible with data provider?
+        if (!$this->dataProviderSupportsQuery($dataProviderName, $query)) {
+            throw new QueryManagerException(sprintf('Data provider %s does not support this type of query (%s), class of type %s is required', $dataProviderName, gettype($query), $query->requireDataProviderClass));
         }
 
         // Get data provider (pass as 2nd argument or use current data provider)

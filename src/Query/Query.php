@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Strata\Data\Query;
 
 use Strata\Data\Http\Response\CacheableResponse;
+use Strata\Data\Http\Rest;
 
 /**
  * Class to help craft a REST API query
@@ -20,6 +21,12 @@ class Query
     private string $uri;
     private array $params = [];
     private array $fields = [];
+
+    /**
+     * What data provider class is required for use with this query?
+     * @var string
+     */
+    public string $requireDataProviderClass = Rest::class;
 
     /**
      * Separator to separate array values in parameters

@@ -131,6 +131,13 @@ class MapCollection extends MapperAbstract implements MapperInterface
     {
         $collectionData = $this->getRootData($data, $rootProperty);
 
+        // No data returned
+        if ($data === null) {
+            $collection = new Collection();
+            $collection->setPagination(new Pagination(0));
+            return $collection;
+        }
+
         // We expect $data to be iterable so we can build a collection
         if (!is_iterable($collectionData)) {
             if (null !== $rootProperty) {

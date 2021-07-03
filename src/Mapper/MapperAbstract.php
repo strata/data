@@ -125,10 +125,10 @@ abstract class MapperAbstract
      *
      * @param array $data
      * @param string|null $rootProperty
-     * @return array
+     * @return ?array Expects to return array or null data
      * @throws MapperException
      */
-    public function getRootData(array $data, ?string $rootProperty = null): array
+    public function getRootData(array $data, ?string $rootProperty = null): ?array
     {
         $propertyAccessor = $this->getPropertyAccessor();
         if (null !== $rootProperty) {
