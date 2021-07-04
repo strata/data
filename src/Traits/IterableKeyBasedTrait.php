@@ -7,6 +7,9 @@ namespace Strata\Data\Traits;
 /**
  * Iterator functionality for use with collections which have string-based keys
  *
+ * E.g.
+ * $collection = ['name1' => item, 'name2' -> item]
+ *
  * Can be used with classes that implement \Iterator, \Countable, \ArrayAccess
  * Colection data is stored in the $this->collection array
  *

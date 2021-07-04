@@ -194,9 +194,9 @@ class HttpTest extends TestCase
             '[postDate]' => '[postDate]',
             '[title]' => '[title]',
         ]);
-        $mapper->totalResults('[meta][total]')
-                ->resultsPerPage(3)
-                ->currentPage('[meta][page]');
+        $mapper->setTotalResults('[meta][total]')
+                ->setResultsPerPage(3)
+                ->setCurrentPage('[meta][page]');
         $collection = $mapper->map($data, '[data]');
 
         $this->assertEquals(10, $collection->getPagination()->getTotalResults());

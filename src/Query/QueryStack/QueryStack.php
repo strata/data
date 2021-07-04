@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Strata\Data\Query\QueryManager;
+namespace Strata\Data\Query\QueryStack;
 
 use Strata\Data\Traits\IterableKeyBasedTrait;
 
@@ -13,6 +13,12 @@ class QueryStack implements \Iterator, \Countable, \ArrayAccess
 {
     use IterableKeyBasedTrait;
 
+    /**
+     * Add an item onto the stack
+     *
+     * @param string $name
+     * @param StackItem $item
+     */
     public function add(string $name, StackItem $item)
     {
         $this->offsetSet($name, $item);

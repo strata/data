@@ -56,7 +56,7 @@ final class MapCollectionTest extends TestCase
             '[id]'     => '[id]',
         ];
         $mapper = new MapCollection($mapping);
-        $mapper->totalResults('[data][total]');
+        $mapper->setTotalResults('[data][total]');
 
         $data = [
             'data' => [
@@ -76,8 +76,8 @@ final class MapCollectionTest extends TestCase
             '[id]'     => '[id]',
         ];
         $mapper = new MapCollection($mapping);
-        $mapper->totalResults('[meta_data][total]')
-               ->resultsPerPage('[meta_data][per_page]');
+        $mapper->setTotalResults('[meta_data][total]')
+               ->setResultsPerPage('[meta_data][per_page]');
 
         $collection = $mapper->map($this->data, '[items]');
 
@@ -98,8 +98,8 @@ final class MapCollectionTest extends TestCase
             'id'     => '[id]',
         ];
         $mapper = new MapCollection($mapping);
-        $mapper->totalResults('[meta_data][total]')
-            ->resultsPerPage('[meta_data][per_page]')
+        $mapper->setTotalResults('[meta_data][total]')
+            ->setResultsPerPage('[meta_data][per_page]')
             ->toObject('Tests\Item');
 
         $collection = $mapper->map($this->data, '[items]');
@@ -119,8 +119,8 @@ final class MapCollectionTest extends TestCase
             'id'     => '[id]',
         ];
         $mapper = new MapCollection($mapping);
-        $mapper->totalResults('[meta_data][total]')
-            ->resultsPerPage('[meta_data][per_page]')
+        $mapper->setTotalResults('[meta_data][total]')
+            ->setResultsPerPage('[meta_data][per_page]')
             ->toObject('Tests\Item')
             ->setCollectionClass('Tests\MyCollection');
 

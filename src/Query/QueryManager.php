@@ -15,8 +15,8 @@ use Strata\Data\Mapper\MapItem;
 use Strata\Data\Mapper\WildcardMappingStrategy;
 use Strata\Data\Query\BuildQuery\BuildGraphQLQuery;
 use Strata\Data\Query\BuildQuery\BuildQuery;
-use Strata\Data\Query\QueryManager\QueryStack;
-use Strata\Data\Query\QueryManager\StackItem;
+use Strata\Data\Query\QueryStack\QueryStack;
+use Strata\Data\Query\QueryStack\StackItem;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -187,24 +187,25 @@ class QueryManager
     /**
      * Whether the data provider name supports this type of query
      * @param string $dataProviderName
-     * @param Query $query
+     * @param QueryInterface $query
      * @return bool
      * @throws QueryManagerException
      */
-    public function dataProviderSupportsQuery(string $dataProviderName, Query $query): bool
+    public function dataProviderSupportsQuery(string $dataProviderName, QueryInterface $query): bool
     {
         $dataProvider = $this->getDataProvider($dataProviderName);
-        return ($dataProvider instanceof $query->requireDataProviderClass);
+        $class = $query->getRequiredDataProviderClass();
+        return ($dataProvider instanceof $class);
     }
 
     /**
      * Add a query (does not run the query, this happens on data access)
      *
-     * @param Query $query Query
+     * @param QueryInterface $query Query
      * @param string $dataProviderName Data provider to use with query, if not set use last added data provider
      * @throws QueryManagerException
      */
-    public function add(Query $query, ?string $dataProviderName = null)
+    public function add(QueryInterface $query, ?string $dataProviderName = null)
     {
         if (!$query->hasName()) {
             throw new QueryManagerException('Query must have a name before it is added to the Query Manager');
@@ -215,7 +216,7 @@ class QueryManager
 
         // Is query compatible with data provider?
         if (!$this->dataProviderSupportsQuery($dataProviderName, $query)) {
-            throw new QueryManagerException(sprintf('Data provider %s does not support this type of query (%s), class of type %s is required', $dataProviderName, gettype($query), $query->requireDataProviderClass));
+            throw new QueryManagerException(sprintf('Data provider %s does not support this type of query (%s), class of type %s is required', $dataProviderName, gettype($query), $query->getRequiredDataProviderClass()));
         }
 
         // Get data provider (pass as 2nd argument or use current data provider)
@@ -351,8 +352,12 @@ class QueryManager
         $query = $item->getQuery();
         $data = $dataProvider->decode($item->getResponse());
 
-        $mapper = new MapItem(new WildcardMappingStrategy());
-        return $mapper->map($data, $rootPropertyPath);
+        if ($rootPropertyPath !== null) {
+            $query->setRootPropertyPath($rootPropertyPath);
+        }
+
+        // use query mapItem to return data
+        return $query->mapItem($data);
     }
 
     /**
@@ -384,15 +389,16 @@ class QueryManager
         $response = $item->getResponse();
         $data = $dataProvider->decode($response);
 
-        $mapper = new MapCollection(new WildcardMappingStrategy());
-        $mapper->totalResults($query->totalResultsPropertyPath)
-                ->resultsPerPage($query->resultsPerPagePropertyPath)
-                ->currentPage($query->currentPagePropertyPath);
-        if ($query->paginationDataFromHeaders) {
-            $mapper->fromPaginationData($response->getHeaders());
+        $paginationData = null;
+        if ($query->isPaginationDataFromHeaders()) {
+            $paginationData = $response->getHeaders();
+        }
+        if ($rootPropertyPath !== null) {
+            $query->setRootPropertyPath($rootPropertyPath);
         }
 
-        return $mapper->map($data, $rootPropertyPath);
+        // use query mapCollection to return data
+        return $query->mapCollection($data, $paginationData);
     }
 
 }

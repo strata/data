@@ -6,7 +6,7 @@ use PHPUnit\Framework\TestCase;
 use Strata\Data\Http\GraphQL;
 use Strata\Data\Http\Response\MockResponseFromFile;
 use Strata\Data\Query\GraphQLQuery;
-use Strata\Data\Query\QueryManager;
+use Strata\Data\Query\QueryStack;
 use Symfony\Component\HttpClient\MockHttpClient;
 
 class QueryManagerTest extends TestCase

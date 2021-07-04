@@ -40,7 +40,7 @@ class BuildQuery implements BuildQueryInterface
         // Convert arrays for use in query
         foreach ($params as $key => $values) {
             if (is_array($values)) {
-                $params[$key] = implode($query->multipleValuesSeparator, $values);
+                $params[$key] = implode($query->getMultipleValuesSeparator(), $values);
             }
         }
         return $params;

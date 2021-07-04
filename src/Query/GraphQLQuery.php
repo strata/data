@@ -11,21 +11,8 @@ use Strata\Data\Query\GraphQL\GraphQLTrait;
 
 /**
  * Class to help craft a GraphQL API query
- *
- * Uses following properties from parent Query object:
- * name = query name
- * params = parameters to pass to query
- * fields = fields to return
- *
- * @todo Expand fields to support:
- *
- * fieldname, e.g language
- * aliases for fieldnames, e.g. code: language
- *
- * objects, e.g. localized { title }
- * inline fragments, e.g. ... on pages_landingPage_Entry { fields }
  */
-class GraphQLQuery extends Query
+class GraphQLQuery extends Query implements GraphQLQueryInterface
 {
     use GraphQLTrait;
 
@@ -33,12 +20,7 @@ class GraphQLQuery extends Query
     private array $definedVariables = [];
     private array $variables = [];
     private array $fragments = [];
-
-    /**
-     * Data provider class required for use with this query
-     * @var string
-     */
-    public string $requireDataProviderClass = GraphQL::class;
+    protected string $multipleValuesSeparator = ', ';
 
     /**
      * Constructor
@@ -53,6 +35,15 @@ class GraphQLQuery extends Query
         if ($filename !== null) {
             $this->setGraphQLFromFile($filename);
         }
+    }
+
+    /**
+     * Data provider class required for use with this query
+     * @var string
+     */
+    public function getRequiredDataProviderClass(): string
+    {
+        return GraphQL::class;
     }
 
     /**

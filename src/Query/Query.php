@@ -4,16 +4,23 @@ declare(strict_types=1);
 
 namespace Strata\Data\Query;
 
+use Strata\Data\Collection;
 use Strata\Data\Http\Response\CacheableResponse;
 use Strata\Data\Http\Rest;
+use Strata\Data\Mapper\MapCollection;
+use Strata\Data\Mapper\MapItem;
+use Strata\Data\Mapper\WildcardMappingStrategy;
+use Strata\Data\Traits\PaginationPropertyTrait;
 
 /**
  * Class to help craft a REST API query
  *
  * Any configurable fields for the query should be in this class
  */
-class Query
+class Query implements QueryInterface
 {
+    use PaginationPropertyTrait;
+
     private bool $enableCache = false;
     private ?int $cacheLifetime = null;
     private ?string $name = null;
@@ -21,20 +28,8 @@ class Query
     private string $uri;
     private array $params = [];
     private array $fields = [];
-
-    /**
-     * Data provider class required for use with this query
-     * @var string
-     */
-    public string $requireDataProviderClass = Rest::class;
-
-    /**
-     * Separator to separate array values in parameters
-     *
-     * E.g. ?param_field=one,two,three
-     * @var string
-     */
-    public string $multipleValuesSeparator = ',';
+    protected ?string $rootPropertyPath = null;
+    protected string $multipleValuesSeparator = ',';
 
     /**
      * Name of the query parameter to set data fields to return
@@ -58,25 +53,25 @@ class Query
      * Is the data source for pagination data stored in HTTP headers?
      * @var bool
      */
-    public bool $paginationDataFromHeaders = false;
+    protected bool $paginationDataFromHeaders = false;
 
     /**
      * Total results data property path
      * @var string
      */
-    public string $totalResultsPropertyPath = '[total]';
+    protected string $totalResultsPropertyPath = '[total]';
 
     /**
      * Current page data property path
      * @var string
      */
-    public string $currentPagePropertyPath = '[page]';
+    protected string $currentPagePropertyPath = '[page]';
 
     /**
      * Results per page data property path
      * @var string
      */
-    public string $resultsPerPagePropertyPath = '[page]';
+    protected string $resultsPerPagePropertyPath = '[page]';
 
     /**
      * Constructor
@@ -89,6 +84,67 @@ class Query
         }
     }
 
+    /**
+     * Data provider class required for use with this query
+     * @var string
+     */
+    public function getRequiredDataProviderClass(): string
+    {
+        return Rest::class;
+    }
+
+
+    /**
+     * Set root property path to retrieve data for this query
+     * @param string $path
+     */
+    public function setRootPropertyPath(string $path)
+    {
+        $this->rootPropertyPath = $path;
+    }
+
+    /**
+     * Return root property path for this query, e.g. [data]
+     * @return ?string
+     */
+    public function getRootPropertyPath(): ?string
+    {
+        return $this->rootPropertyPath;
+    }
+
+    /**
+     * Return string to separate array values in parameters
+     * @return string
+     */
+    public function getMultipleValuesSeparator(): string
+    {
+        return $this->multipleValuesSeparator;
+    }
+
+    /**
+     * Set whether pagination data is set from headers data
+     * @param bool $paginationDataFromHeaders
+     */
+    public function setPaginationDataFromHeaders(bool $paginationDataFromHeaders): self
+    {
+        $this->paginationDataFromHeaders = $paginationDataFromHeaders;
+        return $this;
+    }
+
+    /**
+     * Is pagination data set from headers?
+     * @return bool
+     */
+    public function isPaginationDataFromHeaders(): bool
+    {
+        return $this->paginationDataFromHeaders;
+    }
+
+    /**
+     * Enable cache for this query
+     * @param int|null $lifetime
+     * @return $this
+     */
     public function enableCache(?int $lifetime = null): Query
     {
         $this->enableCache = true;
@@ -97,16 +153,28 @@ class Query
         }
     }
 
+    /**
+     * Disable cache for this query
+     * @return $this
+     */
     public function disableCache(): Query
     {
         $this->enableCache = false;
     }
 
+    /**
+     * Is cache enabled for this query?
+     * @return bool
+     */
     public function isCacheEnabled(): bool
     {
         return $this->enableCache;
     }
 
+    /**
+     * Return cache lifetime for this query
+     * @return int|null
+     */
     public function getCacheLifetime(): ?int
     {
         return $this->cacheLifetime;
@@ -255,6 +323,38 @@ class Query
     public function getFields(): array
     {
         return $this->fields;
+    }
+
+    /**
+     * Map data and return array/object
+     * @param array Data to map to a collection
+     * @return mixed
+     */
+    public function mapItem(array $data)
+    {
+        $mapper = new MapItem(new WildcardMappingStrategy());
+        return $mapper->map($data, $this->getRootPropertyPath());
+    }
+
+    /**
+     * Map data and return a collection object for this query
+     * @param array $data Data to map to a collection
+     * @param array|object|null $paginationData Data to retrieve pagination information from
+     * @return Collection
+     * @throws \Strata\Data\Exception\MapperException
+     */
+    public function mapCollection(array $data, $paginationData = null): Collection
+    {
+        $mapper = new MapCollection(new WildcardMappingStrategy());
+        $mapper->setTotalResults($this->getTotalResults())
+            ->setResultsPerPage($this->getResultsPerPage())
+            ->setCurrentPage($this->getCurrentPage());
+
+        if ($paginationData !== null) {
+            $mapper->fromPaginationData($paginationData);
+        }
+
+        return $mapper->map($data, $this->getRootPropertyPath());
     }
 
 }

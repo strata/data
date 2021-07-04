@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Strata\Data\Query\QueryManager;
+namespace Strata\Data\Query\QueryStack;
 
 use Strata\Data\Http\Response\CacheableResponse;
 use Strata\Data\Query\Query;
@@ -16,6 +16,12 @@ class StackItem
     private string $dataProviderName;
     private CacheableResponse $response;
 
+    /**
+     * Create a query item to add to the query stack
+     * @param Query $query
+     * @param string $dataProviderName
+     * @param CacheableResponse $response
+     */
     public function __construct(Query $query, string $dataProviderName, CacheableResponse $response)
     {
         $this->setQuery($query);

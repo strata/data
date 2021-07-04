@@ -8,6 +8,7 @@ use Strata\Data\Exception\GraphQLQueryException;
 use Strata\Data\Http\GraphQL;
 use Strata\Data\Http\Response\CacheableResponse;
 use Strata\Data\Query\GraphQLQuery;
+use Strata\Data\Query\GraphQLQueryInterface;
 use Strata\Data\Query\Query;
 
 /**
@@ -16,7 +17,7 @@ use Strata\Data\Query\Query;
  */
 class BuildGraphQLQuery implements BuildQueryInterface
 {
-    private GraphQL $dataProvider;
+    private GraphQLQueryInterface $dataProvider;
 
     /**
      * Constructor
@@ -40,10 +41,10 @@ class BuildGraphQLQuery implements BuildQueryInterface
     /**
      * Return parameters (key: "values") for use in an GraphQL query
      *
-     * @param GraphQLQuery $query
+     * @param GraphQLQueryInterface $query
      * @return array
      */
-    public function getGraphQLParameters(GraphQLQuery $query): string
+    public function getGraphQLParameters(GraphQLQueryInterface $query): string
     {
         $params = [];
 
@@ -54,7 +55,7 @@ class BuildGraphQLQuery implements BuildQueryInterface
                     $paramValue = ($value) ? 'true' : 'false';
                     break;
                 case 'array':
-                    $paramValue = '"' . implode(', ', $value) . '"';
+                    $paramValue = '"' . implode($query->getMultipleValuesSeparator(), $value) . '"';
                     break;
                 default:
                     // If a variable do not quote
@@ -73,10 +74,10 @@ class BuildGraphQLQuery implements BuildQueryInterface
     /**
      * Return GraphQL query from array of queries
      *
-     * @param GraphQLQuery $query
+     * @param GraphQLQueryInterface $query
      * @return string
      */
-    public function buildGraphQL(GraphQLQuery $query): string
+    public function buildGraphQL(GraphQLQueryInterface $query): string
     {
         if ($query->hasGraphQL()) {
             $graphQL = $query->getGraphQL();

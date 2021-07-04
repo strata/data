@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Strata\Data\Query\GraphQL;
 
 use Strata\Data\Exception\GraphQLQueryException;
-use Strata\Data\Http\GraphQL;
 
+/**
+ * Trait to store raw GraphQL query to an object
+ */
 trait GraphQLTrait
 {
     private ?string $graphQL = null;

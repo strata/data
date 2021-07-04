@@ -296,9 +296,9 @@ To automatically generate pagination we need to pass data about the total result
 
 Pagination property paths are relative to the original data root, this is not affected by passing a `$rootProperty` argument to the `map()` method.
 
-* `totalResults()`
-* `resultsPerPage()`
-* `currentPage()` 
+* `setTotalResults()`
+* `setResultsPerPage()`
+* `setCurrentPage()` 
 
 Values for all three fields must be set in order to create a valid pagination object, with the exception of `currentPage()` which defaults to `1` if not set.
 
@@ -306,9 +306,9 @@ These methods return a fluent interface so you can chain these methods together 
 
 ```php
 $mapper = new MapCollection($mapping);
-$mapper->totalResults('[meta_data][total]')
-       ->resultsPerPage(3)
-       ->currentPage(1);
+$mapper->setTotalResults('[meta_data][total]')
+       ->setResultsPerPage(3)
+       ->setCurrentPage(1);
 ```
 
 ### Setting pagination data from another data source
@@ -317,9 +317,9 @@ Some data providers set pagination information in a secondary location, for exam
 
 ```php
 $mapper = new MapCollection($mapping);
-$mapper->totalResults('[X-WP-Total]')
-       ->resultsPerPage(20)
-       ->currentPage(1)
+$mapper->setTotalResults('[X-WP-Total]')
+       ->setResultsPerPage(20)
+       ->setCurrentPage(1)
        ->fromPaginationData($headers);
 ```
 
@@ -329,8 +329,8 @@ When you run the `map()` method a `Collection` object is returned that you can i
 
 ```php
 $mapper = new MapCollection($mapping);
-$mapper->totalResults('[meta_data][total]')
-       ->resultsPerPage(3)
+$mapper->setTotalResults('[meta_data][total]')
+       ->setResultsPerPage(3)
        ->currentPage(1);
 
 $collection = $mapper->map($data);
@@ -344,9 +344,9 @@ You can map results in a collection to an object via the `toObject()` method:
 
 ```php
 $mapper = new MapCollection($mapping);
-$mapper->totalResults('[meta_data][total]')
-       ->resultsPerPage(3)
-       ->currentPage(1)
+$mapper->setTotalResults('[meta_data][total]')
+       ->setResultsPerPage(3)
+       ->setCurrentPage(1)
        ->toObject('App\MyObject');
 
 $collection = $mapper->map($data);
@@ -367,8 +367,8 @@ $mapping = [
     'id'     => new IntegerValue('[id]'),
 ];
 $mapper = new MapCollection($mapping)
-$mapper->totalResults('[meta_data][total]')
-       ->resultsPerPage('[meta_data][per_page]')
+$mapper->setTotalResults('[meta_data][total]')
+       ->setResultsPerPage('[meta_data][per_page]')
        ->toObject('App\Item');
 
 $data = [

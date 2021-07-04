@@ -10,50 +10,20 @@ use Strata\Data\Exception\MapperException;
 use Strata\Data\Exception\PaginationException;
 use Strata\Data\Helper\UnionTypes;
 use Strata\Data\Pagination\Pagination;
+use Strata\Data\Traits\PaginationPropertyTrait;
 use Symfony\Component\PropertyAccess\Exception\NoSuchIndexException;
 
 class MapCollection extends MapperAbstract implements MapperInterface
 {
-    private $totalResults;
-    private $resultsPerPage;
-    private $currentPage = 1;
+    use PaginationPropertyTrait;
+
     private $paginationData = null;
 
     /**
-     * Set total results
-     *
-     * @param string|int $totalResults
-     * @return $this Fluent interface
+     * Set data to extract pagination information from
+     * @param $data
+     * @return $this
      */
-    public function totalResults($totalResults): MapCollection
-    {
-        UnionTypes::assert('$totalResults', $totalResults, 'string', 'int');
-        $this->totalResults = $totalResults;
-        return $this;
-    }
-
-    /**
-     * @param string|int $resultsPerPage
-     * @return $this Fluent interface
-     */
-    public function resultsPerPage($resultsPerPage): MapCollection
-    {
-        UnionTypes::assert('$resultsPerPage', $resultsPerPage, 'string', 'int');
-        $this->resultsPerPage = $resultsPerPage;
-        return $this;
-    }
-
-    /**
-     * @param string|int $currentPage
-     * @return $this Fluent interface
-     */
-    public function currentPage($currentPage): MapCollection
-    {
-        UnionTypes::assert('currentPage', $currentPage, 'string', 'int');
-        $this->currentPage = $currentPage;
-        return $this;
-    }
-
     public function fromPaginationData($data): MapCollection
     {
         UnionTypes::assert('$data', $data, 'array', 'object');
@@ -65,51 +35,48 @@ class MapCollection extends MapperAbstract implements MapperInterface
      * Generate pagination from an array or passed data
      *
      * @param array $data Array of data to get pagination information from
-     * @param string|int|null $totalResults If string array property, or if int the value
-     * @param string|int|null $resultsPerPage If string array property, or if int the value
-     * @param string|int|null $currentPage If string array property, or if int the value
      * @return Pagination
      * @throws MapPaginationException If cannot read data properties to create Pagination
      * @throws PaginationException If cannot setup Pagination object successfully
      */
-    public function paginationBuilder(array $data, $totalResults = null, $resultsPerPage = null, $currentPage = null): Pagination
+    public function paginationBuilder(array $data): Pagination
     {
         $propertyAccessor = $this->getPropertyAccessor();
         $pagination = new Pagination();
 
-        switch (gettype($totalResults)) {
+        switch (gettype($this->getTotalResults())) {
             case 'integer':
-                $pagination->setTotalResults($totalResults);
+                $pagination->setTotalResults($this->getTotalResults());
                 break;
             case 'string':
                 try {
-                    $pagination->setTotalResults((int) $propertyAccessor->getValue($data, $totalResults));
+                    $pagination->setTotalResults((int) $propertyAccessor->getValue($data, $this->getTotalResults()));
                 } catch (NoSuchIndexException $e) {
-                    throw new MapperException(sprintf('Cannot read $totalResults property %s', $totalResults), 0, $e);
+                    throw new MapperException(sprintf('Cannot read $totalResults property %s', $this->getTotalResults()), 0, $e);
                 }
                 break;
         }
-        switch (gettype($resultsPerPage)) {
+        switch (gettype($this->resultsPerPage)) {
             case 'integer':
-                $pagination->setResultsPerPage($resultsPerPage);
+                $pagination->setResultsPerPage($this->getResultsPerPage());
                 break;
             case 'string':
                 try {
-                    $pagination->setResultsPerPage((int) $propertyAccessor->getValue($data, $resultsPerPage));
+                    $pagination->setResultsPerPage((int) $propertyAccessor->getValue($data, $this->getResultsPerPage()));
                 } catch (NoSuchIndexException $e) {
-                    throw new MapperException(sprintf('Cannot read $resultsPerPage property %s', $totalResults), 0, $e);
+                    throw new MapperException(sprintf('Cannot read $resultsPerPage property %s', $this->getResultsPerPage()), 0, $e);
                 }
                 break;
         }
-        switch (gettype($currentPage)) {
+        switch (gettype($this->getCurrentPage())) {
             case 'integer':
-                $pagination->setPage($currentPage);
+                $pagination->setPage($this->getCurrentPage());
                 break;
             case 'string':
                 try {
-                    $pagination->setPage((int) $propertyAccessor->getValue($data, $currentPage));
+                    $pagination->setPage((int) $propertyAccessor->getValue($data, $this->getCurrentPage()));
                 } catch (NoSuchIndexException $e) {
-                    throw new MapperException(sprintf('Cannot read $currentPage property %s', $totalResults), 0, $e);
+                    throw new MapperException(sprintf('Cannot read $currentPage property %s', $this->getCurrentPage()), 0, $e);
                 }
                 break;
         }
@@ -153,9 +120,9 @@ class MapCollection extends MapperAbstract implements MapperInterface
         }
 
         if (null !== $this->paginationData) {
-            $paginator = $this->paginationBuilder($this->paginationData, $this->totalResults, $this->resultsPerPage, $this->currentPage);
+            $paginator = $this->paginationBuilder($this->paginationData);
         } else {
-            $paginator = $this->paginationBuilder($data, $this->totalResults, $this->resultsPerPage, $this->currentPage);
+            $paginator = $this->paginationBuilder($data);
         }
         $collection->setPagination($paginator);
 
