@@ -17,7 +17,7 @@ use Strata\Data\Query\Query;
  */
 class BuildGraphQLQuery implements BuildQueryInterface
 {
-    private GraphQLQueryInterface $dataProvider;
+    private GraphQL $dataProvider;
 
     /**
      * Constructor
@@ -127,17 +127,17 @@ class BuildGraphQLQuery implements BuildQueryInterface
             }
 
             // Wrap GraphQL query in query statement
-            $query = 'query ' . ucfirst($query->getName()) . 'Query';
+            $graphQLQuery = 'query ' . ucfirst($query->getName()) . 'Query';
             if (!empty($variablesDefinition)) {
                 $queryVariables = [];
                 foreach ($variablesDefinition as $name => $type) {
                     $queryVariables[] = sprintf('$%s: %s', $name, $type);
                 }
-                $query .= '(';
-                $query .= implode(', ', $queryVariables);
-                $query .= ')';
+                $graphQLQuery .= '(';
+                $graphQLQuery .= implode(', ', $queryVariables);
+                $graphQLQuery .= ')';
             }
-            $graphQL .= $query . '{ ' . PHP_EOL . $graphQL . PHP_EOL . '}' . PHP_EOL;
+            $graphQL .= $graphQLQuery . '{ ' . PHP_EOL . $graphQL . PHP_EOL . '}' . PHP_EOL;
         }
 
         // Fragments

@@ -214,16 +214,21 @@ class QueryManager
             throw new QueryManagerException(sprintf('Query name %s already exists in the Query Manager, please give this query a unique name', $query->getName()));
         }
 
-        // Is query compatible with data provider?
-        if (!$this->dataProviderSupportsQuery($dataProviderName, $query)) {
-            throw new QueryManagerException(sprintf('Data provider %s does not support this type of query (%s), class of type %s is required', $dataProviderName, gettype($query), $query->getRequiredDataProviderClass()));
-        }
-
         // Get data provider (pass as 2nd argument or use current data provider)
         if ($dataProviderName === null) {
             $dataProviderName = $this->getLastDataProviderName();
         }
         $dataProvider = $this->getDataProvider($dataProviderName);
+
+        // Is query compatible with data provider?
+        if (!$this->dataProviderSupportsQuery($dataProviderName, $query)) {
+            throw new QueryManagerException(sprintf(
+                'Query can only be added to a data provider of type %s, "%s" is type %s',
+                $query->getRequiredDataProviderClass(),
+                $dataProviderName,
+                get_class($this->getDataProvider($dataProviderName))
+            ));
+        }
 
         // Prepare request
         switch (get_class($query)) {

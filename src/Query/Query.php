@@ -327,6 +327,9 @@ class Query implements QueryInterface
 
     /**
      * Map data and return array/object
+     *
+     * Default functionality is to return all data, from root property (if set)
+     *
      * @param array Data to map to a collection
      * @return mixed
      */
@@ -338,6 +341,9 @@ class Query implements QueryInterface
 
     /**
      * Map data and return a collection object for this query
+     *
+     * Default functionality is to return all data, from root property (if set)
+     *
      * @param array $data Data to map to a collection
      * @param array|object|null $paginationData Data to retrieve pagination information from
      * @return Collection
