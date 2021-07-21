@@ -10,12 +10,16 @@
 * [Caching](usage/caching.md)
 * [Validation](usage/validating.md)
 
-## Data providers
+## Retrieving data
 
-* [Intro](retrieving-data/data-providers.md)
-* [Http](retrieving-data/http.md)
-* [Rest](retrieving-data/rest.md)
-* [GraphQL](retrieving-data/graphql.md)
+* [Intro](retrieving-data/README.md)
+* [Data providers](retrieving-data/data-providers.md)
+* [HTTP data provider](retrieving-data/http.md)
+* [GraphQL data provider](retrieving-data/graphql.md)
+* [Queries](retrieving-data/query.md)
+* [GraphQL queries](retrieving-data/graphql.md)
+* [Query Manager](retrieving-data/query-manager.md)
+* [Custom query classes](retrieving-data/custom-query-classes.md)
 
 ## Changing data
 

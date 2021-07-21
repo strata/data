@@ -4,18 +4,26 @@ declare(strict_types=1);
 
 namespace Strata\Data\Query;
 
+use Strata\Data\Collection;
 use Strata\Data\Exception\GraphQLQueryException;
+use Strata\Data\Exception\QueryException;
 use Strata\Data\Http\GraphQL;
+use Strata\Data\Http\Response\CacheableResponse;
+use Strata\Data\Mapper\MapCollection;
+use Strata\Data\Mapper\MapItem;
+use Strata\Data\Mapper\WildcardMappingStrategy;
+use Strata\Data\Query\BuildQuery\BuildGraphQLQuery;
 use Strata\Data\Query\GraphQL\Fragment;
 use Strata\Data\Query\GraphQL\GraphQLTrait;
 
 /**
  * Class to help craft a GraphQL API query
  */
-class GraphQLQuery extends Query implements GraphQLQueryInterface
+class GraphQLQuery extends QueryAbstract implements GraphQLQueryInterface
 {
     use GraphQLTrait;
 
+    protected ?string $name = null;
     private ?string $alias = null;
     private array $definedVariables = [];
     private array $variables = [];
@@ -24,14 +32,11 @@ class GraphQLQuery extends Query implements GraphQLQueryInterface
 
     /**
      * Constructor
-     * @param string|null $name Query name
-     * @param string|null $filename Filename to load raw GraphQL query
+     * @param string|null $filename File to load GraphQL query from
+     * @throws GraphQLQueryException
      */
-    public function __construct(?string $name = null, ?string $filename = null)
+    public function __construct(?string $filename = null)
     {
-        if ($name !== null) {
-            $this->setName($name);
-        }
         if ($filename !== null) {
             $this->setGraphQLFromFile($filename);
         }
@@ -39,11 +44,57 @@ class GraphQLQuery extends Query implements GraphQLQueryInterface
 
     /**
      * Data provider class required for use with this query
-     * @var string
+     * @return string
      */
     public function getRequiredDataProviderClass(): string
     {
         return GraphQL::class;
+    }
+
+    /**
+     * Return data provider
+     * @return GraphQL
+     */
+    public function getDataProvider(): GraphQL
+    {
+        return $this->dataProvider;
+    }
+
+
+    /**
+     * Return query name
+     *
+     * @param string $name
+     * @param ?string $alias Alias to use for query
+     * @return $this Fluent interface
+     */
+    public function setName(string $name, ?string $alias = null): self
+    {
+        $this->name = $name;
+
+        if ($alias !== null) {
+            $this->setAlias($alias);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Whether this query has a name
+     * @return bool
+     */
+    public function hasName(): bool
+    {
+        return (!empty($this->name));
+    }
+
+    /**
+     * Get query name
+     * @return string|null
+     */
+    public function getName(): ?string
+    {
+        return $this->name;
     }
 
     /**
@@ -220,4 +271,107 @@ class GraphQLQuery extends Query implements GraphQLQueryInterface
         return $this->fragments;
     }
 
+    /**
+     * Prepare a query for running
+     *
+     * Prepares the response object but doesn't run it - unless data is returned by the cache
+     *
+     * If you don't run this, it's automatically run when you access the Query::run() method
+     *
+     * @throws QueryException
+     * @throws \Strata\Data\Exception\BaseUriException
+     * @throws \Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface
+     */
+    public function prepare()
+    {
+        if (!$this->hasDataProvider()) {
+            throw new QueryException('Cannot prepare query since data provider not set (do this via Query::setDataProvider or via QueryManager::addDataProvider)');
+        }
+        $dataProvider = $this->getDataProvider();
+
+        // Prepare request
+        $buildQuery = new BuildGraphQLQuery($dataProvider);
+        $this->response = $buildQuery->prepareRequest($this);
+    }
+
+    /**
+     * Run a query
+     *
+     * Populates the response object
+     *
+     * @throws QueryException
+     * @throws \Strata\Data\Exception\BaseUriException
+     * @throws \Strata\Data\Exception\HttpException
+     * @throws \Strata\Data\Exception\HttpNotFoundException
+     * @throws \Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface
+     */
+    public function run()
+    {
+        $dataProvider = $this->getDataProvider();
+        $response = $this->getResponse();
+
+        // Prepare response if not already done
+        if (!($response instanceof CacheableResponse)) {
+            $this->prepare();
+            $response = $this->getResponse();
+        }
+
+        if ($this->isSubRequest()) {
+            $dataProvider->suppressErrors();
+        } else {
+            $dataProvider->suppressErrors(false);
+        }
+        $this->response = $dataProvider->runRequest($response);
+    }
+
+    /**
+     * Return data from response
+     * @return mixed
+     * @throws \Strata\Data\Exception\MapperException
+     */
+    public function get()
+    {
+        // Run response, if not already run
+        if (!$this->hasResponseRun()) {
+            $this->run();
+        }
+
+        // Simple mapping from root property path
+        $data = $this->dataProvider->decode($this->getResponse());
+        $mapper = new MapItem(new WildcardMappingStrategy());
+        return $mapper->map($data, $this->getRootPropertyPath());
+    }
+
+    /**
+     * Return collection of data from a query response
+     * @return Collection
+     * @throws QueryException
+     * @throws \Strata\Data\Exception\BaseUriException
+     * @throws \Strata\Data\Exception\HttpException
+     * @throws \Strata\Data\Exception\HttpNotFoundException
+     * @throws \Strata\Data\Exception\MapperException
+     * @throws \Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface
+     */
+    public function getCollection(): Collection
+    {
+        // Run response, if not already run
+        if (!$this->hasResponseRun()) {
+            $this->run();
+        }
+
+        // Simple mapping from root property path
+        $response = $this->getResponse();
+        $data = $this->dataProvider->decode($response);
+        $mapper = new MapCollection(new WildcardMappingStrategy());
+
+        // Use pagination setup query
+        $mapper->setTotalResults($this->getTotalResults())
+            ->setResultsPerPage($this->getResultsPerPage())
+            ->setCurrentPage($this->getCurrentPage());
+        if ($this->isPaginationDataFromHeaders()) {
+            $mapper->fromPaginationData($response->getHeaders());
+        }
+
+        return $mapper->map($data, $this->getRootPropertyPath());
+    }
 }

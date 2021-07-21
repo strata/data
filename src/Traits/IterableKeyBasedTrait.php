@@ -18,8 +18,8 @@ namespace Strata\Data\Traits;
  * @see https://www.php.net/arrayaccess
  * @package Strata\Data\Traits
  */
-trait IterableKeyBasedTrait {
-
+trait IterableKeyBasedTrait
+{
     use IterableTrait;
 
     /**
@@ -113,5 +113,4 @@ trait IterableKeyBasedTrait {
             unset($this->collection[$offset]);
         }
     }
-
 }

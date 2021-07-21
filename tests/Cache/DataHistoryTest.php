@@ -127,7 +127,7 @@ class DataHistoryTest extends TestCase
 
         // Check datetime of last item is within 30 seconds of $now (should be close to identical)
         $interval = $now->diff(new \DateTime($history->getLastItem(123, 'updated')));
-        $this->assertTrue($interval->format('i') < 30);
+        $this->assertTrue($interval->format('%s') < 30);
 
         // Test invalid item field
         $this->expectException('Strata\Data\Exception\CacheException');

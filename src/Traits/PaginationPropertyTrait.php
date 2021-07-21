@@ -77,5 +77,4 @@ trait PaginationPropertyTrait
     {
         return $this->currentPage;
     }
-
 }

@@ -1,107 +1,129 @@
 # Retrieving data
 
-You can retrieve data in two ways.
+There are two techniques to retrieving data with Strata Data: using [data providers](data-providers.md) or [queries](query.md).
 
-[Data providers](data-providers.md) are classes designed to integrate against a type of API/data provider. They provide 
-the core functionality to send data requests, decode response data, deal with errors, and have support for caching and 
-attaching services to different steps. 
+## Data providers
 
-[Query managers](query-manager.md) are wrappers on top of a data provider, which give you helpers to build queries and 
-return structured content. You can write custom query managers to encapsulate common functionality for your API, to make 
-building queries easier. 
+[Data providers](data-providers.md) are classes designed to integrate against a type of data provider. They provide 
+the core functionality to send data requests, deal with errors, support for caching and supressing errors for sub-requests,
+decode response data, and add custom events via the event listener.
 
----
+You can run any type of request via data providers, so data providers are better for tasks such as saving new data to an API.
 
-Data providers are the core means to access external data. These are classes which use custom methods to access 
-data. 
+Requests look similar to a normal HTTP request:
 
-Available data providers:
+```
+// Setup
+$api = new Rest('https://example.com/api/');
 
-* [Http](http.md) - generic HTTP data provider
-* [Rest](rest.md) - data provider for REST-based APIs
-* [GraphQL](graphql.md) - data provider for GraphQL APOIs
+// Run a GET request 
+$response = $api->get('news', ['limit' => 50, 'page' => 2]);
 
-## Common methods
+// Return a decoded array of data
+$data = $api->decode($response);
+```
 
-A `DataProvider` interface is used which defines the following common methods for data providers.
+You can find out more at:
+* [Data providers](data-providers.md)
+* [HTTP data provider](http.md)
+* [GraphQL data provider](graphql.md)
 
-### getBaseUri
+## Queries
 
-Return base URI to use for all data requests. 
+Query classes provide an object-orientated way to build queries and run them. They use data providers to run the actual requests
+and use [mapping](../changing-data/mapping.md) to help parse data from HTTP responses. 
 
-* Returns a string
-  
-### getUri
+Queries are optimised for reading data, so are best used when you want to retrieve data. If you want to save data, then 
+it's best to use a data provider.
 
-Return URI to use for current data request
+Requests look like:
 
-* Parameters
-    * `string|null $endpoint` Optional endpoint to append to base URI
-* Returns a string
+```php
+// Setup
+$api = new Rest('https://example.com/api/');
 
-### getRequestIdentifier
+// Build query
+$query = new Query();
+$query->setUri('news')
+      ->setParams(['page' => 2])
+      ->setRootPropertyPath('[data]')
+      ->setDataProvider($api);
 
-Return a unique identifier safe to use for caching based on the request
+// Return data as an array
+$data = $query->get();
 
-* Parameters
-    * `$uri` URI for request
-    * `array $context` Array of contextual data (e.g. request options)
-* Returns a string
-  
-### isSuppressErrors
+// Return collection of data (requires collection setup to be defined in query)
+$collection = $query->getCollection();
 
-Whether errors are suppressed
+// Or return the HTTP response
+$response = $query->getResponse();
+```
 
-* Returns a boolean
-  
-### getDefaultDecoder
+You can find out more at:
+* [Running queries](query.md)
+* [Running GraphQL queries](graphql.md)
 
-Return default decoder to decode responses.
+### Fluent interface
 
-* Returns an object of type `Strata\Data\Decode\DecoderInterface` or null if no default decoder set
+Queries use a fluent interface to make building queries easier. This means methods that set data (and are used for setting 
+up the query) can be chained since they return the current object. This allows you to do things like: 
 
-### decode
+```
+$query = new Query();
+$query->setUri('news')
+      ->setParams(['page' => 2])
+      ->setRootPropertyPath('[data]');
+```
 
-Decode a response
+You can also surround the `new Query()` statement in brackets to chain everything:
 
-* Parameters
-    * `mixed $response` Response to decode (normally an object or array)
-    * `DecoderInterface|null $decoder` Optional decoder, if not set uses getDefaultDecoder()
-* Returns the decoded data (normally an array or object)
-  
-### isCacheEnabled
+```
+$query = (new Query())
+     ->setUri('news')
+     ->setParams(['page' => 2])
+     ->setRootPropertyPath('[data]');
+```
 
-Is the cache enabled?
+### Query manager
 
-* Returns a boolean
+[Query managers](query-manager.md) is a wrapper class that can be used to add data providers and run multiple queries 
+at once. It supports running concurrent queries, you can apply cache settings to all queries at once (e.g. cache tags).
+It provides a simpler way to run multiple queries at once.
 
-### getCache
+Requests look like this:
 
-Return the cache
+```
+// Setup
+$manager = new QueryManager();
+$manager->addDataProvider('example', new Rest('https://example.com/api/'));
 
-* Returns an object of type `Strata\Data\Cache\DataCache`
-     
-### addListener
+// Add query
+$query = new Query();
+$query->setUri('news')
+      ->setTotalResults('[total_results]')
+      ->setParams(['limit' => 50, 'page' => 2]);
+$manager->add('news', $query);
 
-Adds an event listener that listens on the specified event. See [events](../events.md).
+// Run query and return a collection of results
+$collection = $manager->getCollection('news');
+```
 
-* Parameters
-    * `string $eventName` Event name
-    * `callable $listener` The listener
-    * `int $priority` The higher this value, the earlier an event listener will be triggered in the chain (defaults to 0)
+You can find out more at:
+* [Using a Query Manager to run queries](query-manager.md)
 
-### addSubscriber
+### Custom query classes
+You can also write your own custom query classes to encapsulate common functionality for your API, making building queries easier.
 
-Adds an event subscriber. See [events](../events.md).
+For example, a fictional `NewsQuery` class may set the URI and root property path. Your request will now look like:
 
-* Parameters
-    * `EventSubscriberInterface $subscriber` Event subscriber
-  
-### dispatchEvent
+```
+// Add query
+$query = new NewsQuery();
+$query->addParam('page', $page);
 
-Dispatches an event to all registered listeners
+// Run query and return a collection of results
+$collection = $query->getCollection();
+```
 
-* Parameters
-    * `Event $event` The event to pass to the event handlers/listeners
-    * `string $eventName` The name of the event to dispatch
-* Returns an object of type `Symfony\Contracts\EventDispatcher\Event`
+You can find out more at:
+* [Writing custom query classes](custom-query-classes.md)

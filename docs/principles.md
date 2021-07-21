@@ -1,5 +1,7 @@
 # Principles
 
+_Please note: This section needs updating_
+
 Strata Data offers a standardised way to read and manipulate data from external sources. Its aim is to make working with data easier.
 
 ## Architecture

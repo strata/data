@@ -10,10 +10,10 @@ use Strata\Data\Http\Response\CacheableResponse;
 use Strata\Data\Query\GraphQLQuery;
 use Strata\Data\Query\GraphQLQueryInterface;
 use Strata\Data\Query\Query;
+use Strata\Data\Query\QueryInterface;
 
 /**
- * Class to help build REST API HTTP requests
- * @package Strata\Data\Query
+ * Class to help prepare GraphQL requests
  */
 class BuildGraphQLQuery implements BuildQueryInterface
 {
@@ -51,15 +51,19 @@ class BuildGraphQLQuery implements BuildQueryInterface
         // Build param list
         foreach ($query->getParams() as $name => $value) {
             switch (gettype($value)) {
-                case 'boolean':
-                    $paramValue = ($value) ? 'true' : 'false';
-                    break;
                 case 'array':
                     $paramValue = '"' . implode($query->getMultipleValuesSeparator(), $value) . '"';
                     break;
+                case 'boolean':
+                    $paramValue = ($value) ? 'true' : 'false';
+                    break;
+                case 'integer':
+                case 'double':
+                    $paramValue = $value;
+                    break;
                 default:
                     // If a variable do not quote
-                    if (strpos($value, '$') === 0) {
+                    if (is_string($value) && strpos($value, '$') === 0) {
                         $paramValue = $value;
                         break;
                     }
@@ -74,14 +78,13 @@ class BuildGraphQLQuery implements BuildQueryInterface
     /**
      * Return GraphQL query from array of queries
      *
-     * @param GraphQLQueryInterface $query
+     * @param GraphQLQuery $query
      * @return string
      */
-    public function buildGraphQL(GraphQLQueryInterface $query): string
+    public function buildGraphQL(GraphQLQuery $query): string
     {
         if ($query->hasGraphQL()) {
             $graphQL = $query->getGraphQL();
-
         } else {
             /**
              * Build GraphQL query
@@ -127,7 +130,7 @@ class BuildGraphQLQuery implements BuildQueryInterface
             }
 
             // Wrap GraphQL query in query statement
-            $graphQLQuery = 'query ' . ucfirst($query->getName()) . 'Query';
+            $graphQLQuery = 'query ' . ucfirst($query->getName()) . 'Query ';
             if (!empty($variablesDefinition)) {
                 $queryVariables = [];
                 foreach ($variablesDefinition as $name => $type) {
@@ -137,7 +140,7 @@ class BuildGraphQLQuery implements BuildQueryInterface
                 $graphQLQuery .= implode(', ', $queryVariables);
                 $graphQLQuery .= ')';
             }
-            $graphQL .= $graphQLQuery . '{ ' . PHP_EOL . $graphQL . PHP_EOL . '}' . PHP_EOL;
+            $graphQL = $graphQLQuery . '{' . PHP_EOL . $graphQL . PHP_EOL . '}' . PHP_EOL;
         }
 
         // Fragments
@@ -160,6 +163,21 @@ class BuildGraphQLQuery implements BuildQueryInterface
     }
 
     /**
+     * Return options to use with HTTP request
+     * @param GraphQLQuery $query
+     * @return array
+     * @throws GraphQLQueryException
+     * @throws \JsonException
+     */
+    public function getOptions(GraphQLQuery $query)
+    {
+        $graphQL = $this->buildGraphQL($query);
+        $postData = $this->dataProvider->buildQuery($graphQL, $query->getVariables());
+        $options['body'] = $postData;
+        return $options;
+    }
+
+    /**
      * Return a prepared request
      *
      * Request is not run since no data is accessed (Symfony HttpClient lazy runs requests when you access data)
@@ -168,7 +186,7 @@ class BuildGraphQLQuery implements BuildQueryInterface
      * @param Query $query
      * @return CacheableResponse
      */
-    public function prepareRequest(Query $query): CacheableResponse
+    public function prepareRequest(QueryInterface $query): CacheableResponse
     {
         // Build query
         if ($query->isSubRequest()) {
@@ -182,10 +200,11 @@ class BuildGraphQLQuery implements BuildQueryInterface
             $this->dataProvider->disableCache();
         }
 
-        $graphQL = $this->buildGraphQL($query);
-
-        // @todo this runs request immediately and doesn't support concurrent multiple queries, can we improve on this?
-        return $this->dataProvider->query($graphQL, $query->getVariables());
+        /**
+         * Prepare GraphQL response
+         * @see GraphQL::query
+         */
+        $options = $this->getOptions($query);
+        return $this->dataProvider->prepareRequest('POST', '', $options);
     }
-
 }

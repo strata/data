@@ -7,45 +7,29 @@ namespace Strata\Data\Query;
 use Strata\Data\Collection;
 use Strata\Data\DataProviderInterface;
 use Strata\Data\Exception\CacheException;
+use Strata\Data\Exception\MissingDataProviderException;
 use Strata\Data\Exception\QueryManagerException;
 use Strata\Data\Http\Http;
 use Strata\Data\Http\Response\CacheableResponse;
-use Strata\Data\Mapper\MapCollection;
-use Strata\Data\Mapper\MapItem;
-use Strata\Data\Mapper\WildcardMappingStrategy;
-use Strata\Data\Query\BuildQuery\BuildGraphQLQuery;
-use Strata\Data\Query\BuildQuery\BuildQuery;
-use Strata\Data\Query\QueryStack\QueryStack;
-use Strata\Data\Query\QueryStack\StackItem;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
- * Class to help manage running queries against APIs
+ * Class to help manage running queries against data providers
  */
 class QueryManager
 {
     /** @var DataProviderInterface[] */
     private array $dataProviders = [];
 
-    /** @var string */
-    public ?string $lastDataProviderName = null;
+    /** @var QueryInterface[] */
+    private array $queries = [];
 
-    /** @var QueryStack  */
-    private QueryStack $queryStack;
-
+    private array $dataProviderClassMap = [];
     private bool $cacheEnabled = false;
     private ?CacheInterface $cache = null;
     private ?int $cacheLifetime = null;
     private array $cacheTags = [];
-
-    /**
-     * QueryManager constructor.
-     */
-    public function __construct()
-    {
-        $this->queryStack = new QueryStack();
-    }
 
     /**
      * Add a data provider to use with queries
@@ -54,22 +38,26 @@ class QueryManager
      */
     public function addDataProvider(string $name, DataProviderInterface $dataProvider)
     {
-        if ($this->cacheEnabled) {
+        if ($this->isCacheEnabled()) {
             // Enable cache on data provider
             $dataProvider->setCache($this->cache, $this->cacheLifetime);
-
-        } elseif ($this->cache instanceof CacheInterface) {
+        } elseif ($this->hasCache()) {
             // If cache exists but disabled, add to data provider but disable it
             $dataProvider->setCache($this->cache, $this->cacheLifetime);
             $dataProvider->disableCache();
         }
         if (!empty($this->cacheTags)) {
-            // If cache tags exist, add them to data provider
-            $dataProvider->setCacheTags($this->cacheTags);
+            // If cache tags exist and cache adapter is compatible, set them
+            if ($dataProvider->getCache()->isTaggable()) {
+                $dataProvider->setCacheTags($this->cacheTags);
+            }
         }
 
         $this->dataProviders[$name] = $dataProvider;
-        $this->lastDataProviderName = $name;
+        $this->dataProviderClassMap[] = [
+            'name' => $name,
+            'class' => get_class($dataProvider),
+        ];
     }
 
     /**
@@ -86,6 +74,25 @@ class QueryManager
         foreach ($this->dataProviders as $dataProvider) {
             $dataProvider->setCache($this->cache, $defaultLifetime);
         }
+    }
+
+    /**
+     * Whether a cache object is set
+     * @return bool
+     */
+    public function hasCache(): bool
+    {
+        return $this->cache instanceof CacheInterface;
+    }
+
+    /**
+     * Is the cache enabled?
+     *
+     * @return bool
+     */
+    public function isCacheEnabled(): bool
+    {
+        return $this->cacheEnabled;
     }
 
     /**
@@ -122,13 +129,32 @@ class QueryManager
      *
      * @param array $tags
      * @throws CacheException
+     * @throws QueryManagerException
      */
     public function setCacheTags(array $tags = [])
     {
+        $taggable = 0;
         $this->cacheTags = $tags;
         foreach ($this->dataProviders as $dataProvider) {
-            $dataProvider->getCache()->setTags($tags);
+            // If cache adapter is compatible, set them
+            if ($dataProvider->isCacheEnabled() && $dataProvider->getCache()->isTaggable()) {
+                $dataProvider->setCacheTags($tags);
+                $taggable++;
+            }
         }
+
+        if ($taggable === 0) {
+            throw new QueryManagerException('No data providers contain a cache adapter that is compatible with tagging (must implement Symfony\Component\Cache\Adapter\TagAwareAdapter)');
+        }
+    }
+
+    /**
+     * Return cache tags currently set to the query manager
+     * @return array
+     */
+    public function getCacheTags(): array
+    {
+        return $this->cacheTags;
     }
 
     /**
@@ -158,129 +184,87 @@ class QueryManager
     }
 
     /**
-     * Return named data provider
+     * Return data provider by name
      * @param string $name
      * @return DataProviderInterface
-     * @throws QueryManagerException
+     * @throws MissingDataProviderException
      */
     public function getDataProvider(string $name): DataProviderInterface
     {
         if (!$this->hasDataProvider($name)) {
-            throw new QueryManagerException(sprintf('Cannot find data provider %s', $name));
+            throw new MissingDataProviderException(sprintf('Cannot find data provider %s', $name));
         }
         return $this->dataProviders[$name];
     }
 
     /**
-     * Get last data provider name
-     * @return string
-     * @throws QueryManagerException
-     */
-    public function getLastDataProviderName(): string
-    {
-        if ($this->lastDataProviderName === null) {
-            throw new QueryManagerException('You must set at least one data provider to the query manager');
-        }
-        return $this->lastDataProviderName;
-    }
-
-    /**
-     * Whether the data provider name supports this type of query
-     * @param string $dataProviderName
+     * Return first compatible data provider we can find for passed query
      * @param QueryInterface $query
-     * @return bool
-     * @throws QueryManagerException
+     * @return DataProviderInterface
+     * @throws MissingDataProviderException
      */
-    public function dataProviderSupportsQuery(string $dataProviderName, QueryInterface $query): bool
+    public function getDataProviderForQuery(QueryInterface $query): DataProviderInterface
     {
-        $dataProvider = $this->getDataProvider($dataProviderName);
-        $class = $query->getRequiredDataProviderClass();
-        return ($dataProvider instanceof $class);
+        $requiredClass = $query->getRequiredDataProviderClass();
+        foreach ($this->dataProviderClassMap as $item) {
+            $class = $item['class'];
+            $name = $item['name'];
+            if ($class === $requiredClass) {
+                return $this->getDataProvider($name);
+            }
+        }
+        throw new MissingDataProviderException(sprintf('Cannot find a compatible data provider (%s) for query', $class));
     }
 
     /**
      * Add a query (does not run the query, this happens on data access)
      *
+     * @param string $queryName
      * @param QueryInterface $query Query
-     * @param string $dataProviderName Data provider to use with query, if not set use last added data provider
+     * @param string|null $dataProviderName Data provider to use with query, if not set use last added data provider
      * @throws QueryManagerException
      */
-    public function add(QueryInterface $query, ?string $dataProviderName = null)
+    public function add(string $queryName, QueryInterface $query, ?string $dataProviderName = null)
     {
-        if (!$query->hasName()) {
-            throw new QueryManagerException('Query must have a name before it is added to the Query Manager');
-        }
-        if ($this->queryStack->offsetExists($query->getName())) {
-            throw new QueryManagerException(sprintf('Query name %s already exists in the Query Manager, please give this query a unique name', $query->getName()));
+        if ($this->hasQuery($queryName)) {
+            throw new QueryManagerException(sprintf('Query name %s already exists in the Query Manager, please give this query a unique name', $queryName));
         }
 
-        // Get data provider (pass as 2nd argument or use current data provider)
-        if ($dataProviderName === null) {
-            $dataProviderName = $this->getLastDataProviderName();
-        }
-        $dataProvider = $this->getDataProvider($dataProviderName);
-
-        // Is query compatible with data provider?
-        if (!$this->dataProviderSupportsQuery($dataProviderName, $query)) {
-            throw new QueryManagerException(sprintf(
-                'Query can only be added to a data provider of type %s, "%s" is type %s',
-                $query->getRequiredDataProviderClass(),
-                $dataProviderName,
-                get_class($this->getDataProvider($dataProviderName))
-            ));
+        if (!$query->hasDataProvider()) {
+            // Get data provider (pass as 2nd argument or use a compatible data provider)
+            if ($dataProviderName === null) {
+                $dataProvider = $this->getDataProviderForQuery($query);
+            } else {
+                $dataProvider = $this->getDataProvider($dataProviderName);
+            }
+            $query->setDataProvider($dataProvider);
         }
 
         // Prepare request
-        switch (get_class($query)) {
-            case GraphQLQuery::class:
-                $buildQuery = new BuildGraphQLQuery($dataProvider);
-                break;
-            case Query::class:
-            default:
-                $buildQuery = new BuildQuery($dataProvider);
-                break;
-        }
+        $query->prepare();
 
-        $response = $buildQuery->prepareRequest($query);
-
-        // Add query, data provider name & response to query stack
-        $this->queryStack->add($query->getName(), new StackItem($query, $dataProviderName, $response));
+        // Add query to query stack
+        $this->queries[$queryName] = $query;
     }
 
     /**
      * Run queries on data access
      *
      * Only runs a query once, you can force a query to be re-run via $query->clearResponse()
+     *
+     * This should run multiple queries concurrently
      */
     protected function runQueries()
     {
-        // Build array of concurrent queries for all responses that have not been executed
-        $concurrent = [];
-        foreach ($this->getQueryStack() as $name => $item) {
-            if ($item->hasResponseRun()) {
+        foreach ($this->queries as $query) {
+            // Skip if already run, you can still manually re-run a query via $query->run()
+            if ($query->hasResponseRun()) {
                 continue;
             }
 
-            $query = $item->getQuery();
-            $dataProvider = $this->getDataProvider($item->getDataProviderName());
-            $response = $item->getResponse();
-
-            if ($query->isSubRequest()) {
-                $dataProvider->suppressErrors();
-            } else {
-                $dataProvider->suppressErrors(false);
-            }
-            $dataProvider->runRequest($response);
+            // Run a query
+            $query->run();
         }
-    }
-
-    /**
-     * Return all queries
-     * @return QueryStack Collection of queries
-     */
-    public function getQueryStack(): QueryStack
-    {
-        return $this->queryStack;
     }
 
     /**
@@ -290,42 +274,43 @@ class QueryManager
      */
     public function hasQuery(string $name): bool
     {
-        return (isset($this->queryStack[$name]));
+        return array_key_exists($name, $this->queries);
     }
 
     /**
      * Return a query by name
      * @param string $name
-     * @return Query|null
+     * @return QueryInterface|null
      */
-    public function getQuery(string $name): ?StackItem
+    public function getQuery(string $name): ?QueryInterface
     {
         if ($this->hasQuery($name)) {
-            return $this->queryStack[$name];
+            return $this->queries[$name];
         }
         return null;
     }
 
     /**
      * Get response by query name
-     * @param string $name
+     * @param string $queryName
      * @return CacheableResponse
      * @throws QueryManagerException
      */
     public function getResponse(string $queryName): CacheableResponse
     {
-        if (!$this->queryStack->exists($queryName)) {
+        if (!$this->hasQuery($queryName)) {
             throw new QueryManagerException(sprintf('Cannot find query with query name "%s"', $queryName));
         }
+        $query = $this->getQuery($queryName);
 
-        $this->runQueries();
-
-        $item = $this->queryStack->get($queryName);
-        if (!$item->hasResponseRun()) {
+        if (!$query->hasResponseRun()) {
+            $this->runQueries();
+        }
+        if (!$query->hasResponseRun()) {
             throw new QueryManagerException(sprintf('Response has not run for query name "%s"', $queryName));
         }
 
-        return $item->getResponse();
+        return $query->getResponse();
     }
 
     /**
@@ -336,33 +321,22 @@ class QueryManager
      * @param string $queryName
      * @param string|null $rootPropertyPath Property path to root element to select data from, null if no data returned
      * @throws QueryManagerException
-     *@todo Create an Item object to return (which is cache aware)
      */
-    public function getItem(string $queryName, ?string $rootPropertyPath = null): ?array
+    public function get(string $queryName, ?string $rootPropertyPath = null): ?array
     {
-        if (!$this->queryStack->exists($queryName)) {
+        if (!$this->hasQuery($queryName)) {
             throw new QueryManagerException(sprintf('Cannot find query with query name "%s"', $queryName));
         }
+        $query = $this->getQuery($queryName);
 
-        // Run queries
-        $this->runQueries();
-
-        $item = $this->queryStack->get($queryName);
-        if (!$item->hasResponseRun()) {
+        if (!$query->hasResponseRun()) {
+            $this->runQueries();
+        }
+        if (!$query->hasResponseRun()) {
             throw new QueryManagerException(sprintf('Response has not run for query name "%s"', $queryName));
         }
 
-        // Return decoded data
-        $dataProvider = $this->getDataProvider($item->getDataProviderName());
-        $query = $item->getQuery();
-        $data = $dataProvider->decode($item->getResponse());
-
-        if ($rootPropertyPath !== null) {
-            $query->setRootPropertyPath($rootPropertyPath);
-        }
-
-        // use query mapItem to return data
-        return $query->mapItem($data);
+        return $query->get();
     }
 
     /**
@@ -376,34 +350,18 @@ class QueryManager
      */
     public function getCollection(string $queryName, ?string $rootPropertyPath = null): Collection
     {
-        if (!$this->queryStack->exists($queryName)) {
+        if (!$this->hasQuery($queryName)) {
             throw new QueryManagerException(sprintf('Cannot find query with query name "%s"', $queryName));
         }
+        $query = $this->getQuery($queryName);
 
-        // Run queries
-        $this->runQueries();
-
-        $item = $this->queryStack->get($queryName);
-        if (!$item->hasResponseRun()) {
+        if (!$query->hasResponseRun()) {
+            $this->runQueries();
+        }
+        if (!$query->hasResponseRun()) {
             throw new QueryManagerException(sprintf('Response has not run for query name "%s"', $queryName));
         }
 
-        // Return collections object with decoded data & pagination
-        $dataProvider = $this->getDataProvider($item->getDataProviderName());
-        $query = $item->getQuery();
-        $response = $item->getResponse();
-        $data = $dataProvider->decode($response);
-
-        $paginationData = null;
-        if ($query->isPaginationDataFromHeaders()) {
-            $paginationData = $response->getHeaders();
-        }
-        if ($rootPropertyPath !== null) {
-            $query->setRootPropertyPath($rootPropertyPath);
-        }
-
-        // use query mapCollection to return data
-        return $query->mapCollection($data, $paginationData);
+        return $query->getCollection();
     }
-
 }

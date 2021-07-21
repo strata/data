@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Strata\Data\Query;
 
-
 use Strata\Data\Collection;
-use Strata\Data\Http\Rest;
+use Strata\Data\DataProviderInterface;
+use Strata\Data\Http\Response\CacheableResponse;
 
 interface QueryInterface
 {
@@ -15,6 +15,25 @@ interface QueryInterface
      * @var string Class name
      */
     public function getRequiredDataProviderClass(): string;
+
+    /**
+     * Set data provider to use with this query
+     * @param DataProviderInterface $dataProvider
+     * @return $this
+     */
+    public function setDataProvider(DataProviderInterface $dataProvider): self;
+
+    /**
+     * Return data provider
+     * @return DataProviderInterface
+     */
+    public function getDataProvider(): DataProviderInterface;
+
+    /**
+     * Does this query have a valid data provider set?
+     * @return bool
+     */
+    public function hasDataProvider(): bool;
 
     /**
      * Set root property path to retrieve data for this query
@@ -58,19 +77,6 @@ interface QueryInterface
      * @return int|null
      */
     public function getCacheLifetime(): ?int;
-
-    /**
-     * Whether this query has a name
-     * @return bool
-     */
-    public function hasName(): bool;
-
-    /**
-     * Set query name
-     *
-     * @return string|null
-     */
-    public function getName(): ?string;
 
     /**
      * Set whether this request is a sub-request
@@ -132,19 +138,38 @@ interface QueryInterface
     public function isPaginationDataFromHeaders(): bool;
 
     /**
-     * Map data and return aray/object
+     * Prepare query
+     */
+    public function prepare();
+
+    /**
+     * Run query
+     */
+    public function run();
+
+    /**
+     * Return response for a query
+     * @return CacheableResponse|null
+     */
+    public function getResponse(): ?CacheableResponse;
+
+    /**
+     * Has the response run and retrieved data?
+     * @return bool
+     */
+    public function hasResponseRun(): bool;
+
+    /**
+     * Return data from query response
      * @param array Data to map to a collection
      * @return mixed
      */
-    public function mapItem(array $data);
+    public function get();
 
     /**
-     * Map data and return a collection object for this query
-     * @param array $data Data to map to a collection
-     * @param array|object|null $paginationData Data to retrieve pagination information from
+     * Return collection of data from a query response
      * @return Collection
      * @throws \Strata\Data\Exception\MapperException
      */
-    public function mapCollection(array $data, $paginationData = null): Collection;
-
+    public function getCollection(): Collection;
 }

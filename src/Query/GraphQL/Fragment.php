@@ -14,5 +14,4 @@ class Fragment
     public string $name;
     public string $object;
     public string $fragment;
-
 }

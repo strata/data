@@ -167,5 +167,4 @@ trait DataProviderDecoratorTrait
     {
         return $this->dataProvider->dispatchEvent($event, $eventName);
     }
-
 }

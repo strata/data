@@ -7,10 +7,10 @@ namespace Strata\Data\Query\BuildQuery;
 use Strata\Data\Http\Http;
 use Strata\Data\Http\Response\CacheableResponse;
 use Strata\Data\Query\Query;
+use Strata\Data\Query\QueryInterface;
 
 /**
- * Class to help build REST API HTTP requests
- * @package Strata\Data\Query
+ * Class to help prepare HTTP requests
  */
 class BuildQuery implements BuildQueryInterface
 {
@@ -35,7 +35,7 @@ class BuildQuery implements BuildQueryInterface
     {
         $params = $query->getParams();
         if ($query->hasFields()) {
-            $params[$query->fieldParameter] = $query->getFields();
+            $params[$query->getFieldParameter()] = $query->getFields();
         }
         // Convert arrays for use in query
         foreach ($params as $key => $values) {
@@ -55,7 +55,7 @@ class BuildQuery implements BuildQueryInterface
      * @param Query $query
      * @return CacheableResponse
      */
-    public function prepareRequest(Query $query): CacheableResponse
+    public function prepareRequest(QueryInterface $query): CacheableResponse
     {
         // Build query
         if ($query->isSubRequest()) {
@@ -74,5 +74,4 @@ class BuildQuery implements BuildQueryInterface
         ];
         return $this->dataProvider->prepareRequest('GET', $query->getUri(), $options);
     }
-
 }

@@ -257,7 +257,7 @@ class Pagination implements PaginationInterface
      * @param int $maxPages
      * @return array
      */
-    public function getPageLinks($maxPages = 5): array
+    public function getPageLinks(int $maxPages = 5): array
     {
         $from = 1;
         $to = $maxPages;

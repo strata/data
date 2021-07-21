@@ -8,6 +8,9 @@ use Strata\Data\DataProviderInterface;
 use Strata\Data\Http\Response\CacheableResponse;
 use Strata\Data\Query\Query;
 
+/**
+ * Interface to prepare requests
+ */
 interface BuildQueryInterface
 {
     /**
