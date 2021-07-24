@@ -10,6 +10,7 @@ use Strata\Data\Http\Response\CacheableResponse;
 use Strata\Data\Http\Rest;
 use Strata\Data\Mapper\MapCollection;
 use Strata\Data\Mapper\MapItem;
+use Strata\Data\Mapper\MappingStrategyInterface;
 use Strata\Data\Mapper\WildcardMappingStrategy;
 use Strata\Data\Query\BuildQuery\BuildQuery;
 use Strata\Data\Traits\PaginationPropertyTrait;
@@ -86,6 +87,18 @@ class Query extends QueryAbstract implements QueryInterface
     }
 
     /**
+     * Return mapping strategy to use to map a single item
+     *
+     * You can override this in child classes
+     *
+     * @return MappingStrategyInterface|array
+     */
+    public function getMapping()
+    {
+        return new WildcardMappingStrategy();
+    }
+
+    /**
      * Return data from response
      * @return mixed
      * @throws \Strata\Data\Exception\MapperException
@@ -99,7 +112,7 @@ class Query extends QueryAbstract implements QueryInterface
 
         // Simple mapping from root property path
         $data = $this->dataProvider->decode($this->getResponse());
-        $mapper = new MapItem(new WildcardMappingStrategy());
+        $mapper = new MapItem($this->getMapping());
         return $mapper->map($data, $this->getRootPropertyPath());
     }
 
@@ -123,7 +136,7 @@ class Query extends QueryAbstract implements QueryInterface
         // Simple mapping from root property path
         $response = $this->getResponse();
         $data = $this->dataProvider->decode($response);
-        $mapper = new MapCollection(new WildcardMappingStrategy());
+        $mapper = new MapCollection($this->getMapping());
 
         // Use pagination setup query
         $mapper->setTotalResults($this->getTotalResults())

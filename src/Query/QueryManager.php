@@ -320,9 +320,10 @@ class QueryManager
      *
      * @param string $queryName
      * @param string|null $rootPropertyPath Property path to root element to select data from, null if no data returned
+     * @return mixed
      * @throws QueryManagerException
      */
-    public function get(string $queryName, ?string $rootPropertyPath = null): ?array
+    public function get(string $queryName, ?string $rootPropertyPath = null)
     {
         if (!$this->hasQuery($queryName)) {
             throw new QueryManagerException(sprintf('Cannot find query with query name "%s"', $queryName));
