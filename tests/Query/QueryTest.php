@@ -7,6 +7,7 @@ use Strata\Data\Cache\CacheLifetime;
 use Strata\Data\Exception\QueryException;
 use Strata\Data\Http\GraphQL;
 use Strata\Data\Http\Http;
+use Strata\Data\Http\Response\CacheableResponse;
 use Strata\Data\Http\Rest;
 use Strata\Data\Query\Query;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
@@ -78,6 +79,8 @@ class QueryTest extends TestCase
         $api->setHttpClient($http);
 
         $adapter = new FilesystemAdapter('cache', 0, self::CACHE_DIR);
+        $adapter->clear();
+
         $api->setCache($adapter);
         $api->disableCache();
 
@@ -88,23 +91,31 @@ class QueryTest extends TestCase
 
         // Responses should be different since cache disabled
         $data1 = $query->get();
+
         $query->clearResponse();
         $this->assertNotSame($data1, $query->get());
+        $this->assertFalse($query->isHit());
+
         $query->clearResponse();
         $this->assertNotSame($data1, $query->get());
+        $this->assertFalse($query->isHit());
 
         // Responses should be identical since cache enabled
         $query->clearResponse();
         $query->enableCache(CacheLifetime::HOUR);
 
         $data4 = $query->get();
+        $this->assertFalse($query->isHit());
+
         $query->clearResponse();
         $this->assertSame($data4, $query->get());
+        $this->assertTrue($query->isHit());
+
         $query->clearResponse();
         $this->assertSame($data4, $query->get());
+        $this->assertTrue($query->isHit());
 
         // Cache should be disabled, since Query should reset this
         $this->assertFalse($api->isCacheEnabled());
     }
-
 }

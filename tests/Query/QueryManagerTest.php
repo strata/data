@@ -3,9 +3,11 @@
 namespace Tests;
 
 use PHPUnit\Framework\TestCase;
+use Strata\Data\Cache\CacheLifetime;
 use Strata\Data\Exception\MissingDataProviderException;
 use Strata\Data\Exception\QueryManagerException;
 use Strata\Data\Http\GraphQL;
+use Strata\Data\Http\Http;
 use Strata\Data\Http\Response\MockResponseFromFile;
 use Strata\Data\Http\Rest;
 use Strata\Data\Query\GraphQLQuery;
@@ -13,9 +15,11 @@ use Strata\Data\Query\Query;
 use Strata\Data\Query\QueryManager;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\HttpClient\MockHttpClient;
+use Symfony\Component\HttpClient\Response\MockResponse;
 
 class QueryManagerTest extends TestCase
 {
+    const CACHE_DIR = __DIR__ . '/../Cache/cache';
 
     public function testAddDataProvider()
     {
@@ -104,14 +108,14 @@ class QueryManagerTest extends TestCase
 
         $query = new GraphQLQuery();
         $query->setGraphQLFromFile(__DIR__ . '/graphql/landing-page.graphql')
-              ->setRootPropertyPath('[entry]')
-              ->addVariable('slug', 'landing-page');
+            ->setRootPropertyPath('[entry]')
+            ->addVariable('slug', 'landing-page');
         $manager->add('query1', $query);
 
         $query = new GraphQLQuery();
         $query->setGraphQLFromFile(__DIR__ . '/graphql/localisation.graphql')
-              ->setRootPropertyPath('[entry]')
-              ->addVariable('slug', 'landing-page');
+            ->setRootPropertyPath('[entry]')
+            ->addVariable('slug', 'landing-page');
         $manager->add('query2', $query);
 
         $landing = $manager->get('query1');
@@ -121,4 +125,62 @@ class QueryManagerTest extends TestCase
         $this->assertSame('Landing Page', $landing['title']);
         $this->assertSame("en-US", $localistion['language']);
     }
+
+    public function testQueryWithCache()
+    {
+        $responses = [
+            new MockResponse('{"message": "OK 1"}'),
+            new MockResponse('{"message": "OK 2"}'),
+            new MockResponse('{"message": "OK 3"}'),
+            new MockResponse('{"message": "OK 4"}'),
+            new MockResponse('{"message": "OK 5"}'),
+            new MockResponse('{"message": "OK 6"}'),
+        ];
+        $http = new MockHttpClient($responses);
+
+        $api = new Rest('https://example.com/');
+        $api->setHttpClient($http);
+
+        $adapter = new FilesystemAdapter('cache', 0, self::CACHE_DIR);
+        $adapter->clear();
+        $api->setCache($adapter);
+        $api->disableCache();
+
+        $manager = new QueryManager();
+        $manager->addDataProvider('test', $api);
+
+        $query = new Query();
+        $query->setUri('test');
+        $manager->add('test', $query);
+
+        // Responses should be different since cache disabled
+        $data1 = $manager->get('test');
+
+        $manager->clearResponse('test');
+        $this->assertNotSame($data1, $manager->get('test'));
+        $this->assertFalse($manager->isHit('test'));
+
+        $manager->clearResponse('test');
+        $this->assertNotSame($data1, $manager->get('test'));
+        $this->assertFalse($manager->isHit('test'));
+
+        // Responses should be identical since cache enabled
+        $manager->clearResponse('test');
+        $query->enableCache(CacheLifetime::HOUR);
+
+        $data4 = $manager->get('test');
+        $this->assertFalse($manager->isHit('test'));
+
+        $manager->clearResponse('test');
+        $this->assertSame($data4, $manager->get('test'));
+        $this->assertTrue($manager->isHit('test'));
+
+        $manager->clearResponse('test');
+        $this->assertSame($data4, $manager->get('test'));
+        $this->assertTrue($manager->isHit('test'));
+
+        // Cache should be disabled, since Query should reset this after each query run
+        $this->assertFalse($api->isCacheEnabled());
+    }
+
 }

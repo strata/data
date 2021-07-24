@@ -314,6 +314,22 @@ class QueryManager
     }
 
     /**
+     * Clear response from a query (allows you to re-run queries)
+     *
+     * @param string $queryName
+     * @throws QueryManagerException
+     */
+    public function clearResponse(string $queryName)
+    {
+        if (!$this->hasQuery($queryName)) {
+            throw new QueryManagerException(sprintf('Cannot find query with query name "%s"', $queryName));
+        }
+        $query = $this->getQuery($queryName);
+
+        $query->clearResponse();
+    }
+
+    /**
      * Whether a query response has been returned from the cache
      *
      * @param string $queryName

@@ -22,6 +22,15 @@ trait DecoratedResponseTrait
     }
 
     /**
+     * Return original decorated response
+     * @return ResponseInterface
+     */
+    public function getDecorated(): ResponseInterface
+    {
+        return $this->decorated;
+    }
+
+    /**
      * Gets the HTTP status code of the response.
      *
      * @throws TransportExceptionInterface when a network error occurs

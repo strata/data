@@ -191,13 +191,9 @@ class BuildGraphQLQuery implements BuildQueryInterface
         // Build query
         if ($query->isSubRequest()) {
             $this->dataProvider->suppressErrors();
-        } else {
-            $this->dataProvider->suppressErrors(false);
         }
         if ($query->isCacheEnabled()) {
             $this->dataProvider->enableCache($query->getCacheLifetime());
-        } else {
-            $this->dataProvider->disableCache();
         }
 
         /**
@@ -205,6 +201,12 @@ class BuildGraphQLQuery implements BuildQueryInterface
          * @see GraphQL::query
          */
         $options = $this->getOptions($query);
-        return $this->dataProvider->prepareRequest('POST', '', $options);
+        $response = $this->dataProvider->prepareRequest('POST', '', $options);
+
+        // Reset cache & suppress errors to previous values
+        $this->dataProvider->resetEnableCache();
+        $this->dataProvider->resetSuppressErrors();
+
+        return $response;
     }
 }

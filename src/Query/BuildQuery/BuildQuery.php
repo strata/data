@@ -68,12 +68,12 @@ class BuildQuery implements BuildQueryInterface
         $options = [
             'query' => $this->getParameters($query)
         ];
-        $request = $this->dataProvider->prepareRequest('GET', $query->getUri(), $options);
+        $response = $this->dataProvider->prepareRequest('GET', $query->getUri(), $options);
 
         // Reset cache & suppress errors to previous values
         $this->dataProvider->resetEnableCache();
         $this->dataProvider->resetSuppressErrors();
 
-        return $request;
+        return $response;
     }
 }

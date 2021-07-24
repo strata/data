@@ -12,6 +12,7 @@ use Strata\Data\Decode\DecoderInterface;
 use Strata\Data\Decode\Rss;
 use Strata\Data\Event\DecodeEvent;
 use Strata\Data\Event\FailureEvent;
+use Strata\Data\Event\RequestEventAbstract;
 use Strata\Data\Event\StartEvent;
 use Strata\Data\Event\SuccessEvent;
 use Strata\Data\Exception\BaseUriException;
@@ -538,6 +539,15 @@ class Http implements DataProviderInterface
     {
         $failed = false;
         $requestId = $response->getInfo('user_data');
+
+        // Do nothing is response was returned in cache in prepareRequest()
+        if ($response->isHit()) {
+            $this->dispatchEvent(new SuccessEvent($requestId, $response->getInfo('url'), [
+                'code' => $response->getStatusCode(),
+                'message' => $this->statusMessage($response->getStatusCode()),
+            ]), SuccessEvent::NAME);
+            return $response;
+        }
 
         try {
             $this->totalHttpRequests++;
