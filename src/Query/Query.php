@@ -80,10 +80,16 @@ class Query extends QueryAbstract implements QueryInterface
 
         if ($this->isSubRequest()) {
             $dataProvider->suppressErrors();
-        } else {
-            $dataProvider->suppressErrors(false);
         }
+        if ($this->isCacheEnabled()) {
+            $dataProvider->enableCache($this->getCacheLifetime());
+        }
+
         $this->response = $dataProvider->runRequest($response);
+
+        // Reset cache & suppress errors to previous values
+        $this->dataProvider->resetEnableCache();
+        $this->dataProvider->resetSuppressErrors();
     }
 
     /**

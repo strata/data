@@ -26,6 +26,8 @@ class GraphQL extends Http
         ]
     ];
 
+    protected array $cacheableMethods = ['GET', 'HEAD', 'POST'];
+
     private string $lastQuery;
 
     /**

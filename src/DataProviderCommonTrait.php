@@ -20,7 +20,9 @@ trait DataProviderCommonTrait
     protected string $uriSeparator = '/';
     protected string $baseUri;
     protected bool $suppressErrors = false;
+    protected bool $lastSuppressErrors = false;
     protected bool $cacheEnabled = false;
+    protected bool $lastCacheEnabled = false;
     protected ?DecoderInterface $defaultDecoder = null;
     protected ?DataCache $cache = null;
 
@@ -71,7 +73,18 @@ trait DataProviderCommonTrait
      */
     public function suppressErrors(bool $value = true)
     {
+        $this->lastSuppressErrors = $this->suppressErrors;
         $this->suppressErrors = $value;
+    }
+
+    /**
+     * Reset suppress errors status to last value
+     *
+     * Useful if you want to enable for a single query, then reset back to the previous value
+     */
+    public function resetSuppressErrors()
+    {
+        $this->suppressErrors = $this->lastSuppressErrors;
     }
 
     /**
@@ -97,6 +110,16 @@ trait DataProviderCommonTrait
     }
 
     /**
+     * Whether the data provider has a cache set
+     *
+     * @return bool
+     */
+    public function hasCache(): bool
+    {
+        return $this->cache instanceof DataCache;
+    }
+
+    /**
      * Enable cache for subsequent data requests
      *
      * @param ?int $lifetime
@@ -105,6 +128,8 @@ trait DataProviderCommonTrait
      */
     public function enableCache(?int $lifetime = null)
     {
+        $this->lastCacheEnabled = $this->cacheEnabled;
+
         if (!($this->cache instanceof DataCache)) {
             throw new CacheException(sprintf('You must setup the cache via %s::setCache() before enabling it', get_class($this)));
         }
@@ -113,6 +138,16 @@ trait DataProviderCommonTrait
         if ($lifetime !== null) {
             $this->cache->setLifetime($lifetime);
         }
+    }
+
+    /**
+     * Reset cache enabled status to last value
+     *
+     * Useful if you want to enable for a single query, then reset back to the previous value
+     */
+    public function resetEnableCache()
+    {
+        $this->cacheEnabled = $this->lastCacheEnabled;
     }
 
     /**

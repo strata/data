@@ -42,6 +42,11 @@ The data cache automatically caches data requests if the request is cacheable. F
 * Cache is enabled
 * GET or HEAD requests
 
+For GraphQL queries this is determiend by:
+
+* Cache is enabled
+* GET, HEAD or POST requests
+
 To cache data simply set the cache and then make your data request:
 
 ```php
@@ -74,6 +79,17 @@ $api->enableCache();
 ```
 
 This allows more fine-grained caching rules, where you may want to cache some data requests and not others.
+
+If you wish you can also reset the cache to it's last set value. This is useful if you want to enable the cache for one
+query only but don't want to keep track of whether the cache is currently enabled or disabled.
+
+```php
+$api->enableCache();
+
+// Run query...
+
+$api->resetEnableCache();
+```
 
 ### Working out if an HTTP response has been cached
 

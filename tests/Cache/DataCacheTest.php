@@ -86,8 +86,9 @@ class DataCacheTest extends TestCase
         $api = new Rest('http://example.com/');
         $api->setHttpClient($http);
         $adapter = new FilesystemAdapter('cache', 0, self::CACHE_DIR);
+
+        // Enables cache by default
         $api->setCache($adapter);
-        $api->enableCache();
 
         $response = $api->get('test1');
         $contents1 = $response->getContent();

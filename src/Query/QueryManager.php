@@ -314,6 +314,27 @@ class QueryManager
     }
 
     /**
+     * Whether a query response has been returned from the cache
+     *
+     * @param string $queryName
+     * @return bool|null True if query response returned from cache, null if query response has not yet run
+     * @throws QueryManagerException
+     */
+    public function isHit(string $queryName): ?bool
+    {
+        if (!$this->hasQuery($queryName)) {
+            throw new QueryManagerException(sprintf('Cannot find query with query name "%s"', $queryName));
+        }
+        $query = $this->getQuery($queryName);
+
+        if (!$query->hasResponseRun()) {
+            return null;
+        }
+
+        return $this->getResponse()->isHit();
+    }
+
+    /**
      * Return a data item
      *
      * Default functionality is to return decoded data as an array

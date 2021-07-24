@@ -60,18 +60,20 @@ class BuildQuery implements BuildQueryInterface
         // Build query
         if ($query->isSubRequest()) {
             $this->dataProvider->suppressErrors();
-        } else {
-            $this->dataProvider->suppressErrors(false);
         }
         if ($query->isCacheEnabled()) {
             $this->dataProvider->enableCache($query->getCacheLifetime());
-        } else {
-            $this->dataProvider->disableCache();
         }
 
         $options = [
             'query' => $this->getParameters($query)
         ];
-        return $this->dataProvider->prepareRequest('GET', $query->getUri(), $options);
+        $request = $this->dataProvider->prepareRequest('GET', $query->getUri(), $options);
+
+        // Reset cache & suppress errors to previous values
+        $this->dataProvider->resetEnableCache();
+        $this->dataProvider->resetSuppressErrors();
+
+        return $request;
     }
 }

@@ -86,6 +86,13 @@ interface DataProviderInterface
     public function setCache(CacheInterface $cache, ?int $defaultLifetime = null);
 
     /**
+     * Whether the data provider has a cache set
+     *
+     * @return bool
+     */
+    public function hasCache(): bool;
+
+    /**
      * Return the cache
      *
      * @return DataCache

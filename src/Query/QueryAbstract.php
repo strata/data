@@ -6,7 +6,9 @@ namespace Strata\Data\Query;
 
 use Strata\Data\Collection;
 use Strata\Data\DataProviderInterface;
+use Strata\Data\Exception\CacheException;
 use Strata\Data\Exception\QueryException;
+use Strata\Data\Exception\QueryManagerException;
 use Strata\Data\Http\Response\CacheableResponse;
 use Strata\Data\Http\Rest;
 use Strata\Data\Traits\PaginationPropertyTrait;
@@ -23,6 +25,7 @@ abstract class QueryAbstract implements QueryInterface
 
     protected bool $enableCache = false;
     protected ?int $cacheLifetime = null;
+    protected array $cacheTags = [];
     protected bool $subRequest = false;
     protected string $uri;
     protected array $params = [];
@@ -46,10 +49,10 @@ abstract class QueryAbstract implements QueryInterface
     /**
      * Set data provider to use with this query
      *
-     * @todo Fix signature of this method, seems to be incompatible with the interface?
-     *
      * @param DataProviderInterface $dataProvider
      * @return $this
+     * @todo Fix signature of this method, seems to be incompatible with the interface?
+     *
      */
     public function setDataProvider(DataProviderInterface $dataProvider): self
     {
@@ -73,9 +76,13 @@ abstract class QueryAbstract implements QueryInterface
     /**
      * Return data provider
      * @return DataProviderInterface
+     * @throws QueryException
      */
     public function getDataProvider(): DataProviderInterface
     {
+        if (!$this->hasDataProvider()) {
+            throw new QueryException('No data provider set');
+        }
         return $this->dataProvider;
     }
 
@@ -112,7 +119,20 @@ abstract class QueryAbstract implements QueryInterface
      */
     public function hasResponseRun(): bool
     {
-        return (!empty($this->response->getInfo('http_code')));
+        if ($this->hasResponse()) {
+            return (!empty($this->response->getInfo('http_code')));
+        }
+        return false;
+    }
+
+    /**
+     * Clear response and mark to re-run query next time data is accessed
+     * @return $this
+     */
+    public function clearResponse(): self
+    {
+        $this->response = null;
+        return $this;
     }
 
     /**
@@ -223,6 +243,36 @@ abstract class QueryAbstract implements QueryInterface
     public function getCacheLifetime(): ?int
     {
         return $this->cacheLifetime;
+    }
+
+    /**
+     * Set cache tags to apply to this query
+     *
+     * To remove tags do not pass any arguments and tags will be reset to an empty array
+     *
+     * @param array $tags
+     * @throws CacheException
+     * @throws QueryException
+     */
+    public function setCacheTags(array $tags = [])
+    {
+        $this->cacheTags = $tags;
+
+        // If cache adapter is compatible, set them
+        if ($this->getDataProvider()->hasCache() && $this->getDataProvider()->getCache()->isTaggable()) {
+            $this->getDataProvider()->setCacheTags($tags);
+        } else {
+            throw new QueryException('Data provider does not contain a cache adapter that is compatible with tagging (must implement Symfony\Component\Cache\Adapter\TagAwareAdapter)');
+        }
+    }
+
+    /**
+     * Return cache tags currently set on the query
+     * @return array
+     */
+    public function getCacheTags(): array
+    {
+        return $this->cacheTags;
     }
 
     /**

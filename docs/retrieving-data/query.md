@@ -210,3 +210,16 @@ Or you can grab the data provider for this query and use the decode method.
 $response = $query->getResponse();
 $data = $query->getDataProvider()->decode($response);
 ```
+
+### Re-running a query
+
+By default, once a query is run it stores its response and does not re-run the live request again. 
+
+If you want to force the query to re-run, simply call the `clearResponse()` method:
+
+```php
+$query->clearResponse();
+```
+
+Then any subsequent calls on `get()`, `getCollection()` or `getResponse()` will re-run the live query. Please note if 
+caching is enabled for this query, then a cached response will still be returned if it exists.
