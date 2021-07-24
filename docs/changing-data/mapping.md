@@ -95,48 +95,74 @@ When called via the mapper the callable is passed the following arguments:
 For example, to use the built-in `strtoupper()` function:
 
 ```php
-$data = [
+$mapping = [
     '[title]'  => '[title]',
-    '[name]'   => new CallableValue('[first_name]', 'strtoupper')
+    '[name]'   => new CallableValue('[first_name]', 'strtoupper'),
 ;
+$mapper = new MapItem($mapping);
+
+$data = [
+    'first_name' => 'fred'
+];
 $item = $mapper->map($data);
+
+// Returns: Fred
+echo $item['name'];
 ```
 
 #### CallableData
 
-For more complex operations, you can use `CallableData` which can run transformations across any values from the source data. This class takes one argument: the [callable](https://www.php.net/language.types.callable) to run to return transformed data.
+For more complex operations, you can use `CallableData` which allows you to define custom mapping rules in code via a 
+callable function or class method.
 
-The callable will be passed the source `$data` array as the first argument, all other arguments are optional. When called via the mapper the callable is passed the following arguments:
+When instantiating the class it has one required method: the [callable](https://www.php.net/language.types.callable) to 
+run to return transformed data.
 
-* array `$data` Source data
-* `string $destination` Destination property path
-* `array|object $item` The destination item data is mapped to
+By default, the entire data object is passed to the callable. 
 
-The callable function must return data which is then written to the destination property path in your destination item \(array or object\). The callable function does not need to write the data, just return it.
+The callable function must return the data to write to the destination property path in your destination item 
+(array or object). The callable function does not need to write the data, just return it.
 
 For example, this mapping strategy uses a callback for the `$item['name']` field:
 
 ```php
-$data = [
+// return content to map to source item
+$callableFunction = function(array $data) {
+    return ucfirst($data['first_name']) . ' ' . ucfirst($data['last_name']);
+};
+
+$mapping = [
     '[title]'  => '[title]',
-    '[name]'   => new CallableData(function(array $data) {
-        // return content to map to source item
-        return ucfirst($data['first_name']) . ' ' . ucfirst($data['last_name']);
-     });
+    '[name]'   => new CallableData($callableFunction),
+];
+$mapper = new MapItem($mapping);
+
+$data = [
+    'first_name' => 'fred',
+    'last_name'  => 'jones',
+];
 $item = $mapper->map($data);
+
+// Returns: Fred Jones
+echo $item['name'];
 ```
 
-This results in the following data after mapping:
+Optionally, you can specify a list of property paths to filter the data passed to the callable. In this instance, only named properties are passed to the 
+callable. If a data property cannot be found in the source data, a `null` value is passed instead.
+
+This can help make your callable function a little clearer. Using the same example as above:
 
 ```php
+// return content to map to source item
+$callableFunction = function($firstName, $lastName) {
+    return ucfirst($firstName) . ' ' . ucfirst($lastName);
+};
+
 $data = [
-    'first_name' => 'simon'
+    '[title]'  => '[title]',
+    '[name]'   => new CallableData($callableFunction, '[first_name]', '[last_name]'),
 ];
-
 $item = $mapper->map($data);
-
-// returns: Simon
-echo $item->name;
 ```
 
 It is recommended to use classes for callables, e.g.

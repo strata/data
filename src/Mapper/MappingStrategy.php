@@ -83,7 +83,9 @@ class MappingStrategy implements MappingStrategyInterface, PropertyAccessorInter
                 if ($source->getCallable() instanceof PropertyAccessorInterface) {
                     $source->getCallable()->setPropertyAccessor($this->getPropertyAccessor());
                 }
-                $propertyAccessor->setValue($item, $destination, $source($data, $destination, $item));
+
+                // This runs the _invoke() method of the mapper
+                $propertyAccessor->setValue($item, $destination, $source($data));
                 continue;
             }
 

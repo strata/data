@@ -52,6 +52,28 @@ final class MapCallableTest extends TestCase
         $this->assertEquals('Norwich_Fred Bloggs', $item['code']);
     }
 
+
+    public function testClosureWithValues()
+    {
+        $function = function ($personName, $personTown) {
+            return $personName . '_' . $personTown;
+        };
+
+        $mapping = [
+            '[name]' => '[person_name]',
+            '[code]' => new CallableData($function, '[person_name]', '[person_town]'),
+        ];
+        $mapper = new MapItem($mapping);
+
+        $data = [
+            'person_name' => 'Fred Bloggs',
+            'person_town' => 'Norwich'
+        ];
+        $item = $mapper->map($data);
+
+        $this->assertEquals('Fred Bloggs_Norwich', $item['code']);
+    }
+
     public function testFunction()
     {
         $mapping = [
@@ -69,10 +91,10 @@ final class MapCallableTest extends TestCase
         $this->assertEquals('X FRED BLOGGS', $item['name']);
     }
 
-    public function testObjectMethod()
+    public function testObjectMethodWithNullData()
     {
         $mapping = [
-            '[name]' => new CallableData([$this, 'populateContent']),
+            '[name]' => new CallableData([$this, 'populateContent'], '[person_name]'),
             '[age]' => '[person_age]',
         ];
         $mapper = new MapItem($mapping);
@@ -82,16 +104,23 @@ final class MapCallableTest extends TestCase
             'person_age'   => '42',
         ];
         $item = $mapper->map($data);
-
         $this->assertEquals('FRED BLOGGS', $item['name']);
+
+        $data = [
+            'incorrect_name' => 'Fred Bloggs',
+            'person_age'   => '42',
+        ];
+        $item = $mapper->map($data);
+        echo $item['name'];
+        $this->assertNull($item['name']);
     }
 
-    public function populateContent(array $data, string $destination)
+    public function populateContent(?string $personName)
     {
-        switch ($destination) {
-            case '[name]':
-                return strtoupper($data['person_name']);
+        if ($personName !== null) {
+            return strtoupper($personName);
         }
+        return null;
     }
 
     public function testObjectStaticMethod()
