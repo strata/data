@@ -100,7 +100,7 @@ final class MapItemTest extends TestCase
         $item = $mapper->map($data);
 
         $this->assertEquals('Norwich', $item['region']);
-        $this->assertArrayNotHasKey('age', $item);
+        $this->assertNull($item['age']);
 
         $data = [
             'person_name' => 'Fred Bloggs',
@@ -213,5 +213,24 @@ final class MapItemTest extends TestCase
         $this->assertArrayNotHasKey('person_age', $item);
         $this->assertEquals('East of England', $item['person_region']);
         $this->assertArrayNotHasKey('invalid', $item);
+    }
+
+    public function testNullValuesInSourceData()
+    {
+        // no matching source data, return null rather than not set
+        $mapping = [
+            '[name]' => '[person_name]',
+            '[age]' => '[person_age]',
+        ];
+        $mapper = new MapItem($mapping);
+
+        $data = [
+            'person_name' => 'Fred Bloggs',
+        ];
+        $item = $mapper->map($data);
+
+        $this->assertIsArray($item);
+        $this->assertEquals('Fred Bloggs', $item['name']);
+        $this->assertNull($item['age']);
     }
 }

@@ -19,9 +19,9 @@ interface MapValueInterface
      * Is the property path readable in the passed data?
      *
      * @param $objectOrArray Data to read property from
-     * @return mixed
+     * @return bool
      */
-    public function isReadable($objectOrArray);
+    public function isReadable($objectOrArray): bool;
 
     /**
      * Get the property from the passed data, or null if not found

@@ -121,7 +121,7 @@ run to return transformed data.
 By default, the entire data object is passed to the callable. 
 
 The callable function must return the data to write to the destination property path in your destination item 
-(array or object). The callable function does not need to write the data, just return it.
+(array or object). If the return data cannot be calculated, then return `null`.
 
 For example, this mapping strategy uses a callback for the `$item['name']` field:
 
@@ -155,6 +155,9 @@ This can help make your callable function a little clearer. Using the same examp
 ```php
 // return content to map to source item
 $callableFunction = function($firstName, $lastName) {
+    if (empty($firstName) && empty($lastName)) {
+        return null;
+    }
     return ucfirst($firstName) . ' ' . ucfirst($lastName);
 };
 
@@ -203,6 +206,46 @@ If your item data cannot be found in the root of the data array then you can spe
 ```php
 $item = $mapper->map($data, '[item]');
 ```
+
+### Mapping array data
+
+If your source data contains an array which you want to map, you can do this via the `MapArray` class. This allows you 
+to define child mapping for an array of data. 
+
+The `MapArray` class takes two arguments:
+* The property path to the data array you want to map (this must be an array, otherwise it is ignored)
+* The mapping strategy to use to map (e.g. an array)
+
+For example: 
+
+```php
+// Match url from source data: child_link or uri
+$childrenMapping = [
+    '[title]' => '[child_title]',
+    '[url]'   => ['[child_link]','[uri]'],
+];
+$mapping = [
+    '[name]'     => '[person_name]',
+    '[children]' => new MapArray('[children]', $childrenMapping)
+];
+$mapper = new MapItem($mapping);
+
+$data = [
+    'person_name' => 'Fred Bloggs',
+    'links'    => [
+        ['title' => 'Test 1', 'link' => 'https://example/1'],
+        ['title' => 'Test 2', 'uri' => '/my-link'],
+        ['title' => 'Test 3', 'link' => 'https://example/3'],
+    ]
+];
+
+$item = $mapper->map($data);
+
+// $item['links'] now contains an array with each item containing ['title', 'url']
+```
+
+The `MapArray` object has the same mapping rules as for `MapItem`. It basically runs `MapItem::map` to map the child array
+to your destination data.
 
 ### Mapping to an object
 

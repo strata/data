@@ -67,8 +67,8 @@ class MappingStrategy implements MappingStrategyInterface, PropertyAccessorInter
     /**
      * Map array of data to an item (array or object)
      *
-     * @param array $data Source data
-     * @param array|object $item
+     * @param array $data Source data to map data from
+     * @param array|object $item Destination item to map data to
      * @return mixed
      */
     public function mapItem(array $data, $item)
@@ -103,6 +103,9 @@ class MappingStrategy implements MappingStrategyInterface, PropertyAccessorInter
                 $source->setPropertyAccessor($propertyAccessor);
                 if ($source->isReadable($data)) {
                     $propertyAccessor->setValue($item, $destination, $source->getValue($data));
+                } else {
+                    // Set null value if not found in source data
+                    $propertyAccessor->setValue($item, $destination, null);
                 }
                 continue;
             }
@@ -121,8 +124,11 @@ class MappingStrategy implements MappingStrategyInterface, PropertyAccessorInter
             $transformer->setPropertyAccessor($propertyAccessor);
             if ($transformer->isReadable($data)) {
                 $propertyAccessor->setValue($item, $destination, $transformer->getValue($data));
-                continue;
+            } else {
+                // Set null value if not found in source data
+                $propertyAccessor->setValue($item, $destination, null);
             }
+            continue;
         }
 
         // Transform data

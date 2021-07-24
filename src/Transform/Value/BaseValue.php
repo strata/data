@@ -36,9 +36,9 @@ class BaseValue implements MapValueInterface
      * Is the property path readable in the passed data?
      *
      * @param $objectOrArray Data to read property from
-     * @return mixed
+     * @return bool
      */
-    public function isReadable($objectOrArray)
+    public function isReadable($objectOrArray): bool
     {
         if (is_array($this->propertyPath)) {
             return $this->isFirstValueReadable($objectOrArray, $this->propertyPath);
