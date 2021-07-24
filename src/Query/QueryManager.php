@@ -331,7 +331,7 @@ class QueryManager
             return null;
         }
 
-        return $this->getResponse()->isHit();
+        return $query->getResponse()->isHit();
     }
 
     /**
