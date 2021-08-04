@@ -257,13 +257,15 @@ abstract class QueryAbstract implements QueryInterface
     public function setCacheTags(array $tags = [])
     {
         $this->cacheTags = $tags;
+    }
 
-        // If cache adapter is compatible, set them
-        if ($this->getDataProvider()->hasCache() && $this->getDataProvider()->getCache()->isTaggable()) {
-            $this->getDataProvider()->setCacheTags($tags);
-        } else {
-            throw new QueryException('Data provider does not contain a cache adapter that is compatible with tagging (must implement Symfony\Component\Cache\Adapter\TagAwareAdapter)');
-        }
+    /**
+     * Whether any cache tags are set for this query
+     * @return bool
+     */
+    public function hasCacheTags(): bool
+    {
+        return !empty($this->cacheTags);
     }
 
     /**

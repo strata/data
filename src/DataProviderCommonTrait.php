@@ -183,6 +183,11 @@ trait DataProviderCommonTrait
         $this->getCache()->setTags($tags);
     }
 
+    public function addCacheTag(string $tag)
+    {
+        $this->getCache()->setTags($tag);
+    }
+
     /**
      * Return the cache
      *

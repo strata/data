@@ -182,5 +182,4 @@ class QueryManagerTest extends TestCase
         // Cache should be disabled, since Query should reset this after each query run
         $this->assertFalse($api->isCacheEnabled());
     }
-
 }

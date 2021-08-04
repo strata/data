@@ -63,6 +63,9 @@ class BuildQuery implements BuildQueryInterface
         }
         if ($query->isCacheEnabled()) {
             $this->dataProvider->enableCache($query->getCacheLifetime());
+            if ($query->hasCacheTags()) {
+                $this->dataProvider->setCacheTags($query->getCacheTags());
+            }
         }
 
         $options = [
