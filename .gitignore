@@ -14,5 +14,8 @@ composer.lock
 .phpunit.result.cache
 .php_cs.cache
 
+# PHPLint
+.phplint-cache
+
 # Embedded web-server pid file
 /.web-server-pid
