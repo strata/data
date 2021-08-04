@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Strata\Data\Traits;
 
 use Strata\Data\Helper\UnionTypes;
+use Strata\Data\Query\QueryInterface;
 
 /**
  * Trait to help set pagination properties & build pagination
@@ -20,7 +21,7 @@ trait PaginationPropertyTrait
      * @param string|int $totalResults Property path to retrieve data from, or actual value
      * @return $this Fluent interface
      */
-    public function setTotalResults($totalResults): self
+    public function setTotalResults($totalResults)
     {
         UnionTypes::assert('$totalResults', $totalResults, 'string', 'int');
         $this->totalResults = $totalResults;
@@ -41,7 +42,7 @@ trait PaginationPropertyTrait
      * @param string|int $resultsPerPage Property path to retrieve data from, or actual value
      * @return $this Fluent interface
      */
-    public function setResultsPerPage($resultsPerPage): self
+    public function setResultsPerPage($resultsPerPage)
     {
         UnionTypes::assert('$resultsPerPage', $resultsPerPage, 'string', 'int');
         $this->resultsPerPage = $resultsPerPage;
@@ -62,7 +63,7 @@ trait PaginationPropertyTrait
      * @param string|int $currentPage Property path to retrieve data from, or actual value
      * @return $this Fluent interface
      */
-    public function setCurrentPage($currentPage): self
+    public function setCurrentPage($currentPage)
     {
         UnionTypes::assert('currentPage', $currentPage, 'string', 'int');
         $this->currentPage = $currentPage;
