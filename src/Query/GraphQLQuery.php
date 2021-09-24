@@ -377,6 +377,14 @@ class GraphQLQuery extends QueryAbstract implements GraphQLQueryInterface
         $data = $this->dataProvider->decode($response);
         $mapper = new MapCollection($this->getMapping());
 
+        // Populate pagination data if empty
+        if (empty($this->getTotalResults())) {
+            $this->setTotalResults(count($data));
+        }
+        if (empty($this->getResultsPerPage())) {
+            $this->setResultsPerPage(count($data));
+        }
+
         // Use pagination setup query
         $mapper->setTotalResults($this->getTotalResults())
             ->setResultsPerPage($this->getResultsPerPage())
