@@ -126,6 +126,29 @@ class QueryManagerTest extends TestCase
         $this->assertSame("en-US", $localistion['language']);
     }
 
+    public function testMultipleQueryData()
+    {
+        $responses = [
+            new MockResponseFromFile(__DIR__ . '/responses/multiple.json'),
+        ];
+
+        $manager = new QueryManager();
+        $manager->addDataProvider('test', new Rest('https://example.com'));
+        $manager->setHttpClient(new MockHttpClient($responses));
+
+        $query = new Query();
+        $query->setUri('test')
+              ->setRootPropertyPath('[data][entry]');
+        $manager->add('query', $query);
+
+        $landing = $manager->get('query');
+        $entries = $manager->getCollection('query', '[data][entries]');
+
+        $this->assertSame("https://example.com/landing-page", $landing['url']);
+        $this->assertSame("test 1", $entries[0]['name']);
+        $this->assertSame("test 2", $entries[1]['name']);
+    }
+
     public function testQueryWithCache()
     {
         $responses = [

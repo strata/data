@@ -374,7 +374,17 @@ class QueryManager
             throw new QueryManagerException(sprintf('Response has not run for query name "%s"', $queryName));
         }
 
-        return $query->get();
+        // Set root property path, then reset it
+        if ($rootPropertyPath !== null) {
+            $originalPath = $query->getRootPropertyPath();
+            $query->setRootPropertyPath($rootPropertyPath);
+        }
+        $data = $query->get();
+        if ($rootPropertyPath !== null) {
+            $query->setRootPropertyPath($originalPath);
+        }
+
+        return $data;
     }
 
     /**
@@ -400,6 +410,16 @@ class QueryManager
             throw new QueryManagerException(sprintf('Response has not run for query name "%s"', $queryName));
         }
 
-        return $query->getCollection();
+        // Set root property path, then reset it
+        if ($rootPropertyPath !== null) {
+            $originalPath = $query->getRootPropertyPath();
+            $query->setRootPropertyPath($rootPropertyPath);
+        }
+        $data = $query->getCollection();
+        if ($rootPropertyPath !== null) {
+            $query->setRootPropertyPath($originalPath);
+        }
+
+        return $data;
     }
 }
