@@ -380,7 +380,7 @@ class QueryManager
             $query->setRootPropertyPath($rootPropertyPath);
         }
         $data = $query->get();
-        if ($rootPropertyPath !== null) {
+        if ($rootPropertyPath !== null && is_string($originalPath)) {
             $query->setRootPropertyPath($originalPath);
         }
 
@@ -416,7 +416,7 @@ class QueryManager
             $query->setRootPropertyPath($rootPropertyPath);
         }
         $data = $query->getCollection();
-        if ($rootPropertyPath !== null) {
+        if ($rootPropertyPath !== null && is_string($originalPath)) {
             $query->setRootPropertyPath($originalPath);
         }
 

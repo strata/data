@@ -149,6 +149,28 @@ class QueryManagerTest extends TestCase
         $this->assertSame("test 2", $entries[1]['name']);
     }
 
+    public function testNoDefaultRootPropertyPath()
+    {
+        $responses = [
+            new MockResponseFromFile(__DIR__ . '/responses/multiple.json'),
+        ];
+
+        $manager = new QueryManager();
+        $manager->addDataProvider('test', new Rest('https://example.com'));
+        $manager->setHttpClient(new MockHttpClient($responses));
+
+        $query = new Query();
+        $query->setUri('test');
+        $manager->add('query', $query);
+
+        $all = $manager->get('query');
+        $entries = $manager->getCollection('query', '[data][entries]');
+
+        $this->assertSame("https://example.com/landing-page", $all['data']['entry']['url']);
+        $this->assertSame("test 1", $entries[0]['name']);
+        $this->assertSame("test 2", $entries[1]['name']);
+    }
+
     public function testQueryWithCache()
     {
         $responses = [
