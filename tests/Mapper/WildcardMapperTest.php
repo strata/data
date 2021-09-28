@@ -40,6 +40,21 @@ final class WildcardMapperTest extends TestCase
         $this->assertSame($mapping, $strategy->getMappingByRootElement('address'));
     }
 
+    public function testEmptyMapping()
+    {
+        $mapper = new MapItem(new WildcardMappingStrategy());
+
+        $data = [
+            'person_name' => 'Fred Bloggs',
+            'person_region' => 'Cambridge',
+            'INVALID' => '12345'
+        ];
+        $item = $mapper->map($data);
+
+        $this->assertSame(3, count($item));
+        $this->assertSame('12345', $item['INVALID']);
+    }
+
     public function testWildcardMapping()
     {
         $regionMapping = [
