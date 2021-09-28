@@ -5,37 +5,74 @@ declare(strict_types=1);
 namespace Strata\Data\Mapper;
 
 use Strata\Data\Helper\UnionTypes;
-use Strata\Data\Transform\PropertyAccessorTrait;
-use Strata\Data\Transform\TransformerChain;
 
-class WildcardMappingStrategy implements MappingStrategyInterface
+class WildcardMappingStrategy extends MappingStrategy
 {
-    use PropertyAccessorTrait;
-    use TransformerTrait;
-
+    private array $mapping = [];
     private array $ignore = [];
 
     /**
      * Set fields to map from data to your new array/object
      *
-     * @param array $transformers Array of transformers to apply to mapped data
+     * @param array $transformers
      */
-    public function __construct(array $ignore = [], array $transformers = [])
+    public function __construct(array $transformers = [])
     {
-        if (!empty($ignore)) {
-            $this->setIgnore($ignore);
-        }
         $this->setTransformers($transformers);
+    }
+
+    /**
+     * Set specific fields to map
+     *
+     * @param string $field
+     * @param array $mapping
+     */
+    public function addMapping(string $field, array $mapping)
+    {
+        if (!isset($this->mapping[$field])) {
+            $this->mapping[$field] = [];
+        }
+        foreach ($mapping as $key => $value) {
+            $this->mapping[$field][$key] = $value;
+        }
+
+        //array_push($this->mapping[$field], $mapping);
+    }
+
+    /**
+     * Does a field have specific mapping setup?
+     * @param string $field
+     * @return bool
+     */
+    public function isRootElementInMapping(string $field): bool
+    {
+        return array_key_exists($field, $this->mapping);
+    }
+
+    /**
+     * Return mapping for a specific field
+     * @param string $field
+     * @return array
+     */
+    public function getMappingByRootElement(string $field): array
+    {
+        return $this->mapping[$field];
     }
 
     /**
      * Set fields to ignore when mapping data
      *
-     * @param array $ignore array of fieldnames to ignore when mapping data
+     * @param array|string $field
      */
-    public function setIgnore(array $ignore)
+    public function addIgnore($field)
     {
-        foreach ($ignore as $field) {
+        UnionTypes::assert('$field', $field, 'array', 'string');
+
+        if (is_array($field)) {
+            foreach ($field as $item) {
+                $this->ignore[] = strtolower($item);
+            }
+        } else {
             $this->ignore[] = strtolower($field);
         }
     }
@@ -46,7 +83,7 @@ class WildcardMappingStrategy implements MappingStrategyInterface
      * @param string $field
      * @return bool
      */
-    public function inIgnore(string $field): bool
+    public function isRootElementInIgnore(string $field): bool
     {
         $field = strtolower($field);
         return in_array($field, $this->ignore);
@@ -62,28 +99,34 @@ class WildcardMappingStrategy implements MappingStrategyInterface
     public function mapItem(array $data, $item)
     {
         UnionTypes::assert('$item', $item, 'array', 'object');
-        $propertyAccessor = $this->getPropertyAccessor();
 
-        // Loop through data to map to new item (destination => source)
+        // Loop through all root data to build property path mapping
+        $propertyPaths = [];
         foreach ($data as $field => $value) {
-            if ($this->inIgnore($field)) {
+            // Ignore these fields
+            if ($this->isRootElementInIgnore($field)) {
                 continue;
             }
+
+            // Map these fields
+            if ($this->isRootElementInMapping($field)) {
+                $propertyPaths = array_merge($propertyPaths, $this->getMappingByRootElement($field));
+            }
+
+            // And anything else left, just map as-is
+            $arrayPropertyPath = sprintf('[%s]', $field);
             switch (gettype($item)) {
                 case 'array':
-                    $item[$field] = $value;
+                    $propertyPaths[$arrayPropertyPath] = $arrayPropertyPath;
                     break;
                 case 'object':
-                    $propertyAccessor->setValue($item, $field, $value);
+                    $propertyPaths[$field] = $arrayPropertyPath;
                     break;
             }
         }
+        $this->setPropertyPaths($propertyPaths);
 
-        // Transform data
-        if ($this->getTransformerChain() instanceof TransformerChain) {
-            $item = $this->getTransformerChain()->transform($item);
-        }
-
-        return $item;
+        // Run this through the standard mapping strategy
+        return parent::mapItem($data, $item);
     }
 }
