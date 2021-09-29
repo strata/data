@@ -29,14 +29,13 @@ class WildcardMappingStrategy extends MappingStrategy
      */
     public function addMapping(string $field, array $mapping)
     {
+        $field = strtolower($field);
         if (!isset($this->mapping[$field])) {
             $this->mapping[$field] = [];
         }
         foreach ($mapping as $key => $value) {
             $this->mapping[$field][$key] = $value;
         }
-
-        //array_push($this->mapping[$field], $mapping);
     }
 
     /**
@@ -46,6 +45,7 @@ class WildcardMappingStrategy extends MappingStrategy
      */
     public function isRootElementInMapping(string $field): bool
     {
+        $field = strtolower($field);
         return array_key_exists($field, $this->mapping);
     }
 
@@ -111,6 +111,7 @@ class WildcardMappingStrategy extends MappingStrategy
             // Map these fields
             if ($this->isRootElementInMapping($field)) {
                 $propertyPaths = array_merge($propertyPaths, $this->getMappingByRootElement($field));
+                continue;
             }
 
             // And anything else left, just map as-is

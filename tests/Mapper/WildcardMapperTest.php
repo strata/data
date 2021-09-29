@@ -67,7 +67,9 @@ final class WildcardMapperTest extends TestCase
             new MapValues('[person_region]', $regionMapping)
         ]);
         $strategy->addIgnore(['person_age', 'invalid']);
-        $strategy->addMapping('person_name', $mapping);
+        $strategy->addMapping('person_name', [
+            '[name]' => '[person_name]'
+        ]);
         $mapper = new MapItem($strategy);
 
         $data = [
@@ -79,10 +81,31 @@ final class WildcardMapperTest extends TestCase
         $item = $mapper->map($data);
 
         $this->assertIsArray($item);
+        $this->assertSame(2, count($item));
         $this->assertEquals('Fred Bloggs', $item['name']);
         $this->assertArrayNotHasKey('person_age', $item);
         $this->assertEquals('East of England', $item['person_region']);
         $this->assertArrayNotHasKey('invalid', $item);
+
+        // Example
+        // @see https://docs.strata.dev/data/changing-data/mapping#an-example-1
+        $wildcard = new WildcardMappingStrategy();
+        $wildcard->addIgnore('Field_to_ignore');
+        $wildcard->addMapping('full_name', [
+            '[name]' => '[full_name]'
+        ]);
+        $mapper = new MapItem($wildcard);
+
+        $data = [
+            'full_name' => 'Joe Bloggs',
+            'Field_to_ignore' => '123',
+            'category' => 'fishing'
+        ];
+        $item = $mapper->map($data);
+
+        $this->assertSame(2, count($item));
+        $this->assertSame('Joe Bloggs', $item['name']);
+        $this->assertSame('fishing', $item['category']);
     }
 
     public function testNestedWildcardMapping()
@@ -124,5 +147,4 @@ final class WildcardMapperTest extends TestCase
         $this->assertSame('Cambridge', $item['town']);
         $this->assertSame('CB1 ABC', $item['postcode']);
     }
-
 }
