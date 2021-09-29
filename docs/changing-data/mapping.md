@@ -350,7 +350,7 @@ Add fields to be ignored (not mapped) via  `addIgnore($fieldName)` passing the f
 $wildcard->addIgnore('Field_to_ignore');
 ```
 
-The field name should be a root field, this doesn't work for child fields.
+The `$fieldName` argument is compared case-insensitively and should be a root field, you cannot ignore child array elements.
 
 Please note there is no need to use property paths here, just field names for the array key. You can pass either a single
 field name or an array of field names to this method.
@@ -365,6 +365,8 @@ $wildcard->addMapping('name', [
     '[full_name]' => '[name]'
 ]);
 ```
+
+The `$fieldName` argument is compared case-insensitively. 
 
 You can add multiple mapping, this is useful if the root field has children - in this instance you need to set up
 explicit mapping to retrieve child data.

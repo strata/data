@@ -18,26 +18,39 @@ final class WildcardMapperTest extends TestCase
     public function testSetIgnore()
     {
         $strategy = new WildcardMappingStrategy();
-        $strategy->addIgnore(['name', 'address']);
+        $strategy->addIgnore(['name', 'address', 'mixedCase', 'UPPERCASE']);
         $this->assertTrue($strategy->isRootElementInIgnore('name'));
         $this->assertTrue($strategy->isRootElementInIgnore('address'));
         $this->assertFalse($strategy->isRootElementInIgnore('foobar'));
+        $this->assertTrue($strategy->isRootElementInIgnore('mixedCase'));
+        $this->assertTrue($strategy->isRootElementInIgnore('mixedcase'));
+        $this->assertTrue($strategy->isRootElementInIgnore('UPPERCASE'));
+        $this->assertTrue($strategy->isRootElementInIgnore('uppercase'));
     }
 
     public function testSetMapping()
     {
         $strategy = new WildcardMappingStrategy();
         $strategy->addMapping('person_name', ['[name]' => '[person_name]']);
-        $mapping = [
+        $mapping1 = [
             '[town]' => '[address][town]',
             '[postcode]' => '[address][nested][postcode]'
         ];
-        $strategy->addMapping('address', $mapping);
+        $strategy->addMapping('address', $mapping1);
+        $mapping2 = [
+            '[normalized_name]' => '[mixedCase]'
+        ];
+        $strategy->addMapping('mixedCase', $mapping2);
 
         $this->assertTrue($strategy->isRootElementInMapping('person_name'));
+        $this->assertFalse($strategy->isRootElementInMapping('foobar'));
         $this->assertTrue($strategy->isRootElementInMapping('address'));
+        $this->assertTrue($strategy->isRootElementInMapping('ADDRESS'));
+        $this->assertTrue($strategy->isRootElementInMapping('mixedCase'));
+        $this->assertTrue($strategy->isRootElementInMapping('mixedcase'));
         $this->assertSame(['[name]' => '[person_name]'], $strategy->getMappingByRootElement('person_name'));
-        $this->assertSame($mapping, $strategy->getMappingByRootElement('address'));
+        $this->assertSame($mapping1, $strategy->getMappingByRootElement('address'));
+        $this->assertSame($mapping2, $strategy->getMappingByRootElement('mixedCase'));
     }
 
     public function testEmptyMapping()
@@ -146,5 +159,30 @@ final class WildcardMapperTest extends TestCase
         $this->assertSame('123 Mill Road', $item['street']);
         $this->assertSame('Cambridge', $item['town']);
         $this->assertSame('CB1 ABC', $item['postcode']);
+
+        // test 2
+        // this does indeed create a "siblings" key with the right content, but "siblingNavigation" is also still there
+        $mapping = new WildcardMappingStrategy();
+        $mapping->addMapping('siblingNavigation', ['[siblings]' => '[siblingNavigation][siblings]']);
+        $mapper = new MapItem($mapping);
+
+        $data = [
+            'title' => 'Test title',
+            'siblingNavigation' => [
+                'siblings' => [
+                    [
+                        'name' => 'test1',
+                        'url' => 'url1',
+                    ],
+                    [
+                        'name' => 'test2',
+                        'url' => 'url2',
+                    ],
+                ]
+            ]
+        ];
+        $item = $mapper->map($data);
+        $this->assertSame(2, count($item['siblings']));
+        $this->assertSame('test1', $item['siblings'][0]['name']);
     }
 }

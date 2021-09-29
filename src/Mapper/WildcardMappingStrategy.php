@@ -21,6 +21,11 @@ class WildcardMappingStrategy extends MappingStrategy
         $this->setTransformers($transformers);
     }
 
+    public function normaliseFieldName(string $field): string
+    {
+        return strtolower($field);
+    }
+
     /**
      * Set specific fields to map
      *
@@ -29,7 +34,7 @@ class WildcardMappingStrategy extends MappingStrategy
      */
     public function addMapping(string $field, array $mapping)
     {
-        $field = strtolower($field);
+        $field = $this->normaliseFieldName($field);
         if (!isset($this->mapping[$field])) {
             $this->mapping[$field] = [];
         }
@@ -45,7 +50,7 @@ class WildcardMappingStrategy extends MappingStrategy
      */
     public function isRootElementInMapping(string $field): bool
     {
-        $field = strtolower($field);
+        $field = $this->normaliseFieldName($field);
         return array_key_exists($field, $this->mapping);
     }
 
@@ -56,6 +61,7 @@ class WildcardMappingStrategy extends MappingStrategy
      */
     public function getMappingByRootElement(string $field): array
     {
+        $field = $this->normaliseFieldName($field);
         return $this->mapping[$field];
     }
 
@@ -70,10 +76,10 @@ class WildcardMappingStrategy extends MappingStrategy
 
         if (is_array($field)) {
             foreach ($field as $item) {
-                $this->ignore[] = strtolower($item);
+                $this->ignore[] = $this->normaliseFieldName($item);
             }
         } else {
-            $this->ignore[] = strtolower($field);
+            $this->ignore[] = $this->normaliseFieldName($field);
         }
     }
 
@@ -85,7 +91,7 @@ class WildcardMappingStrategy extends MappingStrategy
      */
     public function isRootElementInIgnore(string $field): bool
     {
-        $field = strtolower($field);
+        $field = $this->normaliseFieldName($field);
         return in_array($field, $this->ignore);
     }
 
