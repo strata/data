@@ -185,4 +185,30 @@ final class WildcardMapperTest extends TestCase
         $this->assertSame(2, count($item['siblings']));
         $this->assertSame('test1', $item['siblings'][0]['name']);
     }
+
+    public function testArrayWildcardMapping()
+    {
+        $mapping = new WildcardMappingStrategy();
+        $mapping->addMapping('heroIllustration', [
+            '[heroIllustration]' => '[heroIllustration][0]',
+        ]);
+        $mapper = new MapItem($mapping);
+
+        $data = [
+            "heroIllustration" => [
+                [
+                    "url" => "https://cdn.example.org/illustration-2.svg",
+                    "mimeType" => "image/svg+xml",
+                    "height" => 387,
+                    "width" => 500,
+                    "size" => "23259"
+                ]
+            ]
+        ];
+        $item = $mapper->map($data);
+
+        $this->assertSame(5, count($item['heroIllustration']));
+        $this->assertSame("https://cdn.example.org/illustration-2.svg", $item['heroIllustration']['url']);
+        $this->assertSame(500, $item['heroIllustration']['width']);
+    }
 }

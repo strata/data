@@ -134,13 +134,22 @@ class Http implements DataProviderInterface
     }
 
     /**
+     * Does this data provider have a HTTP client set?
+     * @return bool
+     */
+    public function hasHttpClient(): bool
+    {
+        return $this->client !== null;
+    }
+
+    /**
      * Return HTTP client
      *
      * @return HttpClientInterface
      */
     public function getHttpClient(): HttpClientInterface
     {
-        if ($this->client === null) {
+        if (!$this->hasHttpClient()) {
             $this->setHttpClient(HttpClient::create($this->getCurrentDefaultOptions()));
         }
         return $this->client;
@@ -174,7 +183,7 @@ class Http implements DataProviderInterface
 
     /**
      * Remove a default HTTP option from all subsequent HTTP requests
-     * @param string|array $option String option name (e.g. 'auth_bearer') or array to represent a multidimensional option (e.g. ['headers', 'User-Agent']
+     * @param string|array $option String option name (e.g. 'auth_bearer') or a two-element array to represent a multidimensional option (e.g. ['headers', 'User-Agent'])
      */
     public function removeDefaultOption($option)
     {

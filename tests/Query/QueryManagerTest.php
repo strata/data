@@ -89,10 +89,10 @@ class QueryManagerTest extends TestCase
         $manager->addDataProvider('test3', $expected3);
 
         $query = new Query();
-        $this->assertSame($expected1, $manager->getDataProviderForQuery($query));
+        $this->assertSame('test1', $manager->getDataProviderNameForQuery($query));
 
         $query = new GraphQLQuery();
-        $this->assertSame($expected2, $manager->getDataProviderForQuery($query));
+        $this->assertSame('test2', $manager->getDataProviderNameForQuery($query));
     }
 
     public function testSimpleQuery()
@@ -226,5 +226,144 @@ class QueryManagerTest extends TestCase
 
         // Cache should be disabled, since Query should reset this after each query run
         $this->assertFalse($api->isCacheEnabled());
+    }
+
+    public function testGetQueries()
+    {
+        $responses = [
+            new MockResponse('{"message": "OK 1"}'),
+            new MockResponse('{"message": "OK 2"}'),
+            new MockResponse('{"message": "OK 3"}'),
+        ];
+
+        $manager = new QueryManager();
+        $manager->addDataProvider('test1', new Rest('https://example1.com'));
+        $manager->addDataProvider('test2', new Rest('https://example2.com'));
+        $manager->setHttpClient(new MockHttpClient($responses));
+
+        $query = new Query();
+        $query->setUri('test');
+        $manager->add('query1', $query, 'test1');
+
+        $query = new Query();
+        $query->setUri('test');
+        $manager->add('query2', $query, 'test2');
+
+        $query = new Query();
+        $query->setUri('test2');
+        $manager->add('query3', $query, 'test2');
+
+        $this->assertSame(3, count($manager->getQueries()));
+        $this->assertSame(1, count($manager->getDataProviderQueries('test1')));
+        $this->assertSame(2, count($manager->getDataProviderQueries('test2')));
+    }
+
+    public function testSharedHttpClient()
+    {
+        // Create a bunch of mock responses
+        $responses = array_fill(0, 8, new MockResponse('{"message": "OK"}'));
+
+        // Test separate HTTP clients
+        $manager = new QueryManager();
+        $rest1 = new Rest('https://example1.com/');
+        $manager->addDataProvider('test1', $rest1);
+        $rest2 = new Rest('https://example2.com/');
+        $manager->addDataProvider('test2', $rest2);
+        $manager->addDataProvider('test3', new Rest('https://example3.com/'));
+
+        $this->assertFalse($manager->getDataProvider('test1')->hasHttpClient());
+        $this->assertFalse($manager->getDataProvider('test2')->hasHttpClient());
+        $this->assertFalse($manager->getDataProvider('test3')->hasHttpClient());
+
+        // Test base URI
+        $rest1->setHttpClient(new MockHttpClient($responses));
+        $request =  $rest1->prepareRequest('GET', 'test1');
+        $this->assertSame('https://example1.com/test1', $request->getInfo('url'));
+
+        $rest2->setHttpClient(new MockHttpClient($responses));
+        $request =  $rest2->prepareRequest('GET', 'test1');
+        $this->assertSame('https://example2.com/test1', $request->getInfo('url'));
+
+        $this->assertTrue($manager->getDataProvider('test1')->hasHttpClient());
+        $this->assertTrue($manager->getDataProvider('test2')->hasHttpClient());
+        $this->assertFalse($manager->getDataProvider('test3')->hasHttpClient());
+        $this->assertNotSame($manager->getDataProvider('test1')->getHttpClient(), $manager->getDataProvider('test2')->getHttpClient());
+
+        // Test shared HTTP clients
+        $manager->shareHttpClient();
+        $this->assertTrue($manager->getDataProvider('test1')->hasHttpClient());
+        $this->assertTrue($manager->getDataProvider('test2')->hasHttpClient());
+        $this->assertTrue($manager->getDataProvider('test3')->hasHttpClient());
+        $this->assertSame($manager->getDataProvider('test1')->getHttpClient(), $manager->getDataProvider('test2')->getHttpClient());
+        $this->assertSame($manager->getDataProvider('test3')->getHttpClient(), $manager->getDataProvider('test2')->getHttpClient());
+
+        // Test base URI
+        $request =  $rest1->prepareRequest('GET', 'test2');
+        $this->assertSame('https://example1.com/test2', $request->getInfo('url'));
+        $request =  $rest2->prepareRequest('GET', 'test2');
+        $this->assertSame('https://example2.com/test2', $request->getInfo('url'));
+        $rest3 = $manager->getDataProvider('test3');
+        $request = $rest3->prepareRequest('GET', 'test2');
+        $this->assertSame('https://example3.com/test2', $request->getInfo('url'));
+
+        // Test again
+        $manager = new QueryManager();
+        $manager->addDataProvider('test1', new Rest('https://example1.com/'));
+        $manager->addDataProvider('test2', new Rest('https://example2.com/'));
+        $manager->addDataProvider('test3', new Rest('https://example3.com/'));
+        $rest1 = $manager->getDataProvider('test1');
+        $rest1->setHttpClient(new MockHttpClient($responses));
+        $manager->shareHttpClient();
+
+        $this->assertTrue($manager->getDataProvider('test1')->hasHttpClient());
+        $this->assertTrue($manager->getDataProvider('test2')->hasHttpClient());
+        $this->assertTrue($manager->getDataProvider('test3')->hasHttpClient());
+        $this->assertSame($manager->getDataProvider('test1')->getHttpClient(), $manager->getDataProvider('test2')->getHttpClient());
+        $this->assertSame($manager->getDataProvider('test3')->getHttpClient(), $manager->getDataProvider('test2')->getHttpClient());
+
+        // Test base URI
+        $rest2 = $manager->getDataProvider('test2');
+        $rest3 = $manager->getDataProvider('test3');
+        $request =  $rest1->prepareRequest('GET', 'test2');
+        $this->assertSame('https://example1.com/test2', $request->getInfo('url'));
+        $request =  $rest2->prepareRequest('GET', 'test2');
+        $this->assertSame('https://example2.com/test2', $request->getInfo('url'));
+        $request = $rest3->prepareRequest('GET', 'test2');
+        $this->assertSame('https://example3.com/test2', $request->getInfo('url'));
+    }
+
+    public function testSetDefaultHttpOptions()
+    {
+        // Create a bunch of mock responses
+        $responses = array_fill(0, 8, new MockResponse('{"message": "OK"}'));
+
+        $manager = new QueryManager();
+        $manager->addDataProvider('test1', new Rest('https://example1.com/'));
+        $manager->addDataProvider('test2', new Rest('https://example2.com/'));
+        $manager->addDataProvider('test3', new Rest('https://example3.com/'));
+        $rest1 = $manager->getDataProvider('test1');
+        $rest1->setHttpClient(new MockHttpClient($responses));
+        $manager->shareHttpClient();
+        $manager->setHttpDefaultOptions(['headers' => [
+            'X-Preview-Token' => 'ABC123',
+        ]]);
+
+        // Test base URI
+        $request =  $rest1->prepareRequest('GET', 'test2');
+        $headers = $request->getDecorated()->getRequestOptions()['headers'];
+        $this->assertTrue(in_array('X-Preview-Token: ABC123', $headers));
+
+        $rest2 = $manager->getDataProvider('test2');
+        $request =  $rest2->prepareRequest('GET', 'test2');
+        $headers = $request->getDecorated()->getRequestOptions()['headers'];
+        $this->assertTrue(in_array('X-Preview-Token: ABC123', $headers));
+
+        $rest3 = $manager->getDataProvider('test3');
+        $request = $rest3->prepareRequest('GET', 'test2', ['headers' => [
+            'X-Custom-Header' => 'Testing',
+        ]]);
+        $headers = $request->getDecorated()->getRequestOptions()['headers'];
+        $this->assertTrue(in_array('X-Preview-Token: ABC123', $headers));
+        $this->assertTrue(in_array('X-Custom-Header: Testing', $headers));
     }
 }

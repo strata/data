@@ -19,17 +19,80 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  */
 class QueryManager
 {
-    /** @var DataProviderInterface[] */
-    private array $dataProviders = [];
+    const DATA_PROVIDER_NAME = 'name';
+    const DATA_PROVIDER_OBJECT = 'object';
+    const DATA_PROVIDER_CLASS = 'class';
+    const DATA_PROVIDER_QUERIES = 'queries';
 
     /** @var QueryInterface[] */
     private array $queries = [];
+    private array $dataProviders = [];
 
-    private array $dataProviderClassMap = [];
+    private ?HttpClientInterface $httpClient = null;
+    private array $httpDefaultOptions = [];
     private bool $cacheEnabled = false;
     private ?CacheInterface $cache = null;
     private ?int $cacheLifetime = null;
     private array $cacheTags = [];
+
+    /**
+     * Set a shared HTTP client to be used across all HTTP data providers
+     *
+     * This is useful to run concurrent requests
+     *
+     * @param HttpClientInterface $httpClient
+     */
+    public function setHttpClient(HttpClientInterface $httpClient)
+    {
+        $this->httpClient = $httpClient;
+        foreach ($this->getDataProviders() as $dataProvider) {
+            if ($dataProvider instanceof Http) {
+                $dataProvider->setHttpClient($httpClient);
+            }
+        }
+    }
+
+    /**
+     * Share the same HTTP client across all HTTP compatible data providers
+     *
+     * This gets the HTTP client from the first data provider and sets this across all HTTP data providers
+     * Any future data providers you add will also have the same HTTP client set
+     * This is useful to run concurrent requests
+     *
+     * @throws MissingDataProviderException
+     */
+    public function shareHttpClient()
+    {
+        $httpDataProvider = null;
+        foreach ($this->getDataProviders() as $dataProvider) {
+            if ($dataProvider instanceof Http) {
+                $httpDataProvider = $dataProvider;
+                break;
+            }
+        }
+        if (!($httpDataProvider instanceof Http)) {
+            throw new MissingDataProviderException('You must setup at least one HTTP data provider before sharing HTTP client across all HTTP data providers');
+        }
+        $this->setHttpClient($httpDataProvider->getHttpClient());
+    }
+
+    /**
+     * Set default HTTP options for all subsequent HTTP requests
+     *
+     * Please note default options are merged with existing default options
+     *
+     * @see https://symfony.com/doc/current/reference/configuration/framework.html#reference-http-client
+     * @param array $options
+     */
+    public function setHttpDefaultOptions(array $options)
+    {
+        $this->httpDefaultOptions = $options;
+        foreach ($this->getDataProviders() as $dataProvider) {
+            if ($dataProvider instanceof Http) {
+                $dataProvider->setDefaultOptions($options);
+            }
+        }
+    }
 
     /**
      * Add a data provider to use with queries
@@ -53,128 +116,28 @@ class QueryManager
             }
         }
 
-        $this->dataProviders[$name] = $dataProvider;
-        $this->dataProviderClassMap[] = [
-            'name' => $name,
-            'class' => get_class($dataProvider),
+        if ($dataProvider instanceof Http) {
+            // Set shared HTTP client
+            if (!is_null($this->httpClient) && !$dataProvider->hasHttpClient()) {
+                $dataProvider->setHttpClient($this->httpClient);
+            }
+            // Set default options
+            if (!empty($this->httpDefaultOptions)) {
+                $dataProvider->setDefaultOptions($this->httpDefaultOptions);
+            }
+        }
+
+        $this->dataProviders[$name] = [
+            self::DATA_PROVIDER_NAME => $name,
+            self::DATA_PROVIDER_CLASS => get_class($dataProvider),
+            self::DATA_PROVIDER_OBJECT => $dataProvider,
+            self::DATA_PROVIDER_QUERIES => [],
         ];
     }
 
     /**
-     * Set and enable the cache
-     *
-     * @param CacheInterface $cache
-     * @param int $defaultLifetime Default cache lifetime
-     */
-    public function setCache(CacheInterface $cache, ?int $defaultLifetime = null)
-    {
-        $this->cache = $cache;
-        $this->cacheEnabled = true;
-
-        foreach ($this->dataProviders as $dataProvider) {
-            $dataProvider->setCache($this->cache, $defaultLifetime);
-        }
-    }
-
-    /**
-     * Whether a cache object is set
-     * @return bool
-     */
-    public function hasCache(): bool
-    {
-        return $this->cache instanceof CacheInterface;
-    }
-
-    /**
-     * Is the cache enabled?
-     *
-     * @return bool
-     */
-    public function isCacheEnabled(): bool
-    {
-        return $this->cacheEnabled;
-    }
-
-    /**
-     * Enable cache for subsequent data requests
-     *
-     * @param ?int $lifetime
-     * @throws CacheException If cache not set
-     */
-    public function enableCache(?int $lifetime = null)
-    {
-        $this->cacheEnabled = true;
-        $this->cacheLifetime = $lifetime;
-        foreach ($this->dataProviders as $dataProvider) {
-            $dataProvider->enableCache($lifetime);
-        }
-    }
-
-    /**
-     * Disable cache for subsequent data requests
-     *
-     */
-    public function disableCache()
-    {
-        $this->cacheEnabled = false;
-        foreach ($this->dataProviders as $dataProvider) {
-            $dataProvider->disableCache();
-        }
-    }
-
-    /**
-     * Set cache tags to apply to all future saved cache items
-     *
-     * To remove tags do not pass any arguments and tags will be reset to an empty array
-     *
-     * @param array $tags
-     * @throws CacheException
-     * @throws QueryManagerException
-     */
-    public function setCacheTags(array $tags = [])
-    {
-        $taggable = 0;
-        $this->cacheTags = $tags;
-        foreach ($this->dataProviders as $dataProvider) {
-            // If cache adapter is compatible, set them
-            if ($dataProvider->isCacheEnabled() && $dataProvider->getCache()->isTaggable()) {
-                $dataProvider->setCacheTags($tags);
-                $taggable++;
-            }
-        }
-
-        if ($taggable === 0) {
-            throw new QueryManagerException('No data providers contain a cache adapter that is compatible with tagging (must implement Symfony\Component\Cache\Adapter\TagAwareAdapter)');
-        }
-    }
-
-    /**
-     * Return cache tags currently set to the query manager
-     * @return array
-     */
-    public function getCacheTags(): array
-    {
-        return $this->cacheTags;
-    }
-
-    /**
-     * Set HTTP client for all data providers
-     *
-     * Primarily used for mocking the HTTPClient for testing
-     *
-     * @param HttpClientInterface $client
-     */
-    public function setHttpClient(HttpClientInterface $client)
-    {
-        foreach ($this->dataProviders as $dataProvider) {
-            if ($dataProvider instanceof Http) {
-                $dataProvider->setHttpClient($client);
-            }
-        }
-    }
-
-    /**
      * Does the named data provider exist?
+     *
      * @param string $name
      * @return bool
      */
@@ -184,8 +147,23 @@ class QueryManager
     }
 
     /**
+     * Return all data provider objects
+     *
+     * @return DataProviderInterface[]
+     */
+    public function getDataProviders(): array
+    {
+        $dataProviders = [];
+        foreach ($this->dataProviders as $item) {
+            $dataProviders[] = $item[self::DATA_PROVIDER_OBJECT];
+        }
+        return $dataProviders;
+    }
+
+    /**
      * Return data provider by name
-     * @param string $name
+     *
+     * @param string $name Data provider name
      * @return DataProviderInterface
      * @throws MissingDataProviderException
      */
@@ -194,23 +172,52 @@ class QueryManager
         if (!$this->hasDataProvider($name)) {
             throw new MissingDataProviderException(sprintf('Cannot find data provider %s', $name));
         }
-        return $this->dataProviders[$name];
+        return $this->dataProviders[$name][self::DATA_PROVIDER_OBJECT];
     }
 
     /**
-     * Return first compatible data provider we can find for passed query
-     * @param QueryInterface $query
-     * @return DataProviderInterface
+     * Return queries for a named data provider
+     *
+     * @param string $name
+     * @return QueryInterface[]
      * @throws MissingDataProviderException
      */
-    public function getDataProviderForQuery(QueryInterface $query): DataProviderInterface
+    public function getDataProviderQueries(string $name): array
+    {
+        if (!$this->hasDataProvider($name)) {
+            throw new MissingDataProviderException(sprintf('Cannot find data provider %s', $name));
+        }
+        return $this->dataProviders[$name][self::DATA_PROVIDER_QUERIES];
+    }
+
+    /**
+     * Return classname for the named data provider object
+     *
+     * @param string $name
+     * @return string
+     * @throws MissingDataProviderException
+     */
+    public function getDataProviderClass(string $name): string
+    {
+        if (!$this->hasDataProvider($name)) {
+            throw new MissingDataProviderException(sprintf('Cannot find data provider %s', $name));
+        }
+        return $this->dataProviders[$name][self::DATA_PROVIDER_CLASS];
+    }
+
+    /**
+     * Return first compatible data provider name we can find for passed query
+     * @param QueryInterface $query
+     * @return string Data provider name
+     * @throws MissingDataProviderException
+     */
+    public function getDataProviderNameForQuery(QueryInterface $query): string
     {
         $requiredClass = $query->getRequiredDataProviderClass();
-        foreach ($this->dataProviderClassMap as $item) {
-            $class = $item['class'];
-            $name = $item['name'];
+        foreach ($this->dataProviders as $item) {
+            $class = $item[self::DATA_PROVIDER_CLASS];
             if ($class === $requiredClass) {
-                return $this->getDataProvider($name);
+                return $item[self::DATA_PROVIDER_NAME];
             }
         }
         throw new MissingDataProviderException(sprintf('Cannot find a compatible data provider (%s) for query', $class));
@@ -218,6 +225,8 @@ class QueryManager
 
     /**
      * Add a query (does not run the query, this happens on data access)
+     *
+     * @todo Need to uniquely identify each data provider so we can add defaults (e.g. site ID, preview token)
      *
      * @param string $queryName
      * @param QueryInterface $query Query
@@ -231,12 +240,11 @@ class QueryManager
         }
 
         if (!$query->hasDataProvider()) {
-            // Get data provider (pass as 2nd argument or use a compatible data provider)
             if ($dataProviderName === null) {
-                $dataProvider = $this->getDataProviderForQuery($query);
-            } else {
-                $dataProvider = $this->getDataProvider($dataProviderName);
+                // Get compatible data provider if not set in method argument
+                $dataProviderName = $this->getDataProviderNameForQuery($query);
             }
+            $dataProvider = $this->getDataProvider($dataProviderName);
             $query->setDataProvider($dataProvider);
         }
 
@@ -245,6 +253,9 @@ class QueryManager
 
         // Add query to query stack
         $this->queries[$queryName] = $query;
+
+        // Add query to data providers array
+        $this->dataProviders[$dataProviderName][self::DATA_PROVIDER_QUERIES][$queryName] = $query;
     }
 
     /**
@@ -288,6 +299,15 @@ class QueryManager
             return $this->queries[$name];
         }
         return null;
+    }
+
+    /**
+     * Return all queries in the query manager
+     * @return QueryInterface[]
+     */
+    public function getQueries(): array
+    {
+        return $this->queries;
     }
 
     /**
@@ -421,5 +441,102 @@ class QueryManager
         }
 
         return $data;
+    }
+
+    /**
+     * Set and enable the cache
+     *
+     * @param CacheInterface $cache
+     * @param int $defaultLifetime Default cache lifetime
+     */
+    public function setCache(CacheInterface $cache, ?int $defaultLifetime = null)
+    {
+        $this->cache = $cache;
+        $this->cacheEnabled = true;
+
+        foreach ($this->getDataProviders() as $dataProvider) {
+            $dataProvider->setCache($this->cache, $defaultLifetime);
+        }
+    }
+
+    /**
+     * Whether a cache object is set
+     * @return bool
+     */
+    public function hasCache(): bool
+    {
+        return $this->cache instanceof CacheInterface;
+    }
+
+    /**
+     * Is the cache enabled?
+     *
+     * @return bool
+     */
+    public function isCacheEnabled(): bool
+    {
+        return $this->cacheEnabled;
+    }
+
+    /**
+     * Enable cache for subsequent data requests
+     *
+     * @param ?int $lifetime
+     * @throws CacheException If cache not set
+     */
+    public function enableCache(?int $lifetime = null)
+    {
+        $this->cacheEnabled = true;
+        $this->cacheLifetime = $lifetime;
+        foreach ($this->getDataProviders() as $dataProvider) {
+            $dataProvider->enableCache($lifetime);
+        }
+    }
+
+    /**
+     * Disable cache for subsequent data requests
+     *
+     */
+    public function disableCache()
+    {
+        $this->cacheEnabled = false;
+        foreach ($this->getDataProviders() as $dataProvider) {
+            $dataProvider->disableCache();
+        }
+    }
+
+    /**
+     * Set cache tags to apply to all future saved cache items
+     *
+     * To remove tags do not pass any arguments and tags will be reset to an empty array
+     *
+     * @param array $tags
+     * @throws CacheException
+     * @throws QueryManagerException
+     */
+    public function setCacheTags(array $tags = [])
+    {
+        $taggable = 0;
+        $this->cacheTags = $tags;
+        foreach ($this->getDataProviders() as $dataProvider) {
+            // If cache adapter is compatible, set them
+            if ($dataProvider->isCacheEnabled() && $dataProvider->getCache()->isTaggable()) {
+                $dataProvider->setCacheTags($tags);
+                $taggable++;
+            }
+        }
+
+        if ($taggable === 0) {
+            throw new QueryManagerException('No data providers contain a cache adapter that is compatible with tagging (must implement Symfony\Component\Cache\Adapter\TagAwareAdapter)');
+        }
+    }
+
+    /**
+     * Return cache tags currently set to the query manager
+     * @return array
+     */
+    public function getCacheTags(): array
+    {
+        return $this->cacheTags;
     }
 }
