@@ -565,8 +565,6 @@ class QueryManager
                     'class'         => get_class($query),
                     'type'          => null,
                     'dataProvider'  => $dataProviderName,
-                    'dataProviderType' => null,
-                    'cacheEnabled'  => $dataProvider->isCacheEnabled(),
                     'hasResponse'   => false
                 ];
                 if ($query->hasResponseRun()) {
@@ -575,6 +573,8 @@ class QueryManager
                     $value['cacheHit'] = $query->getResponse()->isHit();
                     $value['cacheAge'] = $query->getResponse()->getAge();
                     $value['baseUri']  = $dataProvider->getBaseUri();
+                    $value['responseHeaders'] = $query->getResponse()->getHeaders();
+                    $value['responseData'] = $query->getResponse()->getContent();
 
                     if ($query->getResponse()->isHit()) {
                         $data['cached']++;
@@ -582,7 +582,11 @@ class QueryManager
                 }
                 if ($dataProvider instanceof Http) {
                     $value['dataProviderType'] = 'Http';
-                    $value['httpDefaultOptions'] = $dataProvider->getCurrentDefaultOptions();
+
+                    $options = $dataProvider->getCurrentDefaultOptions();
+                    $value['httpHeaders'] = $options['headers'];
+                    unset($options['headers']);
+                    $value['httpOptions'] = $options;
                 }
                 if ($query instanceof Query) {
                     $value['type'] = 'Rest';
