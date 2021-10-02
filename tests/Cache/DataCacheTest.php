@@ -66,6 +66,8 @@ class DataCacheTest extends TestCase
         $item = $cache->getItem('test1');
         $this->assertTrue($item->isHit());
 
+        sleep(2);
+
         /** @var MockResponse $response */
         $response = $cache->getResponseFromItem($item, 'GET', 'test1');
         $this->assertTrue($response instanceof ResponseInterface);
@@ -73,6 +75,11 @@ class DataCacheTest extends TestCase
         $this->assertEquals($contents1, $contents2);
         $headers = $response->getHeaders();
         $this->assertEquals('BAR', $headers['x-foo'][0]);
+
+        // Cache age
+        $age = $headers['x-cache-age'][0];
+        $this->assertTrue(is_numeric($age));
+        $this->assertSame('2', $age);
     }
 
     public function testDataCache()

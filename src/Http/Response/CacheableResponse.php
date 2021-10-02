@@ -13,6 +13,7 @@ class CacheableResponse implements ResponseInterface, StreamableInterface
     use DecoratedResponseTrait;
 
     private bool $isCacheHit = false;
+    private ?int $age = null;
     private ?CacheItemInterface $cacheItem = null;
 
     /**
@@ -25,6 +26,7 @@ class CacheableResponse implements ResponseInterface, StreamableInterface
     public function __construct(ResponseInterface $response, ?bool $hit = null, ?CacheItemInterface $item = null)
     {
         $this->decorated = $response;
+
         if ($hit !== null) {
             $this->setHit($hit);
         }
@@ -53,9 +55,31 @@ class CacheableResponse implements ResponseInterface, StreamableInterface
      *
      * @return bool
      */
-    public function isHit()
+    public function isHit(): bool
     {
         return $this->isCacheHit;
+    }
+
+    /**
+     * Return cached item age in seconds, or null if not cached
+     *
+     * @return int|null
+     */
+    public function getAge(): ?int
+    {
+        if (!$this->isHit()) {
+            return null;
+        }
+
+        if ($this->age === null) {
+            $headers = $this->decorated->getHeaders();
+            if (isset($headers['x-cache-age'])) {
+                $this->age = (int)$headers['x-cache-age'][0];
+            } else {
+                $this->age = 0;
+            }
+        }
+        return $this->age;
     }
 
     public function setCacheItem(CacheItemInterface $item)

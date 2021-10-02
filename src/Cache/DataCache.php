@@ -265,6 +265,7 @@ class DataCache implements CacheItemPoolInterface, TagAwareAdapterInterface, Pru
             'http_code'         => $response->getStatusCode(),
             'response_headers'  => $response->getHeaders(),
             'body'              => $response->getContent(),
+            'cached_date'       => new \DateTimeImmutable()
         ]);
         return $item;
     }
@@ -292,12 +293,18 @@ class DataCache implements CacheItemPoolInterface, TagAwareAdapterInterface, Pru
             return null;
         }
 
+        // Set cache age, since not automatically set for PSR-6 cache
+        if (isset($content['cached_date']) && $content['cached_date'] instanceof \DateTimeInterface) {
+            $age = $content['cached_date']->diff(new \DateTimeImmutable());
+            $content['response_headers']['x-cache-age'] = $age->format('%s');
+        }
+
         /**
          * @see Symfony\Component\HttpClient\CachingHttpClient::request Example usage of MockResponse
          */
         $response = new MockResponse($content['body'], [
-            'http_code' => $content['http_code'],
-            'response_headers' => $content['response_headers'],
+            'http_code'         => $content['http_code'],
+            'response_headers'  => $content['response_headers'],
         ]);
         $response = MockResponse::fromRequest($method, $uri, $options, $response);
         return $response;

@@ -366,4 +366,46 @@ class QueryManagerTest extends TestCase
         $this->assertTrue(in_array('X-Preview-Token: ABC123', $headers));
         $this->assertTrue(in_array('X-Custom-Header: Testing', $headers));
     }
+
+    public function testGetDataCollector()
+    {
+        // Create a bunch of mock responses
+        $responses = array_fill(0, 4, new MockResponse('{"message": "OK"}'));
+
+        $manager = new QueryManager();
+        $manager->addDataProvider('test1', new Rest('https://example1.com/'));
+        $manager->addDataProvider('test2', new Rest('https://example2.com/'));
+        $rest1 = $manager->getDataProvider('test1');
+        $rest1->setHttpClient(new MockHttpClient($responses));
+        $manager->shareHttpClient();
+        $manager->setHttpDefaultOptions(['headers' => [
+            'X-Preview-Token' => 'ABC123',
+        ]]);
+
+        // Queries
+        $query1 = (new Query())->setUri('path1');
+        $query2 = (new Query())->setUri('path2');
+        $manager->add('test1', $query1, 'test1');
+        $manager->add('test2', $query2, 'test2');
+
+        $data = $manager->getDataCollector();
+        $this->assertSame(0, $data['total']);
+        $this->assertSame(0, $data['cached']);
+
+        $response = $manager->get('test1');
+        $data = $manager->getDataCollector();
+        $this->assertSame(2, $data['total']);
+        $this->assertSame(0, $data['cached']);
+
+        $query3 = (new Query())->setUri('path3');
+        $query4 = (new Query())->setUri('path4');
+        $manager->add('test3', $query3, 'test1');
+        $manager->add('test4', $query4, 'test1');
+        $data = $manager->getDataCollector();
+        $this->assertSame(2, $data['total']);
+
+        $response = $manager->get('test3');
+        $data = $manager->getDataCollector();
+        $this->assertSame(4, $data['total']);
+    }
 }

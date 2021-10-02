@@ -96,6 +96,9 @@ if ($response->isHit()) {
 }
 ```
 
+You can also return the cache age via: `$response->getAge()`. This will return the age in seconds for cached data, or 
+null if the data is not cached.
+
 ### Caching HTTP responses
 
 When an HTTP response is returned from the cache this is hydrated via the Symfony `MockResponse` class and a valid HTTP 

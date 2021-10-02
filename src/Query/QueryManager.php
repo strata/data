@@ -539,4 +539,63 @@ class QueryManager
     {
         return $this->cacheTags;
     }
+
+    /**
+     * Return debugging information for data collector (web profiler)
+     * @return array
+     */
+    public function getDataCollector(): array
+    {
+        $data = [
+            'queries' => [],
+            'total' => 0,
+            'cached' => 0,
+        ];
+
+        foreach ($this->dataProviders as $item) {
+            $dataProviderName = $item[self::DATA_PROVIDER_NAME];
+
+            /** @var DataProviderInterface $dataProvider */
+            $dataProvider = $item[self::DATA_PROVIDER_OBJECT];
+
+            /** @var QueryInterface $query */
+            foreach ($item[self::DATA_PROVIDER_QUERIES] as $queryName => $query) {
+                $value = [
+                    'name'          => $queryName,
+                    'class'         => get_class($query),
+                    'type'          => null,
+                    'dataProvider'  => $dataProviderName,
+                    'dataProviderType' => null,
+                    'cacheEnabled'  => $dataProvider->isCacheEnabled(),
+                    'hasResponse'   => false
+                ];
+                if ($query->hasResponseRun()) {
+                    $data['total']++;
+                    $value['hasResponse'] = true;
+                    $value['cacheHit'] = $query->getResponse()->isHit();
+                    $value['cacheAge'] = $query->getResponse()->getAge();
+                    $value['baseUri']  = $dataProvider->getBaseUri();
+
+                    if ($query->getResponse()->isHit()) {
+                        $data['cached']++;
+                    }
+                }
+                if ($dataProvider instanceof Http) {
+                    $value['dataProviderType'] = 'Http';
+                    $value['httpDefaultOptions'] = $dataProvider->getCurrentDefaultOptions();
+                }
+                if ($query instanceof Query) {
+                    $value['type'] = 'Rest';
+                    $value['uri'] = $query->getUri();
+                }
+                if ($query instanceof GraphQLQuery) {
+                    $value['type'] = 'GraphQL';
+                    $value['graphql'] = $query->getGraphQL();
+                }
+                $data['queries'][] = $value;
+            }
+        }
+
+        return $data;
+    }
 }
