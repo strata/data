@@ -555,7 +555,7 @@ class QueryManager
     public function getDataCollector(): array
     {
         $data = [
-            'dataProviders' = [],
+            'dataProviders' => [],
             'queries' => [],
             'total' => 0,
             'cached' => 0,
