@@ -526,6 +526,9 @@ class Http implements DataProviderInterface
         if ($cacheable === null) {
             $cacheable = $this->isCacheableRequest($method);
         }
+        if (!$this->isCacheEnabled()) {
+            $cacheable = false;
+        }
         if ($cacheable) {
             $item = $this->getCache()->getItem($requestId);
             if ($item->isHit()) {

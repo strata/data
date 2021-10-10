@@ -51,6 +51,41 @@ class QueryManagerTest extends TestCase
         $manager->setCacheTags($tags);
     }
 
+    public function testDisableCache()
+    {
+        // Create a bunch of mock responses
+        $responses = array_fill(0, 11, new MockResponse('{"message": "OK"}'));
+
+        $manager = new QueryManager();
+        $manager->addDataProvider('test1', new Rest('https://example.com'));
+        $manager->setHttpClient(new MockHttpClient($responses));
+
+        // Set cache
+        $adapter = new FilesystemAdapter('cache', 0, self::CACHE_DIR);
+        $adapter->clear();
+        $manager->setCache($adapter);
+        $this->assertTrue($manager->isCacheEnabled());
+
+        $query1 = (new Query())->setUri('query1')->cache();
+        $manager->add('query1', $query1);
+        $query2 = (new Query())->setUri('query2')->cache();
+        $manager->add('query2', $query2);
+
+        // Disable cache
+        $manager->disableCache();
+        $this->assertFalse($manager->isCacheEnabled());
+
+        $response1 = $manager->getResponse('query1');
+        $response2 = $manager->getResponse('query2');
+        $manager->clearResponse('query1');
+        $manager->clearResponse('query2');
+
+        $response1 = $manager->getResponse('query1');
+        $response2 = $manager->getResponse('query2');
+        $this->assertFalse($response1->isHit());
+        $this->assertFalse($response2->isHit());
+    }
+
     // @todo update this method to use Query::doNotCache instead
     public function testDoNotCache()
     {
