@@ -555,6 +555,7 @@ class QueryManager
     public function getDataCollector(): array
     {
         $data = [
+            'dataProviders' = [],
             'queries' => [],
             'total' => 0,
             'cached' => 0,
@@ -565,6 +566,14 @@ class QueryManager
 
             /** @var DataProviderInterface $dataProvider */
             $dataProvider = $item[self::DATA_PROVIDER_OBJECT];
+
+            $value = [
+                'name' => $dataProviderName,
+                'class' => get_class($dataProvider),
+                'baseUri' => $dataProvider->getBaseUri(),
+                'cacheEnabled' => $dataProvider->isCacheEnabled(),
+            ];
+            $data['dataProviders'][] = $value;
 
             /** @var QueryInterface $query */
             foreach ($item[self::DATA_PROVIDER_QUERIES] as $queryName => $query) {
