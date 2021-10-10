@@ -6,6 +6,7 @@ namespace Cache;
 
 use PHPUnit\Framework\TestCase;
 use Strata\Data\Cache\DataCache;
+use Strata\Data\Exception\InvalidHttpMethodException;
 use Strata\Data\Http\Rest;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Cache\Adapter\FilesystemTagAwareAdapter;
@@ -94,8 +95,19 @@ class DataCacheTest extends TestCase
         $api->setHttpClient($http);
         $adapter = new FilesystemAdapter('cache', 0, self::CACHE_DIR);
 
-        // Enables cache by default
         $api->setCache($adapter);
+        $api->disableCache();
+
+        $response = $api->get('test1');
+        $contents1 = $response->getContent();
+
+        $response = $api->get('test1');
+        $contents2 = $response->getContent();
+
+        $this->assertNotEquals($contents1, $contents2);
+
+        // Enable cache
+        $api->enableCache();
 
         $response = $api->get('test1');
         $contents1 = $response->getContent();
@@ -104,40 +116,6 @@ class DataCacheTest extends TestCase
         $contents2 = $response->getContent();
 
         $this->assertEquals($contents1, $contents2);
-    }
-
-    /**
-     * @todo move to Http test
-     */
-    public function testCacheableRequest()
-    {
-        $api = new Rest('http://example.com/');
-        $adapter = new FilesystemAdapter('cache', 0, self::CACHE_DIR);
-        $api->setCache($adapter);
-
-        // Default settings
-        $this->assertTrue($api->isCacheableRequest('GET'));
-        $this->assertTrue($api->isCacheableRequest('HEAD'));
-        $this->assertFalse($api->isCacheableRequest('POST'));
-        $this->assertFalse($api->isCacheableRequest('PUT'));
-        $this->assertFalse($api->isCacheableRequest('DELETE'));
-        $this->assertFalse($api->isCacheableRequest('CONNECT'));
-        $this->assertFalse($api->isCacheableRequest('OPTIONS'));
-        $this->assertFalse($api->isCacheableRequest('PATCH'));
-        $this->assertFalse($api->isCacheableRequest('PURGE'));
-        $this->assertFalse($api->isCacheableRequest('TRACE'));
-
-        $api->disableCache();
-        $this->assertFalse($api->isCacheableRequest('GET'));
-
-        $api->enableCache();
-        $api->setCacheableMethods(['GET', 'POST']);
-        $this->assertTrue($api->isCacheableRequest('GET'));
-        $this->assertTrue($api->isCacheableRequest('POST'));
-        $this->assertFalse($api->isCacheableRequest('HEAD'));
-
-        $this->expectException('Strata\Data\Exception\CacheException');
-        $api->setCacheableMethods(['GET', 'MADE UP']);
     }
 
     public function testHttpRequests()

@@ -22,7 +22,9 @@ use Strata\Data\Exception\HttpException;
 use Strata\Data\Exception\HttpOptionException;
 use Strata\Data\Exception\HttpTransportException;
 use Strata\Data\Exception\HttpNotFoundException;
+use Strata\Data\Exception\InvalidHttpMethodException;
 use Strata\Data\Helper\ContentHasher;
+use Strata\Data\Helper\UnionTypes;
 use Strata\Data\Http\Response\CacheableResponse;
 use Strata\Data\Http\Response\DecoratedResponseTrait;
 use Strata\Data\Http\Response\SuppressErrorResponse;
@@ -250,18 +252,44 @@ class Http implements DataProviderInterface
      * Set HTTP methods that can be automatically cached
      *
      * @param array $methods
-     * @throws CacheException
+     * @throws InvalidHttpMethodException
      */
     public function setCacheableMethods(array $methods)
     {
+        self::validMethod($methods, true);
+        $this->cacheableMethods = $methods;
+    }
+
+    /**
+     * Is the method a valid HTTP method?
+     *
+     * @param array|string $methods HTTP method name or array of HTTP methods
+     * @param bool $throw Throw InvalidHttpMethodException exception on failed validation
+     * @return bool
+     * @throws InvalidArgumentException
+     * @throws InvalidHttpMethodException
+     */
+    public static function validMethod($methods, bool $throw = false): bool
+    {
+        UnionTypes::assert('$methods', $methods, 'array', 'string');
+
+        if (!is_array($methods)) {
+            $methods = [$methods];
+        }
+        array_walk($methods, function (&$value) {
+            $value = (string) $value;
+            $value = strtoupper($value);
+        });
+
         $allowed = ['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'CONNECT', 'OPTIONS', 'PATCH', 'PURGE', 'TRACE'];
         $diff = array_diff($methods, $allowed);
-        $valid = (count($diff) === 0);
-        if (!$valid) {
-            throw new CacheException(sprintf('Invalid HTTP method passed: %s', implode(', ', $diff)));
+        $result = (count($diff) === 0);
+
+        if ($throw && !$result) {
+            throw new InvalidHttpMethodException(sprintf('Invalid HTTP method/s passed: %s', implode(', ', $diff)));
         }
 
-        $this->cacheableMethods = $methods;
+        return $result;
     }
 
     /**
@@ -478,11 +506,12 @@ class Http implements DataProviderInterface
      * @param $method
      * @param string $uri
      * @param array $options
+     * @param ?bool $cacheable Whether this request is cacheable, if null use Http::isCacheableRequest
      * @return CacheableResponse
      * @throws BaseUriException
      * @throws TransportExceptionInterface
      */
-    public function prepareRequest($method, string $uri, array $options = []): CacheableResponse
+    public function prepareRequest($method, string $uri, array $options = [], ?bool $cacheable = null): CacheableResponse
     {
         // Passed $options take precedence over defaults
         $options = $this->mergeHttpOptions($this->getCurrentDefaultOptions(), $options);
@@ -494,7 +523,9 @@ class Http implements DataProviderInterface
         $options['user_data'] = $requestId;
 
         // Check cache
-        $cacheable = $this->isCacheableRequest($method);
+        if ($cacheable === null) {
+            $cacheable = $this->isCacheableRequest($method);
+        }
         if ($cacheable) {
             $item = $this->getCache()->getItem($requestId);
             if ($item->isHit()) {

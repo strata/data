@@ -61,21 +61,27 @@ class BuildQuery implements BuildQueryInterface
         if ($query->isSubRequest()) {
             $this->dataProvider->suppressErrors();
         }
-        if ($query->isCacheEnabled()) {
-            $this->dataProvider->enableCache($query->getCacheLifetime());
-            if ($query->hasCacheTags()) {
-                $this->dataProvider->setCacheTags($query->getCacheTags());
-            }
-        }
 
         $options = [
             'query' => $this->getParameters($query)
         ];
-        $response = $this->dataProvider->prepareRequest('GET', $query->getUri(), $options);
+        $response = $this->dataProvider->prepareRequest($query->getMethod(), $query->getUri(), $options, $query->isCacheableRequest());
 
-        // Reset cache & suppress errors to previous values
-        $this->dataProvider->resetEnableCache();
-        $this->dataProvider->resetSuppressErrors();
+        // Set caching rules for this query
+        if ($response->isCacheable()) {
+            $cacheItem = $response->getCacheItem();
+            if ($query->hasCacheLifetime()) {
+                $cacheItem->expiresAfter($query->getCacheLifetime());
+            }
+            if ($query->hasCacheTags() && $query->getDataProvider()->getCache()->isTaggable()) {
+                $cacheItem->tag($query->getCacheTags());
+            }
+        }
+
+        // Reset suppress errors to previous values
+        if ($query->isSubRequest()) {
+            $this->dataProvider->resetSuppressErrors();
+        }
 
         return $response;
     }

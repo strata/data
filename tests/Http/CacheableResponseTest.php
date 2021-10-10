@@ -58,6 +58,7 @@ class CacheableResponseTest extends TestCase
         $api = new Rest('https://example.com/api/');
         $api->setHttpClient(new MockHttpClient($responses));
         $api->setCache(new FilesystemAdapter('cache', 0, self::CACHE_DIR));
+        $api->enableCache();
 
         $response = $api->get('test');
         $this->assertFalse($response->isHit());

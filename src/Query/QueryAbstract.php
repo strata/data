@@ -8,7 +8,6 @@ use Strata\Data\Collection;
 use Strata\Data\DataProviderInterface;
 use Strata\Data\Exception\CacheException;
 use Strata\Data\Exception\QueryException;
-use Strata\Data\Exception\QueryManagerException;
 use Strata\Data\Http\Response\CacheableResponse;
 use Strata\Data\Http\Rest;
 use Strata\Data\Traits\PaginationPropertyTrait;
@@ -23,7 +22,7 @@ abstract class QueryAbstract implements QueryInterface
     protected ?DataProviderInterface $dataProvider = null;
     protected ?CacheableResponse $response = null;
 
-    protected bool $enableCache = false;
+    protected ?bool $cacheableRequest = null;
     protected ?int $cacheLifetime = null;
     protected array $cacheTags = [];
     protected bool $subRequest = false;
@@ -36,6 +35,7 @@ abstract class QueryAbstract implements QueryInterface
     protected string $resultsPerPageParam = 'limit';
     protected string $pageParam = 'page';
     protected bool $paginationDataFromHeaders = false;
+    protected bool $concurrent = true;
 
     /**
      * Data provider class required for use with this query
@@ -165,6 +165,26 @@ abstract class QueryAbstract implements QueryInterface
     }
 
     /**
+     * Set whether it's safe to run this query concurrently with other queries
+     * @param bool $concurrent
+     * @return $this
+     */
+    public function concurrent(bool $concurrent = true): self
+    {
+        $this->concurrent = $concurrent;
+        return $this;
+    }
+
+    /**
+     * Return whether its safe to run this query concurrently
+     * @return bool
+     */
+    public function isConcurrent(): bool
+    {
+        return $this->concurrent;
+    }
+
+    /**
      * Set string to separate array values in parameters
      * @param string $multipleValuesSeparator
      * @return $this
@@ -204,13 +224,22 @@ abstract class QueryAbstract implements QueryInterface
     }
 
     /**
-     * Enable cache for this query only
+     * Is this a cacheable request?
+     * @return ?bool
+     */
+    public function isCacheableRequest(): ?bool
+    {
+        return $this->cacheableRequest;
+    }
+
+    /**
+     * Cache this query
      * @param int|null $lifetime
      * @return $this
      */
-    public function enableCache(?int $lifetime = null): self
+    public function cache(?int $lifetime = null): self
     {
-        $this->enableCache = true;
+        $this->cacheableRequest = true;
         if ($lifetime !== null) {
             $this->cacheLifetime = $lifetime;
         }
@@ -218,22 +247,22 @@ abstract class QueryAbstract implements QueryInterface
     }
 
     /**
-     * Disable cache for this query only
+     * Do not cache this query
      * @return $this
      */
-    public function disableCache(): self
+    public function doNotCache(): self
     {
-        $this->enableCache = false;
+        $this->cacheableRequest = false;
         return $this;
     }
 
     /**
-     * Is cache enabled for this query?
+     * Whether a cache lifetime is setup
      * @return bool
      */
-    public function isCacheEnabled(): bool
+    public function hasCacheLifetime(): bool
     {
-        return $this->enableCache;
+        return null !== $this->cacheLifetime;
     }
 
     /**
@@ -246,7 +275,7 @@ abstract class QueryAbstract implements QueryInterface
     }
 
     /**
-     * Set cache tags to apply to this query
+     * Add cache tags to this query
      *
      * To remove tags do not pass any arguments and tags will be reset to an empty array
      *
@@ -254,9 +283,10 @@ abstract class QueryAbstract implements QueryInterface
      * @throws CacheException
      * @throws QueryException
      */
-    public function setCacheTags(array $tags = [])
+    public function cacheTags(array $tags = []): self
     {
         $this->cacheTags = $tags;
+        return $this;
     }
 
     /**

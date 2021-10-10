@@ -32,18 +32,6 @@ class GraphQLQuery extends QueryAbstract implements GraphQLQueryInterface
     protected string $multipleValuesSeparator = ', ';
 
     /**
-     * Constructor
-     * @param string|null $filename File to load GraphQL query from
-     * @throws GraphQLQueryException
-     */
-    public function __construct(?string $filename = null)
-    {
-        if ($filename !== null) {
-            $this->setGraphQLFromFile($filename);
-        }
-    }
-
-    /**
      * Data provider class required for use with this query
      * @return string
      */
@@ -311,18 +299,22 @@ class GraphQLQuery extends QueryAbstract implements GraphQLQueryInterface
         $dataProvider = $this->getDataProvider();
         $response = $this->getResponse();
 
+        if ($this->isSubRequest()) {
+            $dataProvider->suppressErrors();
+        }
+
         // Prepare response if not already done
         if (!($response instanceof CacheableResponse)) {
             $this->prepare();
             $response = $this->getResponse();
         }
 
-        if ($this->isSubRequest()) {
-            $dataProvider->suppressErrors();
-        } else {
-            $dataProvider->suppressErrors(false);
-        }
         $this->response = $dataProvider->runRequest($response);
+
+        // Reset suppress errors to previous values
+        if ($this->isSubRequest()) {
+            $this->dataProvider->resetSuppressErrors();
+        }
     }
 
     /**

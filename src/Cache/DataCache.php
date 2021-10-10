@@ -126,7 +126,9 @@ class DataCache implements CacheItemPoolInterface, TagAwareAdapterInterface, Pru
      */
     public function getItem($key): CacheItemInterface
     {
-        return $this->cache->getItem($key);
+        $item = $this->cache->getItem($key);
+        $this->setCacheItemDefaults($item);
+        return $item;
     }
 
     /**
@@ -229,7 +231,6 @@ class DataCache implements CacheItemPoolInterface, TagAwareAdapterInterface, Pru
      */
     public function save(CacheItemInterface $item)
     {
-        $item = $this->setCacheItemDefaults($item);
         return $this->cache->save($item);
     }
 
@@ -244,7 +245,6 @@ class DataCache implements CacheItemPoolInterface, TagAwareAdapterInterface, Pru
      */
     public function saveDeferred(CacheItemInterface $item)
     {
-        $item = $this->setCacheItemDefaults($item);
         return $this->cache->saveDeferred($item);
     }
 

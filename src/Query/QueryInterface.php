@@ -54,23 +54,49 @@ interface QueryInterface
     public function getMultipleValuesSeparator(): string;
 
     /**
-     * Enable cache for this query
+     * Set whether it's safe to run this query concurrently with other queries
+     * @param bool $concurrent
+     * @return $this
+     */
+    public function concurrent(bool $concurrent = true): self;
+
+    /**
+     * Return whether it's safe to run this query concurrently
+     * @return bool
+     */
+    public function isConcurrent(): bool;
+
+    /**
+     * Is this a cacheable request?
+     * @return ?bool
+     */
+    public function isCacheableRequest(): ?bool;
+
+    /**
+     * Cache this query
      * @param int|null $lifetime
      * @return $this
      */
-    public function enableCache(?int $lifetime = null): self;
+    public function cache(?int $lifetime = null): self;
 
     /**
-     * Disable cache for this query
+     * Do not cache this query
      * @return $this
      */
-    public function disableCache(): self;
+    public function doNotCache(): self;
 
     /**
-     * Is cache enabled for this query?
+     * Add cache tags to this query
+     * @param array $tags
+     * @return $this
+     */
+    public function cacheTags(array $tags = []): self;
+
+    /**
+     * Whether a cache lifetime is setup
      * @return bool
      */
-    public function isCacheEnabled(): bool;
+    public function hasCacheLifetime(): bool;
 
     /**
      * Return cache lifetime for this query

@@ -106,7 +106,7 @@ trait DataProviderCommonTrait
     public function setCache(CacheInterface $cache, ?int $defaultLifetime = null)
     {
         $this->cache = new DataCache($cache, $defaultLifetime);
-        $this->enableCache($defaultLifetime);
+        $this->enableCache();
     }
 
     /**
@@ -128,11 +128,10 @@ trait DataProviderCommonTrait
      */
     public function enableCache(?int $lifetime = null)
     {
-        $this->lastCacheEnabled = $this->cacheEnabled;
-
-        if (!($this->cache instanceof DataCache)) {
+        if (!$this->hasCache()) {
             throw new CacheException(sprintf('You must setup the cache via %s::setCache() before enabling it', get_class($this)));
         }
+        $this->lastCacheEnabled = $this->cacheEnabled;
         $this->cacheEnabled = true;
 
         if ($lifetime !== null) {
@@ -157,6 +156,7 @@ trait DataProviderCommonTrait
      */
     public function disableCache()
     {
+        $this->lastCacheEnabled = $this->cacheEnabled;
         $this->cacheEnabled = false;
     }
 
@@ -167,7 +167,7 @@ trait DataProviderCommonTrait
      */
     public function isCacheEnabled(): bool
     {
-        return $this->cacheEnabled;
+        return ($this->hasCache() && $this->cacheEnabled);
     }
 
     /**

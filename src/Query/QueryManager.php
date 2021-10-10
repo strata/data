@@ -29,7 +29,6 @@ class QueryManager
     private array $dataProviders = [];
 
     private ?HttpClientInterface $httpClient = null;
-    private array $httpDefaultOptions = [];
     private bool $cacheEnabled = false;
     private ?CacheInterface $cache = null;
     private ?int $cacheLifetime = null;
@@ -77,37 +76,20 @@ class QueryManager
     }
 
     /**
-     * Set default HTTP options for all subsequent HTTP requests
-     *
-     * Please note default options are merged with existing default options
-     *
-     * @see https://symfony.com/doc/current/reference/configuration/framework.html#reference-http-client
-     * @param array $options
-     */
-    public function setHttpDefaultOptions(array $options)
-    {
-        $this->httpDefaultOptions = $options;
-        foreach ($this->getDataProviders() as $dataProvider) {
-            if ($dataProvider instanceof Http) {
-                $dataProvider->setDefaultOptions($options);
-            }
-        }
-    }
-
-    /**
      * Add a data provider to use with queries
      * @param string $name
      * @param DataProviderInterface $dataProvider
      */
     public function addDataProvider(string $name, DataProviderInterface $dataProvider)
     {
-        if ($this->isCacheEnabled()) {
-            // Enable cache on data provider
+        if ($this->hasCache()) {
+            // Set cache
             $dataProvider->setCache($this->cache, $this->cacheLifetime);
-        } elseif ($this->hasCache()) {
-            // If cache exists but disabled, add to data provider but disable it
-            $dataProvider->setCache($this->cache, $this->cacheLifetime);
-            $dataProvider->disableCache();
+            if ($this->isCacheEnabled()) {
+                $dataProvider->enableCache();
+            } else {
+                $dataProvider->disableCache();
+            }
         }
         if (!empty($this->cacheTags)) {
             // If cache tags exist and cache adapter is compatible, set them
@@ -120,10 +102,6 @@ class QueryManager
             // Set shared HTTP client
             if (!is_null($this->httpClient) && !$dataProvider->hasHttpClient()) {
                 $dataProvider->setHttpClient($this->httpClient);
-            }
-            // Set default options
-            if (!empty($this->httpDefaultOptions)) {
-                $dataProvider->setDefaultOptions($this->httpDefaultOptions);
             }
         }
 
@@ -220,13 +198,11 @@ class QueryManager
                 return $item[self::DATA_PROVIDER_NAME];
             }
         }
-        throw new MissingDataProviderException(sprintf('Cannot find a compatible data provider (%s) for query', $class));
+        throw new MissingDataProviderException(sprintf('Cannot find a compatible data provider (%s) for query', $requiredClass));
     }
 
     /**
      * Add a query (does not run the query, this happens on data access)
-     *
-     * @todo Need to uniquely identify each data provider so we can add defaults (e.g. site ID, preview token)
      *
      * @param string $queryName
      * @param QueryInterface $query Query
@@ -259,22 +235,57 @@ class QueryManager
     }
 
     /**
+     * Add multiple queries to the data manager
+     * @param array $queries Array of name => query objects
+     */
+    public function addQueries(array $queries)
+    {
+        foreach ($queries as $name => $query) {
+            if (is_string($name) && !empty($name) && $query instanceof QueryInterface) {
+                $this->add($name, $query);
+            }
+        }
+    }
+
+    /**
      * Run queries on data access
      *
      * Only runs a query once, you can force a query to be re-run via $query->clearResponse()
      *
      * This should run multiple queries concurrently
      */
-    protected function runQueries()
+    protected function runConcurrentQueries()
     {
         foreach ($this->queries as $query) {
             // Skip if already run, you can still manually re-run a query via $query->run()
             if ($query->hasResponseRun()) {
                 continue;
             }
+            // Skip queries marked as do not run concurrently
+            if (!$query->isConcurrent()) {
+                continue;
+            }
 
             // Run a query
             $query->run();
+        }
+    }
+
+    /**
+     * Run a query
+     *
+     * This method either run all queries concurrently, or just this single query is the query is set as non-concurrent
+     *
+     * @param QueryInterface $query
+     */
+    protected function runQuery(QueryInterface $query)
+    {
+        if (!$query->hasResponseRun()) {
+            if ($query->isConcurrent()) {
+                $this->runConcurrentQueries();
+            } else {
+                $query->run();
+            }
         }
     }
 
@@ -321,11 +332,10 @@ class QueryManager
         if (!$this->hasQuery($queryName)) {
             throw new QueryManagerException(sprintf('Cannot find query with query name "%s"', $queryName));
         }
-        $query = $this->getQuery($queryName);
 
-        if (!$query->hasResponseRun()) {
-            $this->runQueries();
-        }
+        // Either run all queries concurrently, or just this single query
+        $query = $this->getQuery($queryName);
+        $this->runQuery($query);
         if (!$query->hasResponseRun()) {
             throw new QueryManagerException(sprintf('Response has not run for query name "%s"', $queryName));
         }
@@ -345,7 +355,6 @@ class QueryManager
             throw new QueryManagerException(sprintf('Cannot find query with query name "%s"', $queryName));
         }
         $query = $this->getQuery($queryName);
-
         $query->clearResponse();
     }
 
@@ -385,11 +394,10 @@ class QueryManager
         if (!$this->hasQuery($queryName)) {
             throw new QueryManagerException(sprintf('Cannot find query with query name "%s"', $queryName));
         }
-        $query = $this->getQuery($queryName);
 
-        if (!$query->hasResponseRun()) {
-            $this->runQueries();
-        }
+        // Either run all queries concurrently, or just this single query
+        $query = $this->getQuery($queryName);
+        $this->runQuery($query);
         if (!$query->hasResponseRun()) {
             throw new QueryManagerException(sprintf('Response has not run for query name "%s"', $queryName));
         }
@@ -421,11 +429,10 @@ class QueryManager
         if (!$this->hasQuery($queryName)) {
             throw new QueryManagerException(sprintf('Cannot find query with query name "%s"', $queryName));
         }
-        $query = $this->getQuery($queryName);
 
-        if (!$query->hasResponseRun()) {
-            $this->runQueries();
-        }
+        // Either run all queries concurrently, or just this single query
+        $query = $this->getQuery($queryName);
+        $this->runQuery($query);
         if (!$query->hasResponseRun()) {
             throw new QueryManagerException(sprintf('Response has not run for query name "%s"', $queryName));
         }
@@ -447,16 +454,15 @@ class QueryManager
      * Set and enable the cache
      *
      * @param CacheInterface $cache
-     * @param int $defaultLifetime Default cache lifetime
+     * @param int|null $defaultLifetime Default cache lifetime
      */
     public function setCache(CacheInterface $cache, ?int $defaultLifetime = null)
     {
         $this->cache = $cache;
-        $this->cacheEnabled = true;
-
         foreach ($this->getDataProviders() as $dataProvider) {
             $dataProvider->setCache($this->cache, $defaultLifetime);
         }
+        $this->enableCache();
     }
 
     /**
@@ -475,7 +481,7 @@ class QueryManager
      */
     public function isCacheEnabled(): bool
     {
-        return $this->cacheEnabled;
+        return ($this->hasCache() && $this->cacheEnabled);
     }
 
     /**
@@ -542,6 +548,8 @@ class QueryManager
 
     /**
      * Return debugging information for data collector (web profiler)
+     *
+     * @todo Query manager data collector - work in progress
      * @return array
      */
     public function getDataCollector(): array
@@ -573,6 +581,7 @@ class QueryManager
                     $value['cacheHit'] = $query->getResponse()->isHit();
                     $value['cacheAge'] = $query->getResponse()->getAge();
                     $value['baseUri']  = $dataProvider->getBaseUri();
+                    $value['httpStatusCode'] = $query->getResponse()->getStatusCode();
                     $value['responseHeaders'] = $query->getResponse()->getHeaders();
                     $value['responseData'] = $query->getResponse()->getContent();
 

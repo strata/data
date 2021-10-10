@@ -1,19 +1,12 @@
 # Query manager
 
-A query manager is used to help run multiple queries to retrieve data. 
+A query manager is used to help run multiple queries to retrieve data. You can share Http client and settings across different queries.
 
-Queries are prepared when added to the query manager and are only run when data is accessed. Where possible, 
-multiple HTTP requests are run concurrently for better performance. 
+## Data providers
 
-You can then return either the decoded data (one item) or a collection (multiple items with pagination) from the query manager 
-for each query you've set up.
-
-Query managers support caching, so you can do things like set cache tags across multiple queries.
-
-## Adding data providers
-
+### addDataProvider
 First create a new `QueryManager` instance and add data providers to it via the `addDataProvider()` method. This takes 
-two arguments: the data provider name, and the data provider object itself.
+two arguments: the data provider name (which must be unique), and the data provider object itself.
 
 ```php
 use Strata\Data\Query\QueryManager;
@@ -29,11 +22,79 @@ $manager->addDataProvider('internal_api', new Rest("https://example1.com/api/"))
 $manager->addDataProvider('cms', new GraphQL("https://example2.com/api/"));
 ```
 
+### setHttpClient
+
+You can override the Http client used by all data providers. This is useful in testing, so you can pass a `MockHttpClient`.
+
+Please note this only sets the Http client for all existing data providers, if you set any future data providers they will use
+their own Http client unless this method is called again - or you use `shareHttpClient()`.
+
+* Params:
+    * `HttpClientInterface $httpClient` Symfony HttpClient object
+
+### shareHttpClient
+
+By calling this method all data providers in the query manager that use a `Http` compatible data provider are set to share 
+the same data provider. This helps performance, by ensuring multiple queries are run concurrently.
+
+This is not default behaviour, so needs to be called to enabled.
+
+## How queries are run
+
+There are two strategies for loading data in queries when using the query manager.
+
+### Concurrent requests
+
+By default queries in the query manager are designed to be run concurrently when you first request data. This works in the following way:
+
+1. When you add queries, each query is added to the queries array in the query manager. 
+2. If a query can be cached, the cache is checked and if a valid cached result exists the query is populated when you add it.
+3. If a query is not populated by the cache, then a live query is run the first time any data is requested from the query manager.
+4. When you request any data from the query manager all un-run queries are run. Queries are run concurrently to help performance (please note this is only possible if the Http client is shared between data managers).
+5. If you add any new queries after requesting data, then these are not automatically run until data is requested again.
+
+E.g.
+
+```php
+$query = new Query();
+$query->setUri('posts');
+$manager->add('posts', $query);
+
+$query = new Query();
+$query->setUri('news')
+      ->setParam('limit', 25);
+$manager->add('news', $query);
+
+// This runs both queries concurrently and returns data for the posts query
+$data = $manager->get('posts');
+```
+
+### Individual requests
+
+Concurernt requests works great for retrieving data. However, it's not great for  all data requests.
+
+For any requests you want to run individually you can do this by setting `false` on the `concurrent()` flag for a query object. Non-concurrent queries are then only run when you access data for that query and never when any other query data is accessed.
+
+```php
+$query = new Query();
+$query->setUri('blog-comments')
+      ->concurrent(false);
+$manager->addStandalone('comments', $query);
+
+// This runs only the comment comment query
+$data = $manager->get('comments');
+```
+
 ## Adding queries
 
-Add a query add via the `QueryManager::add` method. You need to pass the query name as the 1st argument, and the query 
-object as the 2nd argument. You can optionally set the data provider name as the 3rd argument. The default functionality 
-is to use the first compatible data provider in the query manager.
+Add a query add via the `add()` method. 
+
+* Params:
+  * `string $queryName` - Query name, must be unique
+  * `QueryInterface $query` - Query object
+  * `?string $dataProviderName` - Optional data provider name, if not set uses the first compatible data provider in the query manager
+
+This prepares the query and if the cache is enabled returns the object from the cache.
 
 ### Example REST API query
 
@@ -121,23 +182,28 @@ You can also use `hasQuery()` to test whether a query exists in the query manage
 
 ## Caching
 
+You can set a cache in a query manager and it is shared across all data providers. 
+
 Also see [caching](../usage/caching.md).
 
 ### setCache
 
-Set a cache to use for all queries in the query manager. See Symfony documentation on [compatible cache adapters](https://symfony.com/doc/current/components/cache/cache_pools.html) 
-you can use. If you want to use cache tags, please ensure you use a cache adapter that implements `Symfony\Component\Cache\Adapter\TagAwareAdapterInterface`.
+Set a cache to use for all queries in the query manager and enable the cache. This shares the same cache adapater with all data providers in 
+the query manager.  
 
 * Parameters
-    * `CacheInterface $cache` Cache that implements `Symfony\Contracts\Cache\CacheInterface`
-    * `?int $defaultLifetime = null`
-    
+  * `CacheInterface $cache` Cache that implements `Symfony\Contracts\Cache\CacheInterface`
+  * `?int $defaultLifetime = null` Default cache lifetime (if not set defaults to one hour)
+
+See Symfony documentation on [compatible cache adapters](https://symfony.com/doc/current/components/cache/cache_pools.html) 
+you can use. If you want to use cache tags, please ensure you use a cache adapter that implements `Symfony\Component\Cache\Adapter\TagAwareAdapterInterface`.
+
 ### enableCache
 
 Enables the cache for this request. This requires a cache to be set to the data provider to work.
 
 * Parameters
-    * `?int $lifetime = null` Lifetime in seconds for the cache, if not set defaults to one hour
+  * `?int $lifetime = null` Lifetime in seconds for the cache, if not set defaults to one hour
 
 ### disableCache
 
@@ -167,8 +233,8 @@ Whether the query manager has a cache set.
 
 ### isCacheEnabled
 
-Whether the cache is enabled for all queries in the query manager. Please note you can enable the cache on the query level, so it
-only affects individual queries.
+Whether the cache is available for use in the query manager. For this to be true you need to have added a cache adapter
+via `setCache()`, the cache needs to be enabled, and the `skipCache` flag is not enabled.
 
 * Return:
     * bool

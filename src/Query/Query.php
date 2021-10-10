@@ -6,6 +6,7 @@ namespace Strata\Data\Query;
 
 use Strata\Data\Collection;
 use Strata\Data\Exception\QueryException;
+use Strata\Data\Http\Http;
 use Strata\Data\Http\Response\CacheableResponse;
 use Strata\Data\Http\Rest;
 use Strata\Data\Mapper\MapCollection;
@@ -24,6 +25,8 @@ class Query extends QueryAbstract implements QueryInterface
 {
     use PaginationPropertyTrait;
 
+    private string $method = 'GET';
+
     /**
      * Data provider class required for use with this query
      * @return string
@@ -31,6 +34,28 @@ class Query extends QueryAbstract implements QueryInterface
     public function getRequiredDataProviderClass(): string
     {
         return Rest::class;
+    }
+
+    /**
+     * Set the HTTP method for this query
+     * @param string $method
+     * @return $this
+     */
+    public function method(string $method): self
+    {
+        if (Http::validMethod($method)) {
+            $this->method = strtoupper($method);
+        }
+        return $this;
+    }
+
+    /**
+     * Return HTTP method for this query
+     * @return string
+     */
+    public function getMethod(): string
+    {
+        return $this->method;
     }
 
     /**
@@ -70,26 +95,24 @@ class Query extends QueryAbstract implements QueryInterface
     public function run()
     {
         $dataProvider = $this->getDataProvider();
-        $response = $this->getResponse();
+
+        if ($this->isSubRequest()) {
+            $dataProvider->suppressErrors();
+        }
 
         // Prepare response if not already done
+        $response = $this->getResponse();
         if (!($response instanceof CacheableResponse)) {
             $this->prepare();
             $response = $this->getResponse();
         }
 
-        if ($this->isSubRequest()) {
-            $dataProvider->suppressErrors();
-        }
-        if ($this->isCacheEnabled()) {
-            $dataProvider->enableCache($this->getCacheLifetime());
-        }
-
         $this->response = $dataProvider->runRequest($response);
 
-        // Reset cache & suppress errors to previous values
-        $this->dataProvider->resetEnableCache();
-        $this->dataProvider->resetSuppressErrors();
+        // Reset suppress errors to previous values
+        if ($this->isSubRequest()) {
+            $this->dataProvider->resetSuppressErrors();
+        }
     }
 
     /**

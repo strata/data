@@ -6,6 +6,7 @@ namespace Strata\Data\Http\Response;
 
 use Psr\Cache\CacheItemInterface;
 use Symfony\Component\HttpClient\Response\StreamableInterface;
+use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 class CacheableResponse implements ResponseInterface, StreamableInterface
@@ -14,7 +15,7 @@ class CacheableResponse implements ResponseInterface, StreamableInterface
 
     private bool $isCacheHit = false;
     private ?int $age = null;
-    private ?CacheItemInterface $cacheItem = null;
+    private ?ItemInterface $cacheItem = null;
 
     /**
      * Constructor
@@ -23,7 +24,7 @@ class CacheableResponse implements ResponseInterface, StreamableInterface
      * @param bool $hit Whether this response came from the cache (and has a cache hit)
      * @param CacheItem $item Cache item
      */
-    public function __construct(ResponseInterface $response, ?bool $hit = null, ?CacheItemInterface $item = null)
+    public function __construct(ResponseInterface $response, ?bool $hit = null, ?ItemInterface $item = null)
     {
         $this->decorated = $response;
 
@@ -82,7 +83,7 @@ class CacheableResponse implements ResponseInterface, StreamableInterface
         return $this->age;
     }
 
-    public function setCacheItem(CacheItemInterface $item)
+    public function setCacheItem(ItemInterface $item)
     {
         $this->cacheItem = $item;
     }
@@ -98,9 +99,9 @@ class CacheableResponse implements ResponseInterface, StreamableInterface
     /**
      * Return cache item, or null if not set
      *
-     * @return ?CacheItem
+     * @return ?ItemInterface
      */
-    public function getCacheItem(): ?CacheItemInterface
+    public function getCacheItem(): ?ItemInterface
     {
         return $this->cacheItem;
     }

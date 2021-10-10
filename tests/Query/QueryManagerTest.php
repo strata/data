@@ -34,8 +34,8 @@ class QueryManagerTest extends TestCase
         // Set cache
         $manager->setCache(new FilesystemAdapter());
         $manager->addDataProvider('test2', new Rest('https://example.com'));
-        $this->assertTrue($manager->getDataProvider('test2')->isCacheEnabled());
         $this->assertTrue($manager->getDataProvider('test1')->isCacheEnabled());
+        $this->assertTrue($manager->getDataProvider('test2')->isCacheEnabled());
 
         // Disabled cache
         $manager->disableCache();
@@ -49,6 +49,75 @@ class QueryManagerTest extends TestCase
         $this->expectException(QueryManagerException::class);
         $tags = ['tag1', 'tag2', 'tag3'];
         $manager->setCacheTags($tags);
+    }
+
+    // @todo update this method to use Query::doNotCache instead
+    public function testDoNotCache()
+    {
+        // Create a bunch of mock responses
+        $responses = array_fill(0, 11, new MockResponse('{"message": "OK"}'));
+
+        $manager = new QueryManager();
+        $manager->addDataProvider('test1', new Rest('https://example.com'));
+        $manager->setHttpClient(new MockHttpClient($responses));
+
+        // Set cache
+        $adapter = new FilesystemAdapter('cache', 0, self::CACHE_DIR);
+        $adapter->clear();
+        $manager->setCache($adapter);
+        $this->assertTrue($manager->isCacheEnabled());
+
+        // Disable cache
+        $manager->disableCache();
+        $this->assertFalse($manager->isCacheEnabled());
+
+        $query1 = (new Query())->setUri('query1');
+        $manager->add('query1', $query1);
+        $query2 = (new Query())->setUri('query2')->doNotCache();
+        $manager->add('query2', $query2);
+        $query3 = (new Query())->setUri('query3')->method('post');
+        $manager->add('query3', $query3);
+
+        $this->assertNull($query1->isCacheableRequest());
+        $this->assertSame(false, $query2->isCacheableRequest());
+        $this->assertNull($query3->isCacheableRequest());
+
+        $response1 = $manager->getResponse('query1');
+        $response2 = $manager->getResponse('query2');
+        $response3 = $manager->getResponse('query3');
+        $this->assertFalse($response1->isHit());
+        $this->assertFalse($response2->isHit());
+
+        $manager->clearResponse('query1');
+        $manager->clearResponse('query2');
+        $response1 = $manager->getResponse('query1');
+        $response2 = $manager->getResponse('query2');
+        $this->assertFalse($response1->isHit());
+        $this->assertFalse($response2->isHit());
+
+        // Enable cache
+        $manager->enableCache();
+        $manager->clearResponse('query1');
+        $manager->clearResponse('query2');
+        $manager->clearResponse('query3');
+
+        $response1 = $manager->getResponse('query1');
+        $response2 = $manager->getResponse('query2');
+        $response3 = $manager->getResponse('query3');
+        $this->assertFalse($response1->isHit());
+        $this->assertFalse($response2->isHit());
+        $this->assertFalse($response3->isHit());
+
+        $manager->clearResponse('query1');
+        $manager->clearResponse('query2');
+        $manager->clearResponse('query3');
+
+        $response1 = $manager->getResponse('query1');
+        $response2 = $manager->getResponse('query2');
+        $response3 = $manager->getResponse('query3');
+        $this->assertTrue($response1->isHit());
+        $this->assertFalse($response2->isHit());
+        $this->assertFalse($response3->isHit());
     }
 
     public function testSetDataProvider()
@@ -182,17 +251,17 @@ class QueryManagerTest extends TestCase
             new MockResponse('{"message": "OK 6"}'),
         ];
         $http = new MockHttpClient($responses);
-
         $api = new Rest('https://example.com/');
         $api->setHttpClient($http);
-
         $adapter = new FilesystemAdapter('cache', 0, self::CACHE_DIR);
         $adapter->clear();
-        $api->setCache($adapter);
-        $api->disableCache();
-
         $manager = new QueryManager();
         $manager->addDataProvider('test', $api);
+
+        $this->assertFalse($manager->isCacheEnabled());
+        $manager->setCache($adapter);
+        $this->assertTrue($manager->isCacheEnabled());
+        $manager->disableCache();
 
         $query = new Query();
         $query->setUri('test');
@@ -211,7 +280,7 @@ class QueryManagerTest extends TestCase
 
         // Responses should be identical since cache enabled
         $manager->clearResponse('test');
-        $query->enableCache(CacheLifetime::HOUR);
+        $query->cache(CacheLifetime::HOUR);
 
         $data4 = $manager->get('test');
         $this->assertFalse($manager->isHit('test'));
@@ -332,41 +401,6 @@ class QueryManagerTest extends TestCase
         $this->assertSame('https://example3.com/test2', $request->getInfo('url'));
     }
 
-    public function testSetDefaultHttpOptions()
-    {
-        // Create a bunch of mock responses
-        $responses = array_fill(0, 8, new MockResponse('{"message": "OK"}'));
-
-        $manager = new QueryManager();
-        $manager->addDataProvider('test1', new Rest('https://example1.com/'));
-        $manager->addDataProvider('test2', new Rest('https://example2.com/'));
-        $manager->addDataProvider('test3', new Rest('https://example3.com/'));
-        $rest1 = $manager->getDataProvider('test1');
-        $rest1->setHttpClient(new MockHttpClient($responses));
-        $manager->shareHttpClient();
-        $manager->setHttpDefaultOptions(['headers' => [
-            'X-Preview-Token' => 'ABC123',
-        ]]);
-
-        // Test base URI
-        $request =  $rest1->prepareRequest('GET', 'test2');
-        $headers = $request->getDecorated()->getRequestOptions()['headers'];
-        $this->assertTrue(in_array('X-Preview-Token: ABC123', $headers));
-
-        $rest2 = $manager->getDataProvider('test2');
-        $request =  $rest2->prepareRequest('GET', 'test2');
-        $headers = $request->getDecorated()->getRequestOptions()['headers'];
-        $this->assertTrue(in_array('X-Preview-Token: ABC123', $headers));
-
-        $rest3 = $manager->getDataProvider('test3');
-        $request = $rest3->prepareRequest('GET', 'test2', ['headers' => [
-            'X-Custom-Header' => 'Testing',
-        ]]);
-        $headers = $request->getDecorated()->getRequestOptions()['headers'];
-        $this->assertTrue(in_array('X-Preview-Token: ABC123', $headers));
-        $this->assertTrue(in_array('X-Custom-Header: Testing', $headers));
-    }
-
     public function testGetDataCollector()
     {
         // Create a bunch of mock responses
@@ -378,9 +412,6 @@ class QueryManagerTest extends TestCase
         $rest1 = $manager->getDataProvider('test1');
         $rest1->setHttpClient(new MockHttpClient($responses));
         $manager->shareHttpClient();
-        $manager->setHttpDefaultOptions(['headers' => [
-            'X-Preview-Token' => 'ABC123',
-        ]]);
 
         // Queries
         $query1 = (new Query())->setUri('path1');
@@ -407,5 +438,74 @@ class QueryManagerTest extends TestCase
         $response = $manager->get('test3');
         $data = $manager->getDataCollector();
         $this->assertSame(4, $data['total']);
+    }
+
+    public function testAddQueries()
+    {
+        $responses = array_fill(0, 3, new MockResponse('{"message": "OK"}'));
+        $manager = new QueryManager();
+        $manager->addDataProvider('test1', new Rest('https://example1.com/'));
+        $rest1 = $manager->getDataProvider('test1');
+        $rest1->setHttpClient(new MockHttpClient($responses));
+
+        $manager->addQueries([
+            'query1' => (new Query())->setUri('path1'),
+            'query2' => (new Query())->setUri('path2')->concurrent(false),
+            '0'      => (new Query())->setUri('path3'),
+        ]);
+
+        $this->assertSame(2, count($manager->getQueries()));
+        $this->assertTrue($manager->hasQuery('query1'));
+        $this->assertTrue($manager->hasQuery('query2'));
+        $this->assertFalse($manager->hasQuery('query3'));
+
+        $manager->addQueries([
+            (new Query())->setUri('path1'),
+            (new Query())->setUri('path2')->concurrent(false),
+        ]);
+
+        $this->assertSame(2, count($manager->getQueries()));
+    }
+
+    public function testNonConcurrentQueries()
+    {
+        // Create a bunch of mock responses
+        $responses = array_fill(0, 3, new MockResponse('{"message": "OK"}'));
+
+        $manager = new QueryManager();
+        $manager->addDataProvider('test1', new Rest('https://example1.com/'));
+        $rest1 = $manager->getDataProvider('test1');
+        $rest1->setHttpClient(new MockHttpClient($responses));
+
+        $manager->addQueries([
+            'query1' => (new Query())->setUri('path1'),
+            'query2' => (new Query())->setUri('path2')->concurrent(false),
+            'query3' => (new Query())->setUri('path3'),
+        ]);
+
+        $this->assertTrue($manager->hasQuery('query1'));
+        $this->assertTrue($manager->hasQuery('query2'));
+        $this->assertTrue($manager->hasQuery('query3'));
+        $this->assertTrue($manager->getQuery('query1')->isConcurrent());
+        $this->assertFalse($manager->getQuery('query2')->isConcurrent());
+        $this->assertTrue($manager->getQuery('query3')->isConcurrent());
+        $this->assertFalse($manager->getQuery('query1')->hasResponseRun());
+        $this->assertFalse($manager->getQuery('query2')->hasResponseRun());
+        $this->assertFalse($manager->getQuery('query3')->hasResponseRun());
+
+        $data = $manager->get('query1');
+        $this->assertTrue($manager->getQuery('query1')->hasResponseRun());
+        $this->assertTrue($manager->getQuery('query3')->hasResponseRun());
+        $this->assertFalse($manager->getQuery('query2')->hasResponseRun());
+
+        $manager->clearResponse('query1');
+        $manager->clearResponse('query3');
+        $this->assertFalse($manager->getQuery('query1')->hasResponseRun());
+        $this->assertFalse($manager->getQuery('query3')->hasResponseRun());
+
+        $data = $manager->get('query2');
+        $this->assertFalse($manager->getQuery('query1')->hasResponseRun());
+        $this->assertTrue($manager->getQuery('query2')->hasResponseRun());
+        $this->assertFalse($manager->getQuery('query3')->hasResponseRun());
     }
 }

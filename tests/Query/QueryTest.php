@@ -102,7 +102,7 @@ class QueryTest extends TestCase
 
         // Responses should be identical since cache enabled
         $query->clearResponse();
-        $query->enableCache(CacheLifetime::HOUR);
+        $query->cache(CacheLifetime::HOUR);
 
         $data4 = $query->get();
         $this->assertFalse($query->isHit());

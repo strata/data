@@ -5,17 +5,67 @@ declare(strict_types=1);
 namespace Strata\Data\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Strata\Data\Cache\DataCache;
 use Strata\Data\Helper\ContentHasher;
 use Strata\Data\Http\Http;
 use Strata\Data\Http\Rest;
 use Strata\Data\Mapper\MapCollection;
 use Strata\Data\Http\Response\MockResponseFromFile;
+use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 class HttpTest extends TestCase
 {
+    const CACHE_DIR = __DIR__ . '/cache';
+
+    /**
+     * This method is called after each test.
+     *
+     * Delete cache files
+     */
+    protected function tearDown(): void
+    {
+        $cache = new DataCache(new FilesystemAdapter('cache', 0, self::CACHE_DIR));
+        $cache->clear();
+    }
+
+    public function testValidMethod()
+    {
+        $this->assertTrue(Http::validMethod('GET'));
+        $this->assertTrue(Http::validMethod('HEAD'));
+        $this->assertTrue(Http::validMethod('POST'));
+        $this->assertTrue(Http::validMethod('PUT'));
+        $this->assertTrue(Http::validMethod('DELETE'));
+        $this->assertTrue(Http::validMethod('CONNECT'));
+        $this->assertTrue(Http::validMethod('OPTIONS'));
+        $this->assertTrue(Http::validMethod('PATCH'));
+        $this->assertTrue(Http::validMethod('PURGE'));
+        $this->assertTrue(Http::validMethod('TRACE'));
+
+        $this->assertFalse(Http::validMethod('FOO'));
+        $this->assertFalse(Http::validMethod('GETPOST'));
+
+        $this->assertTrue(Http::validMethod('get'));
+        $this->assertTrue(Http::validMethod('post'));
+        $this->assertTrue(Http::validMethod('put'));
+
+        $this->assertTrue(Http::validMethod(['get', 'post']));
+        $this->assertTrue(Http::validMethod(['get', 'options', 'purge', 'post']));
+    }
+
+    public function testInvalidMethod()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        Http::validMethod(99);
+    }
+
+    public function testInvalidMethodException()
+    {
+        $this->expectExceptionMessage('Invalid HTTP method/s passed: MADE UP, FOO');
+        Http::validMethod(['GET', 'HEAD', 'MADE UP', 'FOO'], true);
+    }
 
     public function testDefaultOptions()
     {
@@ -66,6 +116,29 @@ class HttpTest extends TestCase
             'headers' => [
                 'User-Agent' => $api->getUserAgent()
             ]
+        ];
+        $this->assertSame($expected, $api->getCurrentDefaultOptions());
+
+        // test replacement
+        $api->setDefaultOptions([
+            'auth_bearer' => 'ABC123'
+        ]);
+        $expected = [
+            'headers' => [
+                'User-Agent' => $api->getUserAgent()
+            ],
+            'auth_bearer' => 'ABC123'
+        ];
+        $this->assertSame($expected, $api->getCurrentDefaultOptions());
+
+        $api->setDefaultOptions([
+            'auth_bearer' => 'DEF456'
+        ]);
+        $expected = [
+            'headers' => [
+                'User-Agent' => $api->getUserAgent()
+            ],
+            'auth_bearer' => 'DEF456'
         ];
         $this->assertSame($expected, $api->getCurrentDefaultOptions());
     }
@@ -369,5 +442,37 @@ class HttpTest extends TestCase
         $this->assertEquals('My name is John Smith', $response->getContent());
 
         $this->assertEquals(5, $api->getTotalHttpRequests());
+    }
+
+    public function testCacheableRequest()
+    {
+        $api = new Rest('http://example.com/');
+        $adapter = new FilesystemAdapter('cache', 0, self::CACHE_DIR);
+        $adapter->clear();
+
+        $this->assertFalse($api->isCacheEnabled());
+        $api->setCache($adapter);
+        $this->assertTrue($api->isCacheEnabled());
+
+        // Default settings
+        $this->assertTrue($api->isCacheableRequest('GET'));
+        $this->assertTrue($api->isCacheableRequest('HEAD'));
+        $this->assertFalse($api->isCacheableRequest('POST'));
+        $this->assertFalse($api->isCacheableRequest('PUT'));
+        $this->assertFalse($api->isCacheableRequest('DELETE'));
+        $this->assertFalse($api->isCacheableRequest('CONNECT'));
+        $this->assertFalse($api->isCacheableRequest('OPTIONS'));
+        $this->assertFalse($api->isCacheableRequest('PATCH'));
+        $this->assertFalse($api->isCacheableRequest('PURGE'));
+        $this->assertFalse($api->isCacheableRequest('TRACE'));
+
+        $api->disableCache();
+        $this->assertFalse($api->isCacheableRequest('GET'));
+
+        $api->enableCache();
+        $api->setCacheableMethods(['GET', 'POST']);
+        $this->assertTrue($api->isCacheableRequest('GET'));
+        $this->assertTrue($api->isCacheableRequest('POST'));
+        $this->assertFalse($api->isCacheableRequest('HEAD'));
     }
 }
