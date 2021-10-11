@@ -101,6 +101,7 @@ class QueryTest extends TestCase
         $this->assertFalse($query->isHit());
 
         // Responses should be identical since cache enabled
+        $api->enableCache();
         $query->clearResponse();
         $query->cache(CacheLifetime::HOUR);
 
@@ -114,8 +115,5 @@ class QueryTest extends TestCase
         $query->clearResponse();
         $this->assertSame($data4, $query->get());
         $this->assertTrue($query->isHit());
-
-        // Cache should be disabled, since Query should reset this
-        $this->assertFalse($api->isCacheEnabled());
     }
 }

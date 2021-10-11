@@ -314,6 +314,7 @@ class QueryManagerTest extends TestCase
         $this->assertFalse($manager->isHit('test'));
 
         // Responses should be identical since cache enabled
+        $manager->enableCache();
         $manager->clearResponse('test');
         $query->cache(CacheLifetime::HOUR);
 
@@ -327,9 +328,6 @@ class QueryManagerTest extends TestCase
         $manager->clearResponse('test');
         $this->assertSame($data4, $manager->get('test'));
         $this->assertTrue($manager->isHit('test'));
-
-        // Cache should be disabled, since Query should reset this after each query run
-        $this->assertFalse($api->isCacheEnabled());
     }
 
     public function testGetQueries()

@@ -10,5 +10,5 @@ namespace Strata\Data\Query;
 class GraphQLMutation extends GraphQLQuery implements GraphQLQueryInterface
 {
     protected bool $concurrent = false;
-    protected bool $cacheableRequest = true;
+    protected ?bool $cacheableRequest = false;
 }
