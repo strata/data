@@ -171,6 +171,7 @@ class BuildGraphQLQuery implements BuildQueryInterface
      */
     public function getOptions(GraphQLQuery $query)
     {
+        $options = $query->getOptions();
         $graphQL = $this->buildGraphQL($query);
         $postData = $this->dataProvider->buildQuery($graphQL, $query->getVariables());
         $options['body'] = $postData;

@@ -47,6 +47,21 @@ class BuildQuery implements BuildQueryInterface
     }
 
     /**
+     * Return options to use with HTTP request
+     * @param Query $query
+     * @return array
+     */
+    public function getOptions(Query $query)
+    {
+        $options = $query->getOptions();
+        $params = $this->getParameters($query);
+        if (!empty($params)) {
+            $options['query'] = $params;
+        }
+        return $options;
+    }
+
+    /**
      * Return a prepared request
      *
      * Request is not run since no data is accessed (Symfony HttpClient lazy runs requests when you access data)
@@ -62,9 +77,7 @@ class BuildQuery implements BuildQueryInterface
             $this->dataProvider->suppressErrors();
         }
 
-        $options = [
-            'query' => $this->getParameters($query)
-        ];
+        $options = $this->getOptions($query);
         $response = $this->dataProvider->prepareRequest($query->getMethod(), $query->getUri(), $options, $query->isCacheableRequest());
 
         // Set caching rules for this query

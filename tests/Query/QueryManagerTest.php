@@ -541,4 +541,36 @@ class QueryManagerTest extends TestCase
         $this->assertTrue($manager->getQuery('query2')->hasResponseRun());
         $this->assertFalse($manager->getQuery('query3')->hasResponseRun());
     }
+
+    public function testSwitchHttpHeaders()
+    {
+        // Create a bunch of mock responses
+        $responses = array_fill(0, 3, new MockResponse('{"message": "OK"}'));
+
+        $manager = new QueryManager();
+        $rest1 = new Rest('https://example1.com/');
+        $rest1->setDefaultOptions([
+            'auth_bearer' => 'ABC123'
+        ]);
+        $rest1->setHttpClient(new MockHttpClient($responses));
+        $manager->addDataProvider('test1', $rest1);
+
+        $manager->add('query1', (new Query())->setUri('path1'));
+        $manager->add('query2', (new Query())->setUri('path2')->setOptions([
+            'auth_bearer' => 'DEF456'
+        ]));
+        $manager->add('query3', (new Query())->setUri('path3'));
+
+        $mockRequest = $manager->getResponse('query1')->getDecorated();
+        $authorizationRequestHeader = $mockRequest->getRequestOptions()['normalized_headers']['authorization'][0];
+        $this->assertSame('Authorization: Bearer ABC123', $authorizationRequestHeader);
+
+        $mockRequest = $manager->getResponse('query2')->getDecorated();
+        $authorizationRequestHeader = $mockRequest->getRequestOptions()['normalized_headers']['authorization'][0];
+        $this->assertSame('Authorization: Bearer DEF456', $authorizationRequestHeader);
+
+        $mockRequest = $manager->getResponse('query3')->getDecorated();
+        $authorizationRequestHeader = $mockRequest->getRequestOptions()['normalized_headers']['authorization'][0];
+        $this->assertSame('Authorization: Bearer ABC123', $authorizationRequestHeader);
+    }
 }

@@ -20,6 +20,7 @@ abstract class QueryAbstract implements QueryInterface
     use PaginationPropertyTrait;
 
     protected ?DataProviderInterface $dataProvider = null;
+    protected array $options = [];
     protected ?CacheableResponse $response = null;
 
     protected ?bool $cacheableRequest = null;
@@ -51,8 +52,6 @@ abstract class QueryAbstract implements QueryInterface
      *
      * @param DataProviderInterface $dataProvider
      * @return $this
-     * @todo Fix signature of this method, seems to be incompatible with the interface?
-     *
      */
     public function setDataProvider(DataProviderInterface $dataProvider): self
     {
@@ -84,6 +83,24 @@ abstract class QueryAbstract implements QueryInterface
             throw new QueryException('No data provider set');
         }
         return $this->dataProvider;
+    }
+
+    /**
+     * Set options for this query
+     */
+    public function setOptions(array $options): self
+    {
+        $this->options = $options;
+        return $this;
+    }
+
+    /**
+     * Return options for this query
+     * @return $this
+     */
+    public function getOptions(): array
+    {
+        return $this->options;
     }
 
     /**

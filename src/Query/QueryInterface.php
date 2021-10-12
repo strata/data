@@ -36,6 +36,19 @@ interface QueryInterface
     public function hasDataProvider(): bool;
 
     /**
+     * Set options for this query
+     * @param array $options
+     * @return $this
+     */
+    public function setOptions(array $options): self;
+
+    /**
+     * Return options for this query
+     * @return array
+     */
+    public function getOptions(): array;
+
+    /**
      * Set root property path to retrieve data for this query
      * @param string $path
      */
@@ -93,7 +106,7 @@ interface QueryInterface
     public function cacheTags(array $tags = []): self;
 
     /**
-     * Whether a cache lifetime is setup
+     * Whether a cache lifetime is set up
      * @return bool
      */
     public function hasCacheLifetime(): bool;

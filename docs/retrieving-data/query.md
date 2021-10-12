@@ -112,6 +112,31 @@ Set array of parameters to send with this query. These are sent as GET parameter
 * Parameters
     * `array $params` 
 
+### setOptions
+
+Set options for the HTTP request for just this query.
+
+* Parameters
+    * `array $options`  
+
+For example to set headers:
+
+```php
+$query->setOptions([
+    'headers' => [
+        'Content-Type' => 'text/plain'
+    ]
+]));
+```
+
+To set an auth bearer token:
+
+```php
+$query->setOptions([
+    'auth_bearer' => 'ABC123'
+]));
+```
+
 ### concurrent
 
 All queries default to running concurrently when used with a query manager, you can disable this by calling `concurrent(false)`. 
