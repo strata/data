@@ -9,7 +9,6 @@ use Strata\Data\Validate\Rule\NumberRule;
 
 class NumberRuleTest extends TestCase
 {
-
     /**
      * @dataProvider validDataProvider
      */

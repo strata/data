@@ -16,7 +16,6 @@ class TestPermissions
 
 final class CheckPermissionsTest extends TestCase
 {
-
     public function testPermissionMethods()
     {
         $class = new TestPermissions();

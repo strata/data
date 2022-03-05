@@ -9,7 +9,6 @@ use Strata\Data\Validate\Rule\InRule;
 
 class InRuleTest extends TestCase
 {
-
     public function testValidationRule()
     {
         $validator = new InRule('[name]', ['test1', 'test2', 'test3']);

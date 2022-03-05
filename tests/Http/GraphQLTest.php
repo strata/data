@@ -11,7 +11,6 @@ use Symfony\Component\HttpClient\MockHttpClient;
 
 class GraphQLTest extends TestCase
 {
-
     public function testDefaultHttpOptions()
     {
         $graphQL = new GraphQL('https://example.com/api');

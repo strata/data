@@ -13,7 +13,6 @@ use Strata\Data\Exception\DecoderException;
  */
 class GraphQL extends Json
 {
-
     /**
      * Decode JSON string to array
      *

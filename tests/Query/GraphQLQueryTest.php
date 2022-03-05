@@ -9,7 +9,6 @@ use Strata\Data\Query\GraphQLQuery;
 
 class GraphQLQueryTest extends GraphQLTestCase
 {
-
     public function testGenerateGraphQL()
     {
         $expected = <<<EOD

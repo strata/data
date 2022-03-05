@@ -9,7 +9,6 @@ use Strata\Data\Validate\Rule\ArrayRule;
 
 class ArrayRuleTest extends TestCase
 {
-
     public function testValidationRule()
     {
         $validator = new ArrayRule('[data]');

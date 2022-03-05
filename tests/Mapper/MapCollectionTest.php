@@ -17,12 +17,10 @@ class Item
 
 class MyCollection extends Collection
 {
-
 }
 
 class InvalidCollection
 {
-
 }
 
 final class MapCollectionTest extends TestCase

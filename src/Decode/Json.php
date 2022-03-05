@@ -14,7 +14,6 @@ use Strata\Data\Exception\DecoderException;
  */
 class Json implements DecoderInterface
 {
-
     /**
      * Decode JSON string to array
      *

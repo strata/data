@@ -9,7 +9,6 @@ use Strata\Data\Helper\ContentHasher;
 
 final class ContentHashTest extends TestCase
 {
-
     protected $contentExamples = [
       "Some words.",
       "Some words that are different to the ones that went before.",

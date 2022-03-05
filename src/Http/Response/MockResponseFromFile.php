@@ -8,7 +8,6 @@ use Symfony\Component\HttpClient\Response\MockResponse;
 
 class MockResponseFromFile extends MockResponse
 {
-
     /**
      * Create mock response from a file
      *

@@ -9,7 +9,6 @@ use Strata\Data\Validate\Rule\EmailRule;
 
 class EmailRuleTest extends TestCase
 {
-
     /**
      * @dataProvider validDataProvider
      */

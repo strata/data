@@ -9,7 +9,6 @@ namespace Strata\Data\Transform\AllValues;
  */
 class StripTags extends ValuesAbstract
 {
-
     /**
      * Whether this transformer can transform data
      *

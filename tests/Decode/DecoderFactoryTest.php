@@ -11,7 +11,6 @@ use Symfony\Component\HttpClient\Response\MockResponse;
 
 final class DecoderFactoryTest extends TestCase
 {
-
     public function testFilenameFactory()
     {
         $this->assertInstanceOf('Strata\Data\Decode\Json', DecoderFactory::fromFilename('example.json'));

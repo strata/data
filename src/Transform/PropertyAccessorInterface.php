@@ -8,7 +8,6 @@ use Symfony\Component\PropertyAccess\PropertyAccessor;
 
 interface PropertyAccessorInterface
 {
-
     /**
      * Set PropertyAccessor
      *

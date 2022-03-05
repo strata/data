@@ -9,7 +9,6 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
 
 class StringNormalizer
 {
-
     /**
      * Take a string or object, and return a string representing the content
      *

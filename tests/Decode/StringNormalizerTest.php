@@ -20,7 +20,6 @@ class Item
 
 final class StringNormalizerTest extends TestCase
 {
-
     public function testString()
     {
         $this->assertEquals('test1', StringNormalizer::getString('test1'));

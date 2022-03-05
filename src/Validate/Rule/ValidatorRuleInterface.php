@@ -8,7 +8,6 @@ use Strata\Data\Validate\ValidatorInterface;
 
 interface ValidatorRuleInterface extends ValidatorInterface
 {
-
     /**
      * Return property path of data field to validate
      *

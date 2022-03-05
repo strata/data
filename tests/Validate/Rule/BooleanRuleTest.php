@@ -9,7 +9,6 @@ use Strata\Data\Validate\Rule\BooleanRule;
 
 class BooleanRuleTest extends TestCase
 {
-
     public function testValidationRule()
     {
         $validator = new BooleanRule('[data]');

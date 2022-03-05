@@ -9,7 +9,6 @@ use Strata\Data\Validate\Rule\UrlRule;
 
 class UrlRuleTest extends TestCase
 {
-
     public function testValidationRule()
     {
         $validator = new UrlRule('[url]');

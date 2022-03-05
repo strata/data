@@ -20,7 +20,6 @@ class TestFlags
 
 final class FlagsTest extends TestCase
 {
-
     public function testFlags()
     {
         $class = new TestFlags();

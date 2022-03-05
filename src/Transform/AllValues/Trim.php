@@ -9,7 +9,6 @@ namespace Strata\Data\Transform\AllValues;
  */
 class Trim extends ValuesAbstract
 {
-
     /**
      * Whether this transformer can transform data
      *

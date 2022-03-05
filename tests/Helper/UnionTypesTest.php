@@ -9,7 +9,6 @@ use Strata\Data\Helper\UnionTypes;
 
 final class UnionTypesTest extends TestCase
 {
-
     public function testArrayOrObject()
     {
         $this->assertFalse(UnionTypes::is(42, 'array', 'object'));

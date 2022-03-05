@@ -9,7 +9,6 @@ use Strata\Data\Validate\ValidationRules;
 
 class ValidationRulesTest extends TestCase
 {
-
     public function testImplode()
     {
         $this->assertEquals('1,2,3', ValidationRules::implode([1, 2, 3]));

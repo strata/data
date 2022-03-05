@@ -9,7 +9,6 @@ use Strata\Data\Validate\Rule\RequiredRule;
 
 class RequiredRuleTest extends TestCase
 {
-
     /**
      * @dataProvider validDataProvider
      */

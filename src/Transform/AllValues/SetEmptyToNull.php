@@ -9,7 +9,6 @@ namespace Strata\Data\Transform\AllValues;
  */
 class SetEmptyToNull extends ValuesAbstract
 {
-
     /**
      * Whether this transformer can transform data
      *

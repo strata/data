@@ -9,7 +9,6 @@ use Strata\Data\Validate\Rule\ImageRule;
 
 class ImageRuleTest extends TestCase
 {
-
     public function testValidationRule()
     {
         $validator = new ImageRule('[img]');

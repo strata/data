@@ -9,7 +9,6 @@ use Strata\Data\Decode\Json;
 
 class Rest extends Http
 {
-
     /**
      * Return default decoder to use to decode responses
      *

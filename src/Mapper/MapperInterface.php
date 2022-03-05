@@ -8,7 +8,6 @@ use Strata\Data\Exception\MapperException;
 
 interface MapperInterface
 {
-
     /**
      * Map data to an item
      *

@@ -9,7 +9,6 @@ use Strata\Data\Permissions;
 
 final class PermissionTest extends TestCase
 {
-
     public function testDefaultValues()
     {
         $permission = new Permissions();

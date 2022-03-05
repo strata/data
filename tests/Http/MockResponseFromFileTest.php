@@ -10,7 +10,6 @@ use Symfony\Component\HttpClient\MockHttpClient;
 
 final class MockResponseFromFileTest extends TestCase
 {
-
     public function testOnlyBody()
     {
         $client = new MockHttpClient([new MockResponseFromFile(__DIR__ . '/mock-response/mock-response.json')]);

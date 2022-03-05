@@ -9,7 +9,6 @@ use Strata\Data\Decode\GraphQL;
 
 final class GraphQLDecoderTest extends TestCase
 {
-
     public function testValid()
     {
         $decoder = new GraphQL();

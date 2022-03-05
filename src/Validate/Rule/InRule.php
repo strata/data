@@ -6,7 +6,6 @@ namespace Strata\Data\Validate\Rule;
 
 class InRule extends ValidatorRuleAbstract
 {
-
     /**
      * Is the item value valid?
      *

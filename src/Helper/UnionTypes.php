@@ -9,7 +9,6 @@ namespace Strata\Data\Helper;
  */
 class UnionTypes
 {
-
     /**
      * Is a value is one of a number of types
      *

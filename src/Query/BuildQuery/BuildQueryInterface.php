@@ -13,7 +13,6 @@ use Strata\Data\Query\Query;
  */
 interface BuildQueryInterface
 {
-
     /**
      * Return a prepared request
      *

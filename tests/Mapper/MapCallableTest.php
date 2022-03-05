@@ -17,7 +17,6 @@ function user_transform($value): string
 
 final class MapCallableTest extends TestCase
 {
-
     public function testPhpFunction()
     {
         $mapping = [
