@@ -76,4 +76,12 @@ final class UnionTypesTest extends TestCase
         $this->expectException('InvalidArgumentException');
         UnionTypes::assert('test', [1,2,3], 'object', 'string');
     }
+
+    public function testInterface()
+    {
+        $this->assertFalse(UnionTypes::is([1,2,3], '\Countable'));
+        $this->assertTrue(UnionTypes::is(new \ArrayIterator([1,2,3]), '\Countable'));
+        $this->assertTrue(UnionTypes::is(new \ArrayIterator([1,2,3]), '\ArrayAccess'));
+        $this->assertTrue(UnionTypes::is(new \ArrayIterator([1,2,3]), '\ArrayIterator'));
+    }
 }

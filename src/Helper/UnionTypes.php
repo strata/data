@@ -63,13 +63,13 @@ class UnionTypes
                     }
                     break;
                 default:
-                    if (class_exists($type)) {
+                    if (class_exists($type) || interface_exists($type)) {
                         if ($value instanceof $type) {
                             $valid = true;
                         }
                         break;
                     }
-                    throw new \InvalidArgumentException(sprintf('Invalid type %s passed', gettype($type)));
+                    throw new \InvalidArgumentException(sprintf('Invalid union type passed "%s"', $type));
             }
         }
 
