@@ -295,21 +295,6 @@ abstract class QueryAbstract implements QueryInterface
     }
 
     /**
-     * Add cache tags to this query
-     *
-     * To remove tags do not pass any arguments and tags will be reset to an empty array
-     *
-     * @param array $tags
-     * @throws CacheException
-     * @throws QueryException
-     */
-    public function cacheTags(array $tags = []): self
-    {
-        $this->cacheTags = $tags;
-        return $this;
-    }
-
-    /**
      * Add a single cache tag
      * @param string $tag
      * @return $this
@@ -321,13 +306,43 @@ abstract class QueryAbstract implements QueryInterface
     }
 
     /**
-     * Add a single cache tag with the 'new-' prefix, this denotes the cached content is only new content
+     * Add multiple cache tags to this query
+     *
+     * To remove tags do not pass any arguments and tags will be reset to an empty array
+     *
+     * @param array $tags
+     * @throws CacheException
+     * @throws QueryException
+     */
+    public function cacheTags(array $tags = []): self
+    {
+        foreach ($tags as $tag) {
+            $this->cacheTag($tag);
+        }
+        return $this;
+    }
+
+    /**
+     * Add a single cache tag with the 'new' prefix, this denotes the cached content is only new content
      * @param string $tag
      * @return $this
      */
     public function cacheTagNew(string $tag): self
     {
         return $this->cacheTag(self::TAG_NEW . $tag);
+    }
+
+    /**
+     * Add multiple cache tags with the 'new' prefix, denoting this is new content
+     * @param array $tags
+     * @return $this
+     */
+    public function cacheTagsNew(array $tags): self
+    {
+        foreach ($tags as $tag) {
+            $this->cacheTag(self::TAG_NEW . $tag);
+        }
+        return $this;
     }
 
     /**

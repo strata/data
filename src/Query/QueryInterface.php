@@ -98,16 +98,13 @@ interface QueryInterface
      */
     public function doNotCache(): self;
 
-    /**
-     * Add cache tags to this query
-     * @param array $tags
-     * @return $this
-     */
-    public function cacheTags(array $tags = []): self;
-
     public function cacheTag(string $tag): self;
 
+    public function cacheTags(array $tags = []): self;
+
     public function cacheTagNew(string $tag): self;
+
+    public function cacheTagsNew(array $tags): self;
 
     public function cacheTagGlobal(): self;
 
