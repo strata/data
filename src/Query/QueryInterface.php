@@ -105,6 +105,16 @@ interface QueryInterface
      */
     public function cacheTags(array $tags = []): self;
 
+    public function cacheTag(string $tag): self;
+
+    public function cacheTagNew(string $tag): self;
+
+    public function cacheTagGlobal(): self;
+
+    public function hasCacheTags(): bool;
+
+    public function getCacheTags(): array;
+
     /**
      * Whether a cache lifetime is set up
      * @return bool

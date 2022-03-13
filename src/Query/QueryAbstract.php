@@ -19,6 +19,9 @@ abstract class QueryAbstract implements QueryInterface
 {
     use PaginationPropertyTrait;
 
+    const TAG_GLOBAL = 'global';
+    const TAG_NEW = 'new-';
+
     protected ?DataProviderInterface $dataProvider = null;
     protected array $options = [];
     protected ?CacheableResponse $response = null;
@@ -304,6 +307,36 @@ abstract class QueryAbstract implements QueryInterface
     {
         $this->cacheTags = $tags;
         return $this;
+    }
+
+    /**
+     * Add a single cache tag
+     * @param string $tag
+     * @return $this
+     */
+    public function cacheTag(string $tag): self
+    {
+        $this->cacheTags[] = $tag;
+        return $this;
+    }
+
+    /**
+     * Add a single cache tag with the 'new-' prefix, this denotes the cached content is only new content
+     * @param string $tag
+     * @return $this
+     */
+    public function cacheTagNew(string $tag): self
+    {
+        return $this->cacheTag(self::TAG_NEW . $tag);
+    }
+
+    /**
+     * Add the global cache tag, this denotes cached content is used across the whole website/app
+     * @return $this
+     */
+    public function cacheTagGlobal(): self
+    {
+        return $this->cacheTag(self::TAG_GLOBAL);
     }
 
     /**
