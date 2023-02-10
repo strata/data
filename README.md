@@ -20,6 +20,22 @@ Planned for the future:
 * Transform data (e.g. convert source category to match local category name) 
 * Download data via local, FTP, S3 filesystem (via Flysystem)
 
+## Status
+Please note this software is in development, usage may change before the 1.0 release.
+
+## Requirements
+
+* PHP 7.4+
+* [Composer](https://getcomposer.org/)
+
+## Installation
+
+Install via Composer:
+
+```
+composer require strata/data:^0.8
+```
+
 ## Documentation
 
 See [docs](docs/README.md) or the docs site at: [https://docs.strata.dev/data/](https://docs.strata.dev/data/)
