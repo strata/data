@@ -1,0 +1,12 @@
+query Localisation ($slug: [String]) {
+  entry(slug: $slug) {
+    id
+    language
+    url
+    localized {
+      title
+      code: language
+      url
+    }
+  }
+}

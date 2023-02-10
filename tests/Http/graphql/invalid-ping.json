@@ -1,0 +1,6 @@
+{
+  "message": "No route was found",
+  "data": {
+    "status": 404
+  }
+}

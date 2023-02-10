@@ -1,0 +1,31 @@
+{
+  "data": {
+    "entry": {
+      "id": "89",
+      "title": "Landing Page",
+      "pageLead": "A very short introduction/summary of the page.",
+      "landingFlexibleComponents": [{}, {}, {
+        "typeHandle": "fiftyFiftyComponent",
+        "ctaCopy": "An optional button style link",
+        "ctaUrl": "https://example.com/",
+        "enabled": true
+      }, {
+        "typeHandle": "fiftyFiftyComponent",
+        "ctaCopy": "another unique link",
+        "ctaUrl": "https://example.com/",
+        "enabled": true
+      }, {
+        "typeHandle": "textComponent",
+        "contentField": "<h2>Design Principles</h2>\n\n<p>The following design principles guide W3C's work.</p>\n\n<h3>Web for All</h3>\n\n<p>The social value of the Web is that it enables human communication, commerce, and opportunities to share knowledge. One of W3C's primary goals is to make these benefits available to all people, whatever their hardware, software, network infrastructure, native language, culture, geographical location, or physical or mental ability. Learn more about:</p>\n\n<ul>\n\t<li><a href=\"https://example.com/page.html\">Web Accessibility Initiative</a></li>\n\t<li><a href=\"https://example.com/page.html\">Internationalization</a></li>\n</ul>\n\n<h3>Web on Everything</h3>\n\n<p>The number of different kinds of devices that can access the Web has grown immensely. Mobile phones, smart phones, personal digital assistants, interactive television systems, voice response systems, kiosks and even certain domestic appliances can all access the Web. Learn more about:</p>\n\n<ul>\n\t<li><a href=\"https://example.com/page.html\">Web of Devices</a></li>\n\t<li><a href=\"https://example.com/page.html\">Mobile Web Initiative</a></li>\n\t<li><a href=\"https://example.com/page.html\">Browsers and Other Agents</a></li>\n\t<li><a href=\"https://example.com/page.html\">Example of archived content link</a></li>\n</ul>\n",
+        "sortOrder": 5,
+        "enabled": true
+      }, {}, {}, {
+        "typeHandle": "blockquoteComponent",
+        "sortOrder": 8,
+        "citation": "Sir Tim Berners-Lee",
+        "quoteText": "The goal of the Web is to serve humanity. We build it now so that those who come to it later will be able to create things we cannot ourselves imagine.",
+        "enabled": true
+      }]
+    }
+  }
+}
