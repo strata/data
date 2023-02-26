@@ -37,12 +37,3 @@ Data can be modified via **transformers** or **mappers**. Transformers change da
 Mappers can also build collections along with automated pagination.
 
 See [changing data](changing-data/changing-data.md).
-
-### Data manager \(TODO\)
-
-You can use data providers, validators, transformers and mappers independently of each other.
-
-You can also wrap all this functionality up in a **Data Manager** which supports an **event system** to allow you to subscribe to events and run custom functionality. There is support for logging and profiling out of the box.
-
-See [data manager](https://github.com/strata/data/tree/19976c714b935c0075e883fa40c47c7fb5c8aa08/docs/data-manager.md) and [events](advanced-usage/events.md).
-
