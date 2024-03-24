@@ -44,7 +44,7 @@ class Pagination implements PaginationInterface
      *
      * @return int
      */
-    public function count()
+    public function count(): int
     {
         return $this->getTotalPages();
     }

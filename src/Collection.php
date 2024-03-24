@@ -57,7 +57,7 @@ class Collection implements CollectionInterface
      * @param mixed $offset
      * @return bool true on success or false on failure.
      */
-    public function offsetExists($offset)
+    public function offsetExists($offset): bool
     {
         return isset($this->collection[$offset]);
     }
@@ -68,7 +68,7 @@ class Collection implements CollectionInterface
      * @param mixed $offset
      * @return mixed Can return all value types.
      */
-    public function offsetGet($offset)
+    public function offsetGet($offset): mixed
     {
         return isset($this->collection[$offset]) ? $this->collection[$offset] : null;
     }
@@ -80,7 +80,7 @@ class Collection implements CollectionInterface
      * @param mixed $value
      * @return void
      */
-    public function offsetSet($offset, $value)
+    public function offsetSet($offset, $value): void
     {
         if (is_null($offset)) {
             $this->collection[] = $value;
@@ -95,7 +95,7 @@ class Collection implements CollectionInterface
      * @param mixed $offset
      * @return void
      */
-    public function offsetUnset($offset)
+    public function offsetUnset($offset): void
     {
         unset($this->collection[$offset]);
     }

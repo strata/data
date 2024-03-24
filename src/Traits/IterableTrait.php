@@ -50,7 +50,7 @@ trait IterableTrait
      * Return current item
      * @return mixed
      */
-    public function current()
+    public function current(): mixed
     {
         return $this->collection[$this->position];
     }
@@ -67,7 +67,7 @@ trait IterableTrait
     /**
      * Increment position in collection by one
      */
-    public function next()
+    public function next(): void
     {
         ++$this->position;
     }
@@ -75,7 +75,7 @@ trait IterableTrait
     /**
      * Rewind to start of collection
      */
-    public function rewind()
+    public function rewind(): void
     {
         $this->position = 0;
     }
@@ -84,7 +84,7 @@ trait IterableTrait
      * Is the current position in the collection valid?
      * @return bool
      */
-    public function valid()
+    public function valid(): bool
     {
         return isset($this->collection[$this->position]);
     }
@@ -94,7 +94,7 @@ trait IterableTrait
      * @param $position
      * @throws OutOfBoundsException
      */
-    public function seek($position)
+    public function seek($position): void
     {
         if (!isset($this->collection[$position])) {
             throw new \OutOfBoundsException(sprintf('Invalid seek position: %s', $position));

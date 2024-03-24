@@ -137,6 +137,7 @@ trait DataProviderCommonTrait
         if ($lifetime !== null) {
             $this->cache->setLifetime($lifetime);
         }
+        return $this;
     }
 
     /**
@@ -158,6 +159,7 @@ trait DataProviderCommonTrait
     {
         $this->lastCacheEnabled = $this->cacheEnabled;
         $this->cacheEnabled = false;
+        return $this;
     }
 
     /**

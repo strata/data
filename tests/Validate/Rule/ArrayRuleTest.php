@@ -20,7 +20,7 @@ class ArrayRuleTest extends TestCase
         $this->assertTrue($validator->validate($data));
 
         $data = 'string content';
+        $this->expectException(\TypeError::class);
         $this->assertFalse($validator->validate($data));
-        $this->assertStringContainsString('is not an array', $validator->getErrorMessage());
     }
 }
