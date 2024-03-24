@@ -12,7 +12,7 @@
     }
   ],
   "require": {
-    "php": "^7.4|^8.0",
+    "php": "^7.4|^8.0|^8.1",
     "ext-json": "*",
     "symfony/http-client": "^5.4|^6.0",
     "spatie/yaml-front-matter": "^2.0",
@@ -38,30 +38,26 @@
     "roave/security-advisories": "dev-latest"
   },
   "scripts": {
-    "lint": [
+    "phplint": [
       "./vendor/bin/phplint"
     ],
-    "cs":  [
+    "phpcs":  [
       "./vendor/bin/phpcs"
     ],
-    "fix":  [
+    "phpcbf":  [
       "./vendor/bin/phpcbf"
     ],
-    "unit": [
+    "phpunit": [
       "./vendor/bin/phpunit"
     ],
+    "phpstan": [
+      "./vendor/bin/phpstan analyse"
+    ],
     "test": [
-      "composer lint",
-      "composer cs",
-      "composer unit"
+      "composer phplint",
+      "composer phpcs",
+      "composer phpunit"
     ]
-  },
-  "scripts-descriptions": {
-    "lint": "Lint PHP files",
-    "cs": "Test coding standards are met in PHP code",
-    "fix": "Fix PHP code so it meets coding standards",
-    "unit": "Run PHPUnit tests",
-    "test": "Run all tests (phplint, phpcs, phpunit)"
   },
   "config": {
     "allow-plugins": false
