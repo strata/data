@@ -36,7 +36,7 @@ class MapCollection extends MapperAbstract implements MapperInterface
      *
      * @param array $data Array of data to get pagination information from
      * @return Pagination
-     * @throws MapPaginationException If cannot read data properties to create Pagination
+     * @throws MapperException If cannot read data properties to create Pagination
      * @throws PaginationException If cannot setup Pagination object successfully
      */
     public function paginationBuilder(array $data): Pagination

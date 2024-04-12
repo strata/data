@@ -12,7 +12,6 @@ interface QueryInterface
 {
     /**
      * Data provider class required for use with this query
-     * @var string Class name
      */
     public function getRequiredDataProviderClass(): string;
 
@@ -207,7 +206,6 @@ interface QueryInterface
 
     /**
      * Return data from query response
-     * @param array Data to map to a collection
      * @return mixed
      */
     public function get();

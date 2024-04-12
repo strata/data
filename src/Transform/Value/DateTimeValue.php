@@ -31,9 +31,9 @@ class DateTimeValue extends BaseValue
      * Return property as a DateTime object
      *
      * @param $objectOrArray Data to read property from
-     * @return DateTime|null
+     * @return \DateTime|null
      */
-    public function getValue($objectOrArray)
+    public function getValue($objectOrArray): ?\DateTime
     {
         $value = parent::getValue($objectOrArray);
 

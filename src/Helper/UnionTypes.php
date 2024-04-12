@@ -82,7 +82,7 @@ class UnionTypes
      * @param string $propertyName Name of the property (used for exception messages)
      * @param mixed $value Value to check
      * @param string ...$types One or many types to check (array, callable, bool, float, int, string, iterable, object, or classname)
-     * @throws InvalidArgumentException on error
+     * @throws \InvalidArgumentException on error
      */
     public static function assert(string $propertyName, $value, string ...$types)
     {

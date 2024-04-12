@@ -151,10 +151,10 @@ class GraphQL extends Http
      * Uses the baseUri to send requests to
      * GraphQL queries are sent as POST requests with the JSON query in the body
      *
-     * @param array $query GraphQL query
+     * @param string $query GraphQL query
      * @param ?array $variables Array of variables to pass to GraphQL (key & value pairs)
      * @param ?string $operationName Operation name to execute (only required if query contains multiple operations)
-     * @return ResponseInterface
+     * @return CacheableResponse
      * @throws \JsonException on invalid query JSON string
      * @throws \Strata\Data\Exception\BaseUriException
      * @throws \Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface

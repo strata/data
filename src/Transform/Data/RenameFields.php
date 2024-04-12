@@ -73,7 +73,7 @@ class RenameFields extends DataAbstract implements NotTransformedInterface
             $propertyPath = new PropertyPath($old);
             $parent =& $data;
             $elements = $propertyPath->getElements();
-            if ($elements > 1) {
+            if (count($elements) > 1) {
                 for ($x = 0; $x < count($elements) - 1; $x++) {
                     $key = $elements[$x];
                     $parent =& $parent[$key];

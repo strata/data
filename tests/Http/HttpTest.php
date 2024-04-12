@@ -377,7 +377,6 @@ class HttpTest extends TestCase
             $response = $api->runRequest($response);
         }
 
-        /** @phpstan-ignore-next-line */
         $this->assertEquals('https://example.com/api/file-378.html', $response->getInfo('url'));
         $this->assertEquals(379, $api->getTotalHttpRequests());
     }

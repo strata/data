@@ -30,11 +30,11 @@ class StopwatchSubscriber implements EventSubscriberInterface
 
     public function start(StartEvent $event)
     {
-        $this->stopwatch->start($event->getResponse()->getRequestId(), 'data');
+        $this->stopwatch->start($event->getRequestId(), 'data');
     }
 
     public function stop(SuccessEvent $event)
     {
-        $this->stopwatch->stop($event->getResponse()->getRequestId());
+        $this->stopwatch->stop($event->getRequestId());
     }
 }

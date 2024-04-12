@@ -266,7 +266,7 @@ class Http implements DataProviderInterface
      * @param array|string $methods HTTP method name or array of HTTP methods
      * @param bool $throw Throw InvalidHttpMethodException exception on failed validation
      * @return bool
-     * @throws InvalidArgumentException
+     * @throws \InvalidArgumentException
      * @throws InvalidHttpMethodException
      */
     public static function validMethod($methods, bool $throw = false): bool
@@ -726,7 +726,7 @@ class Http implements DataProviderInterface
      * @throws HttpException
      * @throws \Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface
      */
-    public function post(string $uri, $postData = null, array $options = []): CacheableResponse
+    public function post(string $uri, string|array $postData = null, array $options = []): CacheableResponse
     {
         if (is_array($postData)) {
             if (isset($options['body']) && is_array($options['body'])) {
@@ -859,7 +859,7 @@ class Http implements DataProviderInterface
             }
         }
 
-        /** @var ResponseInterface $response */
+        /** @var CacheableResponse $response */
         foreach ($responses as $response) {
             if (!$response->isHit()) {
                 $response = $this->runRequest($response);

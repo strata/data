@@ -122,11 +122,11 @@ trait DataProviderCommonTrait
     /**
      * Enable cache for subsequent data requests
      *
-     * @param ?int $lifetime
-     * @return DataProviderCommonTrait Fluent interface
+     * @param int|null $lifetime
+     * @return $this Fluent interface
      * @throws CacheException If cache not set
      */
-    public function enableCache(?int $lifetime = null)
+    public function enableCache(?int $lifetime = null): self
     {
         if (!$this->hasCache()) {
             throw new CacheException(sprintf('You must setup the cache via %s::setCache() before enabling it', get_class($this)));
@@ -153,9 +153,9 @@ trait DataProviderCommonTrait
     /**
      * Disable cache for subsequent data requests
      *
-     * @return DataProviderCommonTrait Fluent interface
+     * @return self Fluent interface
      */
-    public function disableCache()
+    public function disableCache(): self
     {
         $this->lastCacheEnabled = $this->cacheEnabled;
         $this->cacheEnabled = false;

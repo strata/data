@@ -33,7 +33,7 @@ abstract class RequestEventAbstract extends Event
     /**
      * Return URI
      *
-     * @return ResponseInterface
+     * @return string
      */
     public function getUri(): string
     {

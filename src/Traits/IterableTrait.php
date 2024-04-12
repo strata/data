@@ -92,7 +92,7 @@ trait IterableTrait
     /**
      * Seek to the passed position in the collection
      * @param $position
-     * @throws OutOfBoundsException
+     * @throws \OutOfBoundsException
      */
     public function seek($position): void
     {

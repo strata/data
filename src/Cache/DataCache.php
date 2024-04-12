@@ -179,12 +179,13 @@ class DataCache implements CacheItemPoolInterface, TagAwareAdapterInterface, Pru
     /**
      * Deletes all items in the pool.
      *
+     * @param string $prefix
      * @return bool
      *   True if the pool was successfully cleared. False if there was an error.
      */
     public function clear(string $prefix = ''): bool
     {
-        return $this->cache->clear($prefix);
+        return $this->cache->clear();
     }
 
     /**
@@ -331,11 +332,10 @@ class DataCache implements CacheItemPoolInterface, TagAwareAdapterInterface, Pru
      */
     public function invalidateTags(array $tags): bool
     {
-        if (!$this->isTaggable()) {
+        if (!($this->cache instanceof TagAwareAdapterInterface)) {
             throw new CacheException('Cannot prune cache since cache adaptor does not implement TagAwareAdapterInterface');
         }
 
-        /** @var TagAwareAdapterInterface */
         return $this->cache->invalidateTags($tags);
     }
 
@@ -355,7 +355,7 @@ class DataCache implements CacheItemPoolInterface, TagAwareAdapterInterface, Pru
      */
     public function prune(float $probability = 1.0): bool
     {
-        if (!$this->isPruneable()) {
+        if (!($this->cache instanceof PruneableInterface)) {
             throw new CacheException('Cannot prune cache since cache adaptor does not implement PruneableInterface');
         }
 
@@ -368,7 +368,6 @@ class DataCache implements CacheItemPoolInterface, TagAwareAdapterInterface, Pru
             return false;
         }
 
-        /** @var PruneableInterface */
         return $this->cache->prune();
     }
 }
