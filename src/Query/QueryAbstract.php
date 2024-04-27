@@ -99,7 +99,7 @@ abstract class QueryAbstract implements QueryInterface
 
     /**
      * Return options for this query
-     * @return $this
+     * @return array
      */
     public function getOptions(): array
     {
@@ -557,7 +557,6 @@ abstract class QueryAbstract implements QueryInterface
 
     /**
      * Return data from query response
-     * @param array Data to map to a collection
      * @return mixed
      */
     abstract public function get();

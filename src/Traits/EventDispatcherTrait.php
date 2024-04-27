@@ -50,21 +50,22 @@ trait EventDispatcherTrait
      * @param callable $listener The listener
      * @param int      $priority The higher this value, the earlier an event
      *                           listener will be triggered in the chain (defaults to 0)
+     * @return void
      */
-    public function addListener(string $eventName, callable $listener, int $priority = 0)
+    public function addListener(string $eventName, callable $listener, int $priority = 0): void
     {
-        return $this->getEventDispatcher()->addListener($eventName, $listener, $priority);
+        $this->getEventDispatcher()->addListener($eventName, $listener, $priority);
     }
 
     /**
      * Adds an event subscriber
      *
      * @param EventSubscriberInterface $subscriber
-     * @return mixed
+     * @return void
      */
-    public function addSubscriber(EventSubscriberInterface $subscriber)
+    public function addSubscriber(EventSubscriberInterface $subscriber): void
     {
-        return $this->getEventDispatcher()->addSubscriber($subscriber);
+        $this->getEventDispatcher()->addSubscriber($subscriber);
     }
 
     /**

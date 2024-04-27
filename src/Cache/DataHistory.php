@@ -90,6 +90,20 @@ class DataHistory
     }
 
     /**
+     * Whether the item is stored in the data history
+     *
+     * @param $key
+     * @return bool
+     * @throws \Psr\Cache\InvalidArgumentException
+     */
+    public function hasItem($key): bool
+    {
+        $item = $this->cache->getItem($this->getKey($key));
+
+        return $item->isHit();
+    }
+
+    /**
      * Return last history log item
      *
      * @param $key

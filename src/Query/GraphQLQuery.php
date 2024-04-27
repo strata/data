@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Strata\Data\Query;
 
 use Strata\Data\Collection;
+use Strata\Data\DataProviderInterface;
 use Strata\Data\Exception\GraphQLQueryException;
 use Strata\Data\Exception\QueryException;
 use Strata\Data\Http\GraphQL;
@@ -49,6 +50,11 @@ class GraphQLQuery extends QueryAbstract implements GraphQLQueryInterface
         return $this->dataProvider;
     }
 
+    public function setDataProvider(GraphQL $dataProvider): QueryAbstract
+    {
+        parent::setDataProvider($dataProvider);
+        return $this;
+    }
 
     /**
      * Return query name

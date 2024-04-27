@@ -720,7 +720,7 @@ class Http implements DataProviderInterface
      * Make a POST request
      *
      * @param string $uri URI relative to base URI
-     * @param ?string|array $postData String body or array of data to send with POST request
+     * @param string|array|null $postData String body or array of data to send with POST request
      * @param array $options
      * @return CacheableResponse
      * @throws HttpException

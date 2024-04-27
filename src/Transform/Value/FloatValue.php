@@ -10,9 +10,9 @@ class FloatValue extends BaseValue
      * Return property as a float
      *
      * @param $objectOrArray Data to read property from
-     * @return DateTime|null
+     * @return float|null
      */
-    public function getValue($objectOrArray)
+    public function getValue($objectOrArray): ?float
     {
         $value = parent::getValue($objectOrArray);
 

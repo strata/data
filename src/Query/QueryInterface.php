@@ -199,6 +199,12 @@ interface QueryInterface
     public function getResponse(): ?CacheableResponse;
 
     /**
+     * Clear response and mark to re-run query next time data is accessed
+     * @return self
+     */
+    public function clearResponse(): self;
+
+    /**
      * Has the response run and retrieved data?
      * @return bool
      */

@@ -123,7 +123,7 @@ trait DataProviderCommonTrait
      * Enable cache for subsequent data requests
      *
      * @param int|null $lifetime
-     * @return $this Fluent interface
+     * @return self Fluent interface
      * @throws CacheException If cache not set
      */
     public function enableCache(?int $lifetime = null): self

@@ -50,7 +50,7 @@ class ContentHasher
     /**
      * Normalise content so it is a string and can be used to create a hash
      *
-     * @param (array|string $content
+     * @param array|string $content
      * @return string
      * @throws InvalidArgumentException
      */
