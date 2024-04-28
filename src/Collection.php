@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Strata\Data;
 
-use Strata\Data\Helper\UnionTypes;
 use Strata\Data\Pagination\Pagination;
 use Strata\Data\Traits\IterableTrait;
 
@@ -35,9 +34,8 @@ class Collection implements CollectionInterface
      * Add an item to the collection
      * @param array|object $item
      */
-    public function add($item)
+    public function add(array|object $item)
     {
-        UnionTypes::assert('$item', $item, 'array', 'object');
         $this->collection[] = $item;
     }
 

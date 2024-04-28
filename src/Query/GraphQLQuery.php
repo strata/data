@@ -50,12 +50,6 @@ class GraphQLQuery extends QueryAbstract implements GraphQLQueryInterface
         return $this->dataProvider;
     }
 
-    public function setDataProvider(GraphQL $dataProvider): QueryAbstract
-    {
-        parent::setDataProvider($dataProvider);
-        return $this;
-    }
-
     /**
      * Return query name
      *

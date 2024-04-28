@@ -6,6 +6,7 @@ namespace Strata\Data\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Strata\Data\Cache\DataCache;
+use Strata\Data\Exception\InvalidHttpMethodException;
 use Strata\Data\Helper\ContentHasher;
 use Strata\Data\Http\Http;
 use Strata\Data\Http\Rest;
@@ -57,7 +58,7 @@ class HttpTest extends TestCase
 
     public function testInvalidMethod()
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(\TypeError::class);
         Http::validMethod(99);
     }
 

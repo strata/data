@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Strata\Data\Transform\Value;
 
-use Strata\Data\Helper\UnionTypes;
-
 class CallableValue extends BaseValue
 {
     private $callable;
@@ -39,7 +37,7 @@ class CallableValue extends BaseValue
      */
     public function canTransform($data): bool
     {
-        return UnionTypes::is($data, 'array', 'object');
+        return (is_array($data) || is_object($data));
     }
 
     /**

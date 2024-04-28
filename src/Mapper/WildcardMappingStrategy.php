@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Strata\Data\Mapper;
 
-use Strata\Data\Helper\UnionTypes;
-
 class WildcardMappingStrategy extends MappingStrategy
 {
     private array $mapping = [];
@@ -70,10 +68,8 @@ class WildcardMappingStrategy extends MappingStrategy
      *
      * @param array|string $field
      */
-    public function addIgnore($field)
+    public function addIgnore(array|string $field)
     {
-        UnionTypes::assert('$field', $field, 'array', 'string');
-
         if (is_array($field)) {
             foreach ($field as $item) {
                 $this->ignore[] = $this->normaliseFieldName($item);
@@ -102,10 +98,8 @@ class WildcardMappingStrategy extends MappingStrategy
      * @param array|object $item
      * @return mixed
      */
-    public function mapItem(array $data, $item)
+    public function mapItem(array $data, array|object $item)
     {
-        UnionTypes::assert('$item', $item, 'array', 'object');
-
         // Loop through all root data to build property path mapping
         $propertyPaths = [];
         foreach ($data as $field => $value) {

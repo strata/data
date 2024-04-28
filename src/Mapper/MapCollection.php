@@ -8,7 +8,6 @@ use Strata\Data\Collection;
 use Strata\Data\CollectionInterface;
 use Strata\Data\Exception\MapperException;
 use Strata\Data\Exception\PaginationException;
-use Strata\Data\Helper\UnionTypes;
 use Strata\Data\Pagination\Pagination;
 use Strata\Data\Traits\PaginationPropertyTrait;
 use Symfony\Component\PropertyAccess\Exception\NoSuchIndexException;
@@ -21,12 +20,11 @@ class MapCollection extends MapperAbstract implements MapperInterface
 
     /**
      * Set data to extract pagination information from
-     * @param $data
+     * @param array|object $data
      * @return $this
      */
-    public function fromPaginationData($data): MapCollection
+    public function fromPaginationData(array|object $data): MapCollection
     {
-        UnionTypes::assert('$data', $data, 'array', 'object');
         $this->paginationData = $data;
         return $this;
     }

@@ -24,7 +24,6 @@ use Strata\Data\Exception\HttpTransportException;
 use Strata\Data\Exception\HttpNotFoundException;
 use Strata\Data\Exception\InvalidHttpMethodException;
 use Strata\Data\Helper\ContentHasher;
-use Strata\Data\Helper\UnionTypes;
 use Strata\Data\Http\Response\CacheableResponse;
 use Strata\Data\Http\Response\DecoratedResponseTrait;
 use Strata\Data\Http\Response\SuppressErrorResponse;
@@ -269,10 +268,8 @@ class Http implements DataProviderInterface
      * @throws \InvalidArgumentException
      * @throws InvalidHttpMethodException
      */
-    public static function validMethod($methods, bool $throw = false): bool
+    public static function validMethod(array|string $methods, bool $throw = false): bool
     {
-        UnionTypes::assert('$methods', $methods, 'array', 'string');
-
         if (!is_array($methods)) {
             $methods = [$methods];
         }
