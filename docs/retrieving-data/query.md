@@ -48,7 +48,7 @@ This:
 
 In the example above the total results data is set as `[meta][total_results]` which is a property path pointing to `$data['meta']['total_results']`
 
-See [property paths](../property-paths.md) for more information on how to use these.
+See [property paths](property-paths.md) for more information on how to use these.
 
 ## Query classes
 

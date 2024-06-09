@@ -15,6 +15,7 @@ use Strata\Data\Mapper\MappingStrategyInterface;
 use Strata\Data\Mapper\WildcardMappingStrategy;
 use Strata\Data\Query\BuildQuery\BuildQuery;
 use Strata\Data\Traits\PaginationPropertyTrait;
+use Strata\Data\Traits\QueryStaticMethodsTrait;
 
 /**
  * Class to represent a data query, also has methods to return data
@@ -23,7 +24,7 @@ use Strata\Data\Traits\PaginationPropertyTrait;
  */
 class Query extends QueryAbstract implements QueryInterface
 {
-    use PaginationPropertyTrait;
+    use PaginationPropertyTrait, QueryStaticMethodsTrait;
 
     private string $method = 'GET';
 

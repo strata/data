@@ -11,6 +11,19 @@ use Strata\Data\Http\Response\CacheableResponse;
 interface QueryInterface
 {
     /**
+     * Static method to create a new query
+     * @return self
+     */
+    public static function create(): self;
+
+    /**
+     * Static method to create a new query with a URI
+     * @param string $uri
+     * @return self
+     */
+    public static function uri(string $uri): self;
+
+    /**
      * Data provider class required for use with this query
      */
     public function getRequiredDataProviderClass(): string;

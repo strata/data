@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 namespace Strata\Data\Transform\Data;
+
 class Concatenate extends DataAbstract
 {
     private array $propertyPaths;

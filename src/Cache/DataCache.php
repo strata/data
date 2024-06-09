@@ -56,6 +56,11 @@ class DataCache implements CacheItemPoolInterface, TagAwareAdapterInterface, Pru
         return $this;
     }
 
+    public function getLifetime(): int
+    {
+        return $this->lifetime;
+    }
+
     /**
      * Are tags enabled by the cache adapter?
      *

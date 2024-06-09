@@ -444,6 +444,44 @@ class HttpTest extends TestCase
         $this->assertEquals(5, $api->getTotalHttpRequests());
     }
 
+    public function testDefaultCache()
+    {
+        $api = new Rest('http://example.com/');
+        $api->enableCache();
+
+        $this->assertTrue($api->isCacheEnabled());
+        $this->assertEquals(60*60, $api->getCache()->getLifetime());
+    }
+
+    public function testStatusMethods()
+    {
+        $responses = [
+            new MockResponse('OK'),
+            new MockResponse('ERROR', ['http_code' => 500]),
+            new MockResponse('REDIRECT', ['http_code' => 301, 'redirect_url' => 'http://example.com/new-url']),
+        ];
+
+        $api = new Rest('http://example.com/');
+        $api->setHttpClient(new MockHttpClient($responses));
+        $api->suppressErrors();
+
+        $response = $api->get('test');
+        $this->assertTrue($response->isSuccessful());
+        $this->assertFalse($response->isFailed());
+        $this->assertFalse($response->isRedirect());
+
+        $response = $api->get('failed');
+        $this->assertFalse($response->isSuccessful());
+        $this->assertTrue($response->isFailed());
+        $this->assertFalse($response->isRedirect());
+
+        $response = $api->get('redirect');
+        $this->assertFalse($response->isSuccessful());
+        $this->assertTrue($response->isFailed());
+        $this->assertTrue($response->isRedirect());
+        $this->assertEquals('http://example.com/new-url', $response->getRedirectUrl());
+    }
+
     public function testCacheableRequest()
     {
         $api = new Rest('http://example.com/');

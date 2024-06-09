@@ -2,7 +2,7 @@
 
 ## Setting up your data connection
 
-Instantiate a [data provider](retrieving-data/README.md), for example using the generic Http data provider:
+Instantiate a [data provider](README.md), for example using the generic Http data provider:
 
 ```php
 use Strata\Data\Http\Http;
@@ -16,13 +16,13 @@ See []()authentication
 ## Requests
 
 To make a request use a concrete method from the data provider, these are different for different types of providers. 
-See [data providers](retrieving-data/README.md) for documentation.
+See [data providers](README.md) for documentation.
 
-The generic [Http data provider](retrieving-data/http.md) supports request methods such as `get()`, `post()` and `exists()`. 
+The generic [Http data provider](http.md) supports request methods such as `get()`, `post()` and `exists()`. 
 
-The [Rest data provider](retrieving-data/rest.md) automatically decodes data as JSON.
+The [Rest data provider](rest.md) automatically decodes data as JSON.
 
-The [GraphQL data provider](retrieving-data/graphql.md) supports request methods such as `ping()` and `query()`.
+The [GraphQL data provider](graphql.md) supports request methods such as `ping()` and `query()`.
 
 an available Data class. RestApi supports things like get and post, GraphQL 
 has a query method. Full details on available methods appear below.

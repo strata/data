@@ -8,6 +8,7 @@ use Strata\Data\Cache\DataCache;
 use Strata\Data\Decode\DecoderInterface;
 use Strata\Data\Exception\BaseUriException;
 use Strata\Data\Exception\CacheException;
+use Symfony\Component\Cache\Adapter\FilesystemTagAwareAdapter;
 use Symfony\Contracts\Cache\CacheInterface;
 
 /**
@@ -129,7 +130,8 @@ trait DataProviderCommonTrait
     public function enableCache(?int $lifetime = null): self
     {
         if (!$this->hasCache()) {
-            throw new CacheException(sprintf('You must setup the cache via %s::setCache() before enabling it', get_class($this)));
+            $cache = new FilesystemTagAwareAdapter();
+            $this->setCache($cache);
         }
         $this->lastCacheEnabled = $this->cacheEnabled;
         $this->cacheEnabled = true;

@@ -17,13 +17,14 @@ use Strata\Data\Mapper\WildcardMappingStrategy;
 use Strata\Data\Query\BuildQuery\BuildGraphQLQuery;
 use Strata\Data\Query\GraphQL\Fragment;
 use Strata\Data\Query\GraphQL\GraphQLTrait;
+use Strata\Data\Traits\QueryStaticMethodsTrait;
 
 /**
  * Class to help craft a GraphQL API query
  */
 class GraphQLQuery extends QueryAbstract implements GraphQLQueryInterface
 {
-    use GraphQLTrait;
+    use GraphQLTrait, QueryStaticMethodsTrait;
 
     protected ?string $name = null;
     private ?string $alias = null;

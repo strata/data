@@ -31,13 +31,32 @@ trait DecoratedResponseTrait
     }
 
     /**
-     * Gets the HTTP status code of the response.
+     * Gets the HTTP status code of the response
      *
      * @throws TransportExceptionInterface when a network error occurs
      */
     public function getStatusCode(): int
     {
         return $this->decorated->getStatusCode();
+    }
+
+    /**
+     * Returns true if the response is successful
+     *
+     * @return bool
+     */
+    public function isSuccessful(): bool
+    {
+        return $this->getStatusCode() >= 200 && $this->getStatusCode() < 300;
+    }
+
+    /**
+     * Returns true if the response is not successful
+     * @return bool
+     */
+    public function isFailed(): bool
+    {
+        return !$this->isSuccessful();
     }
 
     /**
@@ -52,6 +71,42 @@ trait DecoratedResponseTrait
     public function getHeaders(bool $throw = true): array
     {
         return $this->decorated->getHeaders($throw);
+    }
+
+    public function getHeader(string $header, bool $throw = true): array
+    {
+        $headers = $this->decorated->getHeaders($throw);
+        if (isset($headers[$header])) {
+            return $headers[$header];
+        }
+    }
+
+    /**
+     * Returns true if the response is a redirect
+     *
+     * @return bool
+     */
+    public function isRedirect(): bool
+    {
+        return $this->getStatusCode() >= 300 && $this->getStatusCode() < 400;
+    }
+
+    /**
+     * The resolved location of redirect responses, null otherwise
+     * @return string|null
+     */
+    public function getRedirectUrl(): ?string
+    {
+        return $this->getInfo('redirect_url');
+    }
+
+    /**
+     * The number of redirects followed while executing the request
+     * @return int
+     */
+    public function getRedirectCount(): int
+    {
+        return $this->getInfo('redirect_count');
     }
 
     /**

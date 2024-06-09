@@ -1,8 +1,8 @@
 # Testing API requests
 
-When testing HTTP requests you need to create mock responses based on what would actually be returned from a real HTTP request. Symfony's HTTPClient has support for [testing HTTP requests](https://symfony.com/doc/current/components/http_client.html#testing-http-clients-and-responses).
+When testing HTTP requests you need to create mock responses based on what would actually be returned from a real HTTP request. Symfony's HTTPClient has support for [testing HTTP requests](https://symfony.com/doc/current/http_client.html#http-client-and-responses).
 
-You can also use `MockResponseFromFile` to generate a mock response easily from a file.
+You can also use the`MockResponseFromFile` class to generate a mock response easily from a file.
 
 ## MockResponseFromFile
 
@@ -16,7 +16,7 @@ Allows you to load a mock request from file.
 
 Body file is loaded from `{$filename}`
 
-The optional info file is loaded from `{$filename}.info.php` and must contain the `$info` variable \(array\). By default mock responses return a 200 status code which you can change by setting the `$info` array.
+The optional info file is loaded from `{$filename}.info.php` and must contain the `$info` variable (array). By default mock responses return a 200 status code which you can change by setting the `$info` array.
 
 ### Usage
 

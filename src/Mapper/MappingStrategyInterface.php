@@ -6,8 +6,7 @@ namespace Strata\Data\Mapper;
 
 use Symfony\Component\PropertyAccess\PropertyAccessor;
 
-interface
-MappingStrategyInterface
+interface MappingStrategyInterface
 {
     public function setPropertyAccessor(PropertyAccessor $propertyAccessor);
     public function getPropertyAccessor(): PropertyAccessor;
