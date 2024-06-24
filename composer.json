@@ -6,9 +6,7 @@
   "authors": [
     {
       "name": "Simon Jones",
-      "email": "simon@studio24.net",
-      "homepage": "https://studio24.net/",
-      "role": "Developer"
+      "email": "simon@studio24.net"
     }
   ],
   "require": {
@@ -17,10 +15,10 @@
     "laminas/laminas-feed": "^2.22",
     "league/commonmark": "^2.4",
     "spatie/yaml-front-matter": "^2.0",
-    "symfony/http-client": "^6.4|^6.0",
-    "symfony/cache": "^6.4",
-    "symfony/stopwatch": "^6.4|^6.0",
-    "symfony/property-access": "^6.4",
+    "symfony/http-client": "^6.4|^7.1",
+    "symfony/cache": "^6.4|^7.1",
+    "symfony/stopwatch": "^6.4|^7.1",
+    "symfony/property-access": "^6.4|^7.1",
     "symfony/monolog-bundle": "^3.7"
   },
   "autoload": {
@@ -55,5 +53,12 @@
   },
   "config": {
     "allow-plugins": false
+  },
+
+  "extra": {
+    "symfony": {
+      "allow-contrib": false,
+      "require": "7.2.*"
+    }
   }
 }
