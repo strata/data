@@ -6,15 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.9.0](https://github.com/strata/data/compare/v0.8.2...v0.9.0) (2024-06-24)
 
-
 ### Features
 
-* testing release GH action ([062a360](https://github.com/strata/data/commit/062a36026d0f4df9553213d1d93b8b1adc520f85))
-
-## [0.9.0] - TBC
-
-### Changed
-- Minimum requirements PHP 8.1
+* Update to PHP 8.1+
+* Support Symfony 6 and 7
 
 ## [0.8.0] - 2023-02-10
 
