@@ -24,7 +24,8 @@ use Strata\Data\Traits\QueryStaticMethodsTrait;
  */
 class GraphQLQuery extends QueryAbstract implements GraphQLQueryInterface
 {
-    use GraphQLTrait, QueryStaticMethodsTrait;
+    use GraphQLTrait;
+    use QueryStaticMethodsTrait;
 
     protected ?string $name = null;
     private ?string $alias = null;

@@ -31,7 +31,7 @@ class EmailRuleTest extends TestCase
         $this->assertFalse($validator->validate($data));
     }
 
-    public function validDataProvider()
+    public static function validDataProvider()
     {
         return [
             ['name@domain.com'],
@@ -39,7 +39,7 @@ class EmailRuleTest extends TestCase
         ];
     }
 
-    public function invalidDataProvider()
+    public static function invalidDataProvider()
     {
         return [
             ['invalid @ domain.com'],

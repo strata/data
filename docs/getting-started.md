@@ -99,6 +99,10 @@ It is easier to use a query object to run API requests.
 
 ```php
 use Strata\Data\Query\Query;
+use Strata\Data\Http\Rest;
+
+$api = new Rest('https://www.example.com/api/');
+$api->enableCache();
 
 $page = 2;
 $query = Query::uri('posts')
@@ -135,9 +139,7 @@ $manager->addDataProvider('internal_api', new Rest("https://example1.com/api/"))
 $manager->addDataProvider('cms', new Rest("https://example2.com/api/"));
 
 // Add your first query to run against internal API
-$query = Query::uri('content')
-         ->setParam('id', 24);
-$manager->add('content', $query);
+$manager->add('content', Query::uri('content')->setParam('id', 24));
 
 // Add a second query to run against CMS API
 $query = Query::uri('news')

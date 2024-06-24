@@ -7,7 +7,7 @@ namespace Strata\Data\Tests;
 use PHPUnit\Framework\TestCase;
 use Strata\Data\Permissions;
 
-final class PermissionTest extends TestCase
+final class PermissionsTest extends TestCase
 {
     public function testDefaultValues()
     {

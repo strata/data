@@ -450,7 +450,7 @@ class HttpTest extends TestCase
         $api->enableCache();
 
         $this->assertTrue($api->isCacheEnabled());
-        $this->assertEquals(60*60, $api->getCache()->getLifetime());
+        $this->assertEquals(60 * 60, $api->getCache()->getLifetime());
     }
 
     public function testStatusMethods()

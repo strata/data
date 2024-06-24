@@ -24,7 +24,8 @@ use Strata\Data\Traits\QueryStaticMethodsTrait;
  */
 class Query extends QueryAbstract implements QueryInterface
 {
-    use PaginationPropertyTrait, QueryStaticMethodsTrait;
+    use PaginationPropertyTrait;
+    use QueryStaticMethodsTrait;
 
     private string $method = 'GET';
 
