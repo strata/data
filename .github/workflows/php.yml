@@ -33,7 +33,7 @@ jobs:
           php-version: ${{ matrix.php }}
           extensions: mbstring, intl
           ini-values: post_max_size=256M, max_execution_time=180
-          
+
       - name: Check PHP version
         run: php -v
 
@@ -45,11 +45,10 @@ jobs:
 
       - name: Install Symfony ${{ matrix.symfony }} packages
         run: |
-          composer update symfony/http-client:${{ matrix.symfony }} --no-update
-          composer update symfony/cache:${{ matrix.symfony }} --no-update
-          composer update symfony/stopwatch:${{ matrix.symfony }} --no-update
-          composer update symfony/property-access:${{ matrix.symfony }} --no-update
-        if: matrix.symfony != 7.1
+          composer update symfony/http-client:${{ matrix.symfony }}
+          composer update symfony/cache:${{ matrix.symfony }}
+          composer update symfony/stopwatch:${{ matrix.symfony }}
+          composer update symfony/property-access:${{ matrix.symfony }}
 
       - name: Lint PHP files
         run: |
