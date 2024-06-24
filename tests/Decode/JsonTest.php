@@ -64,6 +64,7 @@ EOD;
     {
         $decoder = new Json();
         $this->expectException(DecoderException::class);
+        // @phpstan-ignore-next-line
         $decoder->decode(null);
     }
 }

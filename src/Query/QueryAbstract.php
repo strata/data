@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Strata\Data\Query;
 
 use Strata\Data\Collection;
+use Strata\Data\CollectionInterface;
 use Strata\Data\DataProviderInterface;
 use Strata\Data\Exception\CacheException;
 use Strata\Data\Exception\QueryException;
@@ -560,11 +561,4 @@ abstract class QueryAbstract implements QueryInterface
      * @return mixed
      */
     abstract public function get();
-
-    /**
-     * Return collection of data from a query response
-     * @return Collection
-     * @throws \Strata\Data\Exception\MapperException
-     */
-    abstract public function getCollection(): Collection;
 }

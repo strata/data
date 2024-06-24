@@ -15,7 +15,6 @@ trait PropertyAccessorTrait
     /**
      * Property accessor
      * @see https://symfony.com/doc/current/components/property_access.html
-     * @see PropertyAccessorInterface
      * @var PropertyAccessor
      */
     private ?PropertyAccessor $propertyAccessor = null;
@@ -43,9 +42,11 @@ trait PropertyAccessorTrait
     public function getPropertyAccessor(): PropertyAccessor
     {
         if (!($this->propertyAccessor instanceof PropertyAccessor)) {
-            $this->propertyAccessor = PropertyAccess::createPropertyAccessorBuilder()
+            // @var PropertyAccessor $propertyAccessor
+            $propertyAccessor = PropertyAccess::createPropertyAccessorBuilder()
                 ->enableExceptionOnInvalidIndex()
                 ->getPropertyAccessor();
+            $this->setPropertyAccessor($propertyAccessor);
         }
         return $this->propertyAccessor;
     }

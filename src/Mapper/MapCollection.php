@@ -97,7 +97,7 @@ class MapCollection extends MapperAbstract implements MapperInterface
         $collectionData = $this->getRootData($data, $rootProperty);
 
         // No data returned
-        if ($data === null) {
+        if (empty($data)) {
             $collection = new Collection();
             $collection->setPagination(new Pagination(0));
             return $collection;

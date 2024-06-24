@@ -59,6 +59,7 @@ class HttpTest extends TestCase
     public function testInvalidMethod()
     {
         $this->expectException(\TypeError::class);
+        // @phpstan-ignore-next-line
         Http::validMethod(99);
     }
 
@@ -232,9 +233,7 @@ class HttpTest extends TestCase
         $this->assertSame('46', $item['id']);
         $this->assertSame("Test", $item['title']);
 
-        /** ideas */
-        return;
-
+/*
         // Data manager (deals with logging, events, data transformations)
         $manager = new DataManager();
 
@@ -250,6 +249,7 @@ class HttpTest extends TestCase
         $manager->addTransformer(new GraphQLTransformer())
                 ->addTransformer(new CollectionTransformer('entries'));
         $data = $mamager->transform($data);
+*/
     }
 
     public function testList()

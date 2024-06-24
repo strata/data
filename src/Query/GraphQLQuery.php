@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Strata\Data\Query;
 
 use Strata\Data\Collection;
+use Strata\Data\CollectionInterface;
 use Strata\Data\DataProviderInterface;
 use Strata\Data\Exception\GraphQLQueryException;
 use Strata\Data\Exception\QueryException;
@@ -49,6 +50,9 @@ class GraphQLQuery extends QueryAbstract implements GraphQLQueryInterface
      */
     public function getDataProvider(): GraphQL
     {
+        if (!($this->dataProvider instanceof GraphQL)) {
+            throw new \Exception('Data provider not set');
+        }
         return $this->dataProvider;
     }
 
@@ -351,7 +355,7 @@ class GraphQLQuery extends QueryAbstract implements GraphQLQueryInterface
 
     /**
      * Return collection of data from a query response
-     * @return Collection
+     * @return CollectionInterface
      * @throws QueryException
      * @throws \Strata\Data\Exception\BaseUriException
      * @throws \Strata\Data\Exception\HttpException
@@ -359,7 +363,7 @@ class GraphQLQuery extends QueryAbstract implements GraphQLQueryInterface
      * @throws \Strata\Data\Exception\MapperException
      * @throws \Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface
      */
-    public function getCollection(): Collection
+    public function getCollection(): CollectionInterface
     {
         // Run response, if not already run
         if (!$this->hasResponseRun()) {

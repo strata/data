@@ -42,10 +42,6 @@ class LoggerSubscriber implements EventSubscriberInterface
 
     public function logFailure(FailureEvent $event)
     {
-        if ($event->getException() instanceof \Exception) {
-            $this->logger->info(self::PREFIX . sprintf('Failed request to: %s, Error: %s', $event->getUri(), $event->getException()->getMessage()), $event->getContext());
-        } else {
-            $this->logger->info(self::PREFIX . sprintf('Failed request to: %s', $event->getUri()), $event->getContext());
-        }
+        $this->logger->error(self::PREFIX . sprintf('Failed request to: %s, Error: %s', $event->getUri(), $event->getException()->getMessage()), $event->getContext());
     }
 }

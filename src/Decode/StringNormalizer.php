@@ -12,7 +12,7 @@ class StringNormalizer
     /**
      * Take a string or object, and return a string representing the content
      *
-     * @param string|object $data
+     * @param mixed $data
      * @return string
      * @throws DecoderException
      */
@@ -30,10 +30,8 @@ class StringNormalizer
             if (method_exists($data, '__toString')) {
                 return $data->__toString();
             }
-
             throw new DecoderException(sprintf('Cannot convert object of type "%s" into a string', get_class($data)));
         }
-
-        throw new DecoderException(sprintf('$data must be a string or object, "%s" passed', gettype($data)));
+        throw new DecoderException(sprintf('Cannot convert %s into a string', gettype($data)));
     }
 }

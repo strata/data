@@ -21,6 +21,7 @@ class ArrayRuleTest extends TestCase
 
         $data = 'string content';
         $this->expectException(\TypeError::class);
+        // @phpstan-ignore-next-line
         $this->assertFalse($validator->validate($data));
     }
 }

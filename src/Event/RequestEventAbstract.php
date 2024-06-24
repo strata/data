@@ -27,7 +27,7 @@ abstract class RequestEventAbstract extends Event
      */
     public function getRequestId(): string
     {
-        return $this->getRequestId();
+        return $this->requestId;
     }
 
     /**

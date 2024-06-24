@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Strata\Data\Query;
 
-use Strata\Data\Collection;
+use Strata\Data\CollectionInterface;
 use Strata\Data\DataProviderInterface;
 use Strata\Data\Http\Response\CacheableResponse;
 
@@ -231,8 +231,8 @@ interface QueryInterface
 
     /**
      * Return collection of data from a query response
-     * @return Collection
+     * @return CollectionInterface
      * @throws \Strata\Data\Exception\MapperException
      */
-    public function getCollection(): Collection;
+    public function getCollection(): CollectionInterface;
 }

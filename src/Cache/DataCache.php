@@ -137,6 +137,7 @@ class DataCache implements CacheItemPoolInterface, TagAwareAdapterInterface, Pru
         $this->setCacheItemDefaults($item);
 
         // @todo PHPStan: Method Strata\Data\Cache\DataCache::getItem() should return Symfony\Component\Cache\CacheItem but returns Psr\Cache\CacheItemInterface.
+        // @phpstan-ignore-next-line
         return $item;
     }
 
