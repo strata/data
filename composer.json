@@ -25,7 +25,9 @@
     "psr-4": {
       "Strata\\Data\\": "src/"
     },
-    "exclude-from-classmap": ["/tests/"]
+    "exclude-from-classmap": [
+      "/tests/"
+    ]
   },
   "require-dev": {
     "phpunit/phpunit": "^10.5",
@@ -34,10 +36,10 @@
     "roave/security-advisories": "dev-latest"
   },
   "scripts": {
-    "phpcs":  [
+    "phpcs": [
       "./vendor/bin/phpcs"
     ],
-    "phpcbf":  [
+    "phpcbf": [
       "./vendor/bin/phpcbf"
     ],
     "phpunit": [
@@ -54,7 +56,6 @@
   "config": {
     "allow-plugins": false
   },
-
   "extra": {
     "symfony": {
       "allow-contrib": false,
