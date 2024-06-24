@@ -83,19 +83,12 @@ class Permissions
         switch ($action) {
             case self::READ:
                 return 'READ';
-                break;
-
             case self::CREATE:
                 return 'CREATE';
-                break;
-
             case self::UPDATE:
                 return 'UPDATE';
-                break;
-
             case self::DELETE:
                 return 'DELETE';
-                break;
         }
         return null;
     }

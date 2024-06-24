@@ -14,7 +14,7 @@ class TestPermissions
     use CheckPermissionsTrait;
 }
 
-final class CheckPermissionsTest extends TestCase
+final class CheckPermissionsTraitTest extends TestCase
 {
     public function testPermissionMethods()
     {

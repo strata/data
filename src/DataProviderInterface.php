@@ -6,10 +6,13 @@ namespace Strata\Data;
 
 use Strata\Data\Cache\DataCache;
 use Strata\Data\Decode\DecoderInterface;
+use Strata\Data\Exception\BaseUriException;
 use Strata\Data\Exception\CacheException;
+use Strata\Data\Http\Response\CacheableResponse;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\EventDispatcher\Event;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 interface DataProviderInterface
 {
@@ -53,6 +56,12 @@ interface DataProviderInterface
      * @return bool
      */
     public function isSuppressErrors(): bool;
+
+    /**
+     * Reset suppress errors status to last value
+     *
+     */
+    public function resetSuppressErrors();
 
     /**
      * Return default decoder
@@ -103,17 +112,17 @@ interface DataProviderInterface
      * Enable cache for subsequent data requests
      *
      * @param ?int $lifetime
-     * @return DataProviderCommonTrait Fluent interface
+     * @return self Fluent interface
      * @throws CacheException If cache not set
      */
-    public function enableCache(?int $lifetime = null);
+    public function enableCache(?int $lifetime = null): self;
 
     /**
      * Disable cache for subsequent data requests
      *
-     * @return DataProviderCommonTrait Fluent interface
+     * @return self Fluent interface
      */
-    public function disableCache();
+    public function disableCache(): self;
 
     /**
      * Set cache tags to apply to all future saved cache items
@@ -150,4 +159,14 @@ interface DataProviderInterface
      * @return Event The passed $event MUST be returned
      */
     public function dispatchEvent(Event $event, string $eventName): Event;
+
+    public function runRequest(CacheableResponse $response): CacheableResponse;
+
+    public function hasHttpClient(): bool;
+
+    public function setHttpClient(HttpClientInterface $client);
+
+    public function getHttpClient(): HttpClientInterface;
+
+    public function prepareRequest($method, string $uri, array $options = [], ?bool $cacheable = null): CacheableResponse;
 }

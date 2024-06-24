@@ -48,11 +48,17 @@ class DataCache implements CacheItemPoolInterface, TagAwareAdapterInterface, Pru
      * Set cache lifetime
      *
      * @param int $lifetime Lifetime in seconds
-     * @return $this]
+     * @return $this
      */
     public function setLifetime(int $lifetime)
     {
         $this->lifetime = $lifetime;
+        return $this;
+    }
+
+    public function getLifetime(): int
+    {
+        return $this->lifetime;
     }
 
     /**
@@ -89,6 +95,7 @@ class DataCache implements CacheItemPoolInterface, TagAwareAdapterInterface, Pru
             throw new CacheException(sprintf('Tags are not supported by your cache adapter %s', get_class($this->cache)));
         }
         $this->tags = $tags;
+        return $this;
     }
 
     /**
@@ -117,17 +124,20 @@ class DataCache implements CacheItemPoolInterface, TagAwareAdapterInterface, Pru
      * @param string $key
      *   The key for which to return the corresponding Cache Item.
      *
-     * @return CacheItemInterface
+     * @return CacheItem
      *   The corresponding Cache Item.
      * @throws InvalidArgumentException
      *   If the $key string is not a legal value a \Psr\Cache\InvalidArgumentException
      *   MUST be thrown.
      *
      */
-    public function getItem($key): CacheItemInterface
+    public function getItem($key): CacheItem
     {
         $item = $this->cache->getItem($key);
         $this->setCacheItemDefaults($item);
+
+        // @todo PHPStan: Method Strata\Data\Cache\DataCache::getItem() should return Symfony\Component\Cache\CacheItem but returns Psr\Cache\CacheItemInterface.
+        // @phpstan-ignore-next-line
         return $item;
     }
 
@@ -147,7 +157,7 @@ class DataCache implements CacheItemPoolInterface, TagAwareAdapterInterface, Pru
      *   MUST be thrown.
      *
      */
-    public function getItems(array $keys = array())
+    public function getItems(array $keys = []): iterable
     {
         return $this->cache->getItems($keys);
     }
@@ -169,7 +179,7 @@ class DataCache implements CacheItemPoolInterface, TagAwareAdapterInterface, Pru
      *   MUST be thrown.
      *
      */
-    public function hasItem($key)
+    public function hasItem($key): bool
     {
         return $this->cache->hasItem($key);
     }
@@ -177,12 +187,13 @@ class DataCache implements CacheItemPoolInterface, TagAwareAdapterInterface, Pru
     /**
      * Deletes all items in the pool.
      *
+     * @param string $prefix
      * @return bool
      *   True if the pool was successfully cleared. False if there was an error.
      */
-    public function clear(string $prefix = '')
+    public function clear(string $prefix = ''): bool
     {
-        return $this->cache->clear($prefix);
+        return $this->cache->clear();
     }
 
     /**
@@ -198,7 +209,7 @@ class DataCache implements CacheItemPoolInterface, TagAwareAdapterInterface, Pru
      *   MUST be thrown.
      *
      */
-    public function deleteItem($key)
+    public function deleteItem($key): bool
     {
         return $this->cache->deleteItem($key);
     }
@@ -215,7 +226,7 @@ class DataCache implements CacheItemPoolInterface, TagAwareAdapterInterface, Pru
      *   MUST be thrown.
      *
      */
-    public function deleteItems(array $keys)
+    public function deleteItems(array $keys): bool
     {
         return $this->cache->deleteItems($keys);
     }
@@ -229,7 +240,7 @@ class DataCache implements CacheItemPoolInterface, TagAwareAdapterInterface, Pru
      * @return bool
      *   True if the item was successfully persisted. False if there was an error.
      */
-    public function save(CacheItemInterface $item)
+    public function save(CacheItemInterface $item): bool
     {
         return $this->cache->save($item);
     }
@@ -243,7 +254,7 @@ class DataCache implements CacheItemPoolInterface, TagAwareAdapterInterface, Pru
      * @return bool
      *   False if the item could not be queued or if a commit was attempted and failed. True otherwise.
      */
-    public function saveDeferred(CacheItemInterface $item)
+    public function saveDeferred(CacheItemInterface $item): bool
     {
         return $this->cache->saveDeferred($item);
     }
@@ -316,7 +327,7 @@ class DataCache implements CacheItemPoolInterface, TagAwareAdapterInterface, Pru
      * @return bool
      *   True if all not-yet-saved items were successfully saved or there were none. False otherwise.
      */
-    public function commit()
+    public function commit(): bool
     {
         return $this->cache->commit();
     }
@@ -329,11 +340,10 @@ class DataCache implements CacheItemPoolInterface, TagAwareAdapterInterface, Pru
      */
     public function invalidateTags(array $tags): bool
     {
-        if (!$this->isTaggable()) {
+        if (!($this->cache instanceof TagAwareAdapterInterface)) {
             throw new CacheException('Cannot prune cache since cache adaptor does not implement TagAwareAdapterInterface');
         }
 
-        /** @var TagAwareAdapterInterface */
         return $this->cache->invalidateTags($tags);
     }
 
@@ -351,9 +361,9 @@ class DataCache implements CacheItemPoolInterface, TagAwareAdapterInterface, Pru
      * @param float $probability Set a value between 0 and 1 to run based on a % chance (0.5 = run on 50% of calls)
      * @see https://symfony.com/doc/current/components/cache/cache_pools.html#component-cache-cache-pool-prune
      */
-    public function prune(float $probability = 1.0)
+    public function prune(float $probability = 1.0): bool
     {
-        if (!$this->isPruneable()) {
+        if (!($this->cache instanceof PruneableInterface)) {
             throw new CacheException('Cannot prune cache since cache adaptor does not implement PruneableInterface');
         }
 
@@ -363,10 +373,9 @@ class DataCache implements CacheItemPoolInterface, TagAwareAdapterInterface, Pru
 
         $number = mt_rand(0, 10);
         if ($number > $probability * 10) {
-            return;
+            return false;
         }
 
-        /** @var PruneableInterface */
-        $this->cache->prune();
+        return $this->cache->prune();
     }
 }

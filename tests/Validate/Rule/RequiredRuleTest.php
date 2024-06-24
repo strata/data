@@ -31,7 +31,7 @@ class RequiredRuleTest extends TestCase
         $this->assertFalse($validator->validate($data));
     }
 
-    public function validDataProvider()
+    public static function validDataProvider()
     {
         return [
             ['[email]'],
@@ -39,7 +39,7 @@ class RequiredRuleTest extends TestCase
         ];
     }
 
-    public function invalidDataProvider()
+    public static function invalidDataProvider()
     {
         return [
             ['[category]'],

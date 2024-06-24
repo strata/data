@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Strata\Data\Transform\Data;
 
-use Strata\Data\Helper\UnionTypes;
-
 class CallableData extends DataAbstract
 {
     private $callable;
@@ -53,7 +51,7 @@ class CallableData extends DataAbstract
      */
     public function canTransform($data): bool
     {
-        return UnionTypes::is($data, 'array', 'object');
+        return (is_array($data) || is_object($data));
     }
 
     /**

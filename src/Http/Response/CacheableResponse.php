@@ -21,8 +21,8 @@ class CacheableResponse implements ResponseInterface, StreamableInterface
      * Constructor
      *
      * @param ResponseInterface $response Response we are decorating
-     * @param bool $hit Whether this response came from the cache (and has a cache hit)
-     * @param CacheItem $item Cache item
+     * @param ?bool $hit Whether this response came from the cache (and has a cache hit)
+     * @param ?ItemInterface $item Cache item
      */
     public function __construct(ResponseInterface $response, ?bool $hit = null, ?ItemInterface $item = null)
     {

@@ -4,15 +4,27 @@ declare(strict_types=1);
 
 namespace Strata\Data\Query;
 
-use Strata\Data\Collection;
+use Strata\Data\CollectionInterface;
 use Strata\Data\DataProviderInterface;
 use Strata\Data\Http\Response\CacheableResponse;
 
 interface QueryInterface
 {
     /**
+     * Static method to create a new query
+     * @return self
+     */
+    public static function create(): self;
+
+    /**
+     * Static method to create a new query with a URI
+     * @param string $uri
+     * @return self
+     */
+    public static function uri(string $uri): self;
+
+    /**
      * Data provider class required for use with this query
-     * @var string Class name
      */
     public function getRequiredDataProviderClass(): string;
 
@@ -200,6 +212,12 @@ interface QueryInterface
     public function getResponse(): ?CacheableResponse;
 
     /**
+     * Clear response and mark to re-run query next time data is accessed
+     * @return self
+     */
+    public function clearResponse(): self;
+
+    /**
      * Has the response run and retrieved data?
      * @return bool
      */
@@ -207,15 +225,14 @@ interface QueryInterface
 
     /**
      * Return data from query response
-     * @param array Data to map to a collection
      * @return mixed
      */
     public function get();
 
     /**
      * Return collection of data from a query response
-     * @return Collection
+     * @return CollectionInterface
      * @throws \Strata\Data\Exception\MapperException
      */
-    public function getCollection(): Collection;
+    public function getCollection(): CollectionInterface;
 }

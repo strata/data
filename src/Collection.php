@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Strata\Data;
 
-use Strata\Data\Helper\UnionTypes;
 use Strata\Data\Pagination\Pagination;
 use Strata\Data\Traits\IterableTrait;
 
@@ -35,9 +34,8 @@ class Collection implements CollectionInterface
      * Add an item to the collection
      * @param array|object $item
      */
-    public function add($item)
+    public function add(array|object $item)
     {
-        UnionTypes::assert('$item', $item, 'array', 'object');
         $this->collection[] = $item;
     }
 
@@ -57,7 +55,7 @@ class Collection implements CollectionInterface
      * @param mixed $offset
      * @return bool true on success or false on failure.
      */
-    public function offsetExists($offset)
+    public function offsetExists($offset): bool
     {
         return isset($this->collection[$offset]);
     }
@@ -68,7 +66,7 @@ class Collection implements CollectionInterface
      * @param mixed $offset
      * @return mixed Can return all value types.
      */
-    public function offsetGet($offset)
+    public function offsetGet($offset): mixed
     {
         return isset($this->collection[$offset]) ? $this->collection[$offset] : null;
     }
@@ -80,7 +78,7 @@ class Collection implements CollectionInterface
      * @param mixed $value
      * @return void
      */
-    public function offsetSet($offset, $value)
+    public function offsetSet($offset, $value): void
     {
         if (is_null($offset)) {
             $this->collection[] = $value;
@@ -95,7 +93,7 @@ class Collection implements CollectionInterface
      * @param mixed $offset
      * @return void
      */
-    public function offsetUnset($offset)
+    public function offsetUnset($offset): void
     {
         unset($this->collection[$offset]);
     }

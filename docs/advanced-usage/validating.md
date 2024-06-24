@@ -27,7 +27,7 @@ A simple validation rules system exists, inspired by [Laravel's Validation](http
 
 Simply create a new instance of `Strata\Data\Validate\ValidationRules` and pass in the validation requirements in the 
 constructor. This is an array made up of the property path to the field you want to validate and the validation rule.
-See [how to write property paths](property-paths.md).
+See [how to write property paths](../retrieving-data/property-paths.md).
 
 The rules format is:
 

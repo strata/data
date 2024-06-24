@@ -25,10 +25,10 @@ interface ValidatorRuleInterface extends ValidatorInterface
     /**
      * Return property from data, or null if not found
      *
-     * @param $data
+     * @param object|array $data
      * @return mixed|null
      */
-    public function getProperty($data);
+    public function getProperty(object|array $data);
 
     /**
      * Set array of values to use with this validation rule

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Strata\Data\Mapper;
 
 use Strata\Data\Exception\MapperException;
-use Strata\Data\Helper\UnionTypes;
 use Strata\Data\Transform\Data\CallableData;
 use Strata\Data\Transform\PropertyAccessorInterface;
 use Strata\Data\Transform\PropertyAccessorTrait;
@@ -71,9 +70,8 @@ class MappingStrategy implements MappingStrategyInterface, PropertyAccessorInter
      * @param array|object $item Destination item to map data to
      * @return mixed
      */
-    public function mapItem(array $data, $item)
+    public function mapItem(array $data, array|object $item)
     {
-        UnionTypes::assert('$item', $item, 'array', 'object');
         $propertyAccessor = $this->getPropertyAccessor();
 
         // Loop through property paths to map to new item (destination => source)
@@ -111,7 +109,7 @@ class MappingStrategy implements MappingStrategyInterface, PropertyAccessorInter
             }
 
             // Invalid source type
-            if (!UnionTypes::is($source, 'string', 'array')) {
+            if (!is_string($source) && !is_array($source)) {
                 $type = gettype($source);
                 if ($type === 'object') {
                     $type = get_class($source);

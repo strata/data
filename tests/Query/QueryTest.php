@@ -18,6 +18,19 @@ class QueryTest extends TestCase
 {
     const CACHE_DIR = __DIR__ . '/../Cache/cache';
 
+    public function testCreate()
+    {
+        $query = Query::create();
+        $this->assertInstanceOf(Query::class, $query);
+    }
+
+    public function testUri()
+    {
+        $query = Query::uri('test');
+        $this->assertInstanceOf(Query::class, $query);
+        $this->assertEquals('test', $query->getUri());
+    }
+
     public function testSetDataProvider()
     {
         $query = new Query();
@@ -42,9 +55,9 @@ class QueryTest extends TestCase
         $api = new Rest('https://example.com/');
         $api->setHttpClient($http);
 
-        $query = new Query();
-        $query->setUri('test')
-              ->setDataProvider($api)
+        $query = Query::create()
+                ->setUri('test')
+                ->setDataProvider($api)
         ;
 
         // Responses should be different

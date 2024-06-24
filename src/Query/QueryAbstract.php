@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Strata\Data\Query;
 
 use Strata\Data\Collection;
+use Strata\Data\CollectionInterface;
 use Strata\Data\DataProviderInterface;
 use Strata\Data\Exception\CacheException;
 use Strata\Data\Exception\QueryException;
@@ -99,7 +100,7 @@ abstract class QueryAbstract implements QueryInterface
 
     /**
      * Return options for this query
-     * @return $this
+     * @return array
      */
     public function getOptions(): array
     {
@@ -557,15 +558,7 @@ abstract class QueryAbstract implements QueryInterface
 
     /**
      * Return data from query response
-     * @param array Data to map to a collection
      * @return mixed
      */
     abstract public function get();
-
-    /**
-     * Return collection of data from a query response
-     * @return Collection
-     * @throws \Strata\Data\Exception\MapperException
-     */
-    abstract public function getCollection(): Collection;
 }

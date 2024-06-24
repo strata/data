@@ -31,7 +31,7 @@ class NumberRuleTest extends TestCase
         $this->assertFalse($validator->validate($data));
     }
 
-    public function validDataProvider()
+    public static function validDataProvider()
     {
         return [
             [1],
@@ -40,7 +40,7 @@ class NumberRuleTest extends TestCase
         ];
     }
 
-    public function invalidDataProvider()
+    public static function invalidDataProvider()
     {
         return [
             ['one'],

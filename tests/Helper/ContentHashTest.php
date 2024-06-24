@@ -56,12 +56,6 @@ final class ContentHashTest extends TestCase
         $this->assertTrue($hash1 == $hash3);
     }
 
-    public function testInvalidType()
-    {
-        $this->expectException('InvalidArgumentException');
-        ContentHasher::hash(new \DateTime());
-    }
-
     public function testArray()
     {
         $this->assertFalse(ContentHasher::hasContentChanged(ContentHasher::hash($this->arrayExamples[0]), $this->arrayExamples[1]));

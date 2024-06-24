@@ -19,5 +19,5 @@ Example use cases are:
 * Map a single item to an object (and optionally type set item fields, e.g. to an DateTime object)
 * Map a collection of items to a set of objects
 
-We use Symfony's PropertyAccess component to help read and write data. See [how to write property paths](../property-paths.md) 
+We use Symfony's PropertyAccess component to help read and write data. See [how to write property paths](../retrieving-data/property-paths.md) 
 for more details.

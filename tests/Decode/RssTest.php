@@ -25,8 +25,8 @@ final class RssTest extends TestCase
         $this->assertInstanceOf('Laminas\Feed\Reader\Feed\FeedInterface', $feed);
         $this->assertEquals('News feed generator', $feed->getTitle());
 
-        /** @var \Laminas\Feed\Reader\Entry\EntryInterface $item */
         $x = 0;
+        /** @var \Laminas\Feed\Reader\Entry\EntryInterface $item */
         foreach ($feed as $item) {
             $x++;
             switch ($x) {

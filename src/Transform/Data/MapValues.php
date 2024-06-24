@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Strata\Data\Transform\Data;
 
-use Strata\Data\Helper\UnionTypes;
 use Strata\Data\Transform\NotTransformedInterface;
 use Strata\Data\Transform\NotTransformedTrait;
 
@@ -77,7 +76,7 @@ class MapValues extends DataAbstract implements NotTransformedInterface
      */
     public function canTransform($data): bool
     {
-        return UnionTypes::is($data, 'array', 'object');
+        return (is_array($data) || is_object($data));
     }
 
     /**

@@ -1,30 +1,28 @@
 # Data
 
-The purpose of this package is to help read data from APIs and other external sources.
+A simple way to manage data retrieval from APIs and other sources. This package is built using Symfony components and can
+be used with any PHP application, Symfony, Laravel or plain PHP. 
 
-Features:
+You can:
 
-* Download data via HTTP APIs
-* Throw exceptions on failed requests
-* Supports REST and GraphQL
-* Decode data from a variety of formats (e.g. JSON, Markdown)
-* Automated debug information (logging and time profiling)
+* Read data from REST and GraphQL APIs
+* Authenticate with APIs
+* Handle errors consistently
 * Cache requests to increase performance
-* Tools to help detect whether data has changed since last request 
-* Transform data (e.g. convert source category to match local category name)
+* Decode data from a variety of formats (e.g. JSON, Markdown)
+* Transform data (e.g. map a category name)
+* Work out if data has changed since the last request
 
-Planned for the future:
+See the [documentation](docs/README.md) for more.
 
-* Validate data items to see whether they contain required data properties
-* Efficient bulk API queries via concurrent requests 
-* Download data via local, FTP, S3 filesystem (via Flysystem)
+You can use this with the [frontend](https://github.com/strata/frontend) package to help you build a frontend website.
 
 ## Status
 Please note this software is in development, usage may change before the 1.0 release.
 
 ## Requirements
 
-* PHP 7.4+
+* PHP 8.1+
 * [Composer](https://getcomposer.org/)
 
 ## Installation
@@ -32,13 +30,10 @@ Please note this software is in development, usage may change before the 1.0 rel
 Install via Composer:
 
 ```
-composer require strata/data:^0.8
+composer require strata/data:^0.9
 ```
-
-## Documentation
-
-See [docs](docs/README.md) - these are currently being cleaned up and we plan to publish better docs for v0.10.
 
 ## Thanks to
 
-https://developer.happyr.com/http-client-and-caching
+* [Symfony](https://symfony.com/)
+* https://developer.happyr.com/http-client-and-caching

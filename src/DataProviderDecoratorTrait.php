@@ -149,7 +149,7 @@ trait DataProviderDecoratorTrait
      */
     public function addListener(string $eventName, callable $listener, int $priority = 0)
     {
-        return $this->dataProvider->addListener($eventName, $listener, $priority);
+        $this->dataProvider->addListener($eventName, $listener, $priority);
     }
 
     /**
@@ -157,7 +157,7 @@ trait DataProviderDecoratorTrait
      */
     public function addSubscriber(EventSubscriberInterface $subscriber)
     {
-        return $this->dataProvider->addSubscriber($subscriber);
+        $this->dataProvider->addSubscriber($subscriber);
     }
 
     /**

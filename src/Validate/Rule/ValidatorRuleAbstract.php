@@ -90,10 +90,10 @@ abstract class ValidatorRuleAbstract implements ValidatorRuleInterface
     /**
      * Return property from data, or null if not found
      *
-     * @param $data
+     * @param object|array $data
      * @return mixed|null
      */
-    public function getProperty($data)
+    public function getProperty(object|array $data)
     {
         if (!$this->getPropertyAccessor()->isReadable($data, $this->propertyPath)) {
             return null;

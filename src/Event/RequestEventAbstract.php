@@ -27,13 +27,13 @@ abstract class RequestEventAbstract extends Event
      */
     public function getRequestId(): string
     {
-        return $this->getRequestId();
+        return $this->requestId;
     }
 
     /**
      * Return URI
      *
-     * @return ResponseInterface
+     * @return string
      */
     public function getUri(): string
     {

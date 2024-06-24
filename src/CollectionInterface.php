@@ -13,7 +13,7 @@ interface CollectionInterface extends \SeekableIterator, \Countable, \ArrayAcces
 {
     public function setCollection(array $collection);
 
-    public function add($item);
+    public function add(array|object $item);
 
     public function setPagination(Pagination $pagination);
 

@@ -14,23 +14,28 @@ jobs:
 
     strategy:
       matrix:
-        php-versions: ['7.4']
+        php: ['8.1', '8.2', '8.3']
+        symfony: ['6.4', '7.1']
+        exclude:
+          - php: '8.1'
+            symfony: '7.1'
 
     runs-on: ubuntu-latest
 
+    name: On PHP ${{ matrix.php }} and Symfony ${{ matrix.symfony }}
+
     steps:
+      # https://github.com/marketplace/actions/checkout
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       # https://github.com/marketplace/actions/setup-php-action
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php-versions }}
+          php-version: ${{ matrix.php }}
           extensions: mbstring, intl
           ini-values: post_max_size=256M, max_execution_time=180
-
-      - uses: actions/checkout@v2
 
       - name: Check PHP version
         run: php -v
@@ -41,8 +46,18 @@ jobs:
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress
 
-      - name: Code lint PHP files
-        run: ./vendor/bin/phplint
+      - name: Install Symfony ${{ matrix.symfony }} packages
+        run: |
+          composer update symfony/http-client:${{ matrix.symfony }}
+          composer update symfony/cache:${{ matrix.symfony }}
+          composer update symfony/stopwatch:${{ matrix.symfony }}
+          composer update symfony/property-access:${{ matrix.symfony }}
+
+      - name: Lint PHP files
+        run: |
+          curl -Ls https://github.com/overtrue/phplint/releases/latest/download/phplint.phar -o /usr/local/bin/phplint
+          chmod +x /usr/local/bin/phplint
+          /usr/local/bin/phplint --no-cache --no-progress -v        
 
       - name: Coding standards
         run: ./vendor/bin/phpcs

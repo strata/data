@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Strata\Data\Query;
 
 use Strata\Data\Collection;
+use Strata\Data\CollectionInterface;
 use Strata\Data\Exception\QueryException;
 use Strata\Data\Http\Http;
 use Strata\Data\Http\Response\CacheableResponse;
@@ -15,6 +16,7 @@ use Strata\Data\Mapper\MappingStrategyInterface;
 use Strata\Data\Mapper\WildcardMappingStrategy;
 use Strata\Data\Query\BuildQuery\BuildQuery;
 use Strata\Data\Traits\PaginationPropertyTrait;
+use Strata\Data\Traits\QueryStaticMethodsTrait;
 
 /**
  * Class to represent a data query, also has methods to return data
@@ -24,6 +26,7 @@ use Strata\Data\Traits\PaginationPropertyTrait;
 class Query extends QueryAbstract implements QueryInterface
 {
     use PaginationPropertyTrait;
+    use QueryStaticMethodsTrait;
 
     private string $method = 'GET';
 
@@ -147,7 +150,7 @@ class Query extends QueryAbstract implements QueryInterface
 
     /**
      * Return collection of data from a query response
-     * @return Collection
+     * @return CollectionInterface
      * @throws QueryException
      * @throws \Strata\Data\Exception\BaseUriException
      * @throws \Strata\Data\Exception\HttpException
@@ -155,7 +158,7 @@ class Query extends QueryAbstract implements QueryInterface
      * @throws \Strata\Data\Exception\MapperException
      * @throws \Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface
      */
-    public function getCollection(): Collection
+    public function getCollection(): CollectionInterface
     {
         // Run response, if not already run
         if (!$this->hasResponseRun()) {

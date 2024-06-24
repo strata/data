@@ -90,6 +90,20 @@ class DataHistory
     }
 
     /**
+     * Whether the item is stored in the data history
+     *
+     * @param $key
+     * @return bool
+     * @throws \Psr\Cache\InvalidArgumentException
+     */
+    public function hasItem($key): bool
+    {
+        $item = $this->cache->getItem($this->getKey($key));
+
+        return $item->isHit();
+    }
+
+    /**
      * Return last history log item
      *
      * @param $key
@@ -109,13 +123,10 @@ class DataHistory
         switch ($field) {
             case 'updated':
                 return $item['updated'];
-                break;
             case 'content_hash':
                 return $item['content_hash'];
-                break;
             case 'metadata':
                 return $item['metadata'];
-                break;
             default:
                 throw new CacheException(sprintf('Cannot return history field "%s" since not set', $field));
         }

@@ -24,7 +24,6 @@ use Strata\Data\Exception\HttpTransportException;
 use Strata\Data\Exception\HttpNotFoundException;
 use Strata\Data\Exception\InvalidHttpMethodException;
 use Strata\Data\Helper\ContentHasher;
-use Strata\Data\Helper\UnionTypes;
 use Strata\Data\Http\Response\CacheableResponse;
 use Strata\Data\Http\Response\DecoratedResponseTrait;
 use Strata\Data\Http\Response\SuppressErrorResponse;
@@ -266,13 +265,11 @@ class Http implements DataProviderInterface
      * @param array|string $methods HTTP method name or array of HTTP methods
      * @param bool $throw Throw InvalidHttpMethodException exception on failed validation
      * @return bool
-     * @throws InvalidArgumentException
+     * @throws \InvalidArgumentException
      * @throws InvalidHttpMethodException
      */
-    public static function validMethod($methods, bool $throw = false): bool
+    public static function validMethod(array|string $methods, bool $throw = false): bool
     {
-        UnionTypes::assert('$methods', $methods, 'array', 'string');
-
         if (!is_array($methods)) {
             $methods = [$methods];
         }
@@ -720,13 +717,13 @@ class Http implements DataProviderInterface
      * Make a POST request
      *
      * @param string $uri URI relative to base URI
-     * @param ?string|array $postData String body or array of data to send with POST request
+     * @param string|array|null $postData String body or array of data to send with POST request
      * @param array $options
      * @return CacheableResponse
      * @throws HttpException
      * @throws \Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface
      */
-    public function post(string $uri, $postData = null, array $options = []): CacheableResponse
+    public function post(string $uri, string|array $postData = null, array $options = []): CacheableResponse
     {
         if (is_array($postData)) {
             if (isset($options['body']) && is_array($options['body'])) {
@@ -859,7 +856,7 @@ class Http implements DataProviderInterface
             }
         }
 
-        /** @var ResponseInterface $response */
+        /** @var CacheableResponse $response */
         foreach ($responses as $response) {
             if (!$response->isHit()) {
                 $response = $this->runRequest($response);

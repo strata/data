@@ -18,5 +18,5 @@ interface MappingStrategyInterface
      * @param array|object $item
      * @return mixed
      */
-    public function mapItem(array $data, $item);
+    public function mapItem(array $data, array|object $item);
 }

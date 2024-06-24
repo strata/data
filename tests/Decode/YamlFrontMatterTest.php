@@ -33,16 +33,21 @@ EOD;
     {
         $decoder = new FrontMatter();
         $data = $decoder->decode($this->text1);
-        $this->assertNull($data->title);
+
+        /**
+         * PHPStan doesn't like testing dynamic properties returned via __get()
+         * @see https://phpstan.org/blog/solving-phpstan-access-to-undefined-property
+         */
+        $this->assertNull($data->title); /* @phpstan-ignore-line */
         $this->assertEquals($this->text1, $data->body());
 
         $data = $decoder->decode($this->text2);
-        $this->assertEquals('Valid example', $data->title);
-        $this->assertEquals('test2', $data->layout);
+        $this->assertEquals('Valid example', $data->title); /* @phpstan-ignore-line */
+        $this->assertEquals('test2', $data->layout); /* @phpstan-ignore-line */
         $this->assertEquals(PHP_EOL . $this->text1, $data->body());
 
         $data = $decoder->decode($this->text3);
-        $this->assertNull($data->title);
+        $this->assertNull($data->title); /* @phpstan-ignore-line */
         $this->assertEquals($this->text3, $data->body());
     }
 }

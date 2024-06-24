@@ -42,7 +42,7 @@ class BuildGraphQLQuery implements BuildQueryInterface
      * Return parameters (key: "values") for use in an GraphQL query
      *
      * @param GraphQLQueryInterface $query
-     * @return array
+     * @return string
      */
     public function getGraphQLParameters(GraphQLQueryInterface $query): string
     {

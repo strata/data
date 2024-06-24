@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Strata\Data\Query;
 
 use Strata\Data\Collection;
+use Strata\Data\CollectionInterface;
 use Strata\Data\DataProviderInterface;
 use Strata\Data\Exception\CacheException;
 use Strata\Data\Exception\MissingDataProviderException;
@@ -420,11 +421,12 @@ class QueryManager
      *
      * Default functionality is to return decoded data as an array with pagination
      *
+     * @return CollectionInterface
      * @param string $queryName
      * @param string|null $rootPropertyPath Property path to root element to select data from
      * @throws QueryManagerException
      */
-    public function getCollection(string $queryName, ?string $rootPropertyPath = null): Collection
+    public function getCollection(string $queryName, ?string $rootPropertyPath = null): CollectionInterface
     {
         if (!$this->hasQuery($queryName)) {
             throw new QueryManagerException(sprintf('Cannot find query with query name "%s"', $queryName));

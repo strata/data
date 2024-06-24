@@ -561,14 +561,17 @@ class QueryManagerTest extends TestCase
         ]));
         $manager->add('query3', (new Query())->setUri('path3'));
 
+        /** @var MockResponse $mockRequest */
         $mockRequest = $manager->getResponse('query1')->getDecorated();
         $authorizationRequestHeader = $mockRequest->getRequestOptions()['normalized_headers']['authorization'][0];
         $this->assertSame('Authorization: Bearer ABC123', $authorizationRequestHeader);
 
+        /** @var MockResponse $mockRequest */
         $mockRequest = $manager->getResponse('query2')->getDecorated();
         $authorizationRequestHeader = $mockRequest->getRequestOptions()['normalized_headers']['authorization'][0];
         $this->assertSame('Authorization: Bearer DEF456', $authorizationRequestHeader);
 
+        /** @var MockResponse $mockRequest */
         $mockRequest = $manager->getResponse('query3')->getDecorated();
         $authorizationRequestHeader = $mockRequest->getRequestOptions()['normalized_headers']['authorization'][0];
         $this->assertSame('Authorization: Bearer ABC123', $authorizationRequestHeader);

@@ -36,7 +36,7 @@ final class DecoderFactoryTest extends TestCase
         $this->assertInstanceOf($expectedClass, DecoderFactory::fromResponse($response));
     }
 
-    public function responseDataProvider()
+    public static function responseDataProvider()
     {
         return [
             'Json' => [

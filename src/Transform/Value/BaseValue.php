@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Strata\Data\Transform\Value;
 
-use Strata\Data\Helper\UnionTypes;
 use Strata\Data\Transform\PropertyAccessorTrait;
 
 class BaseValue implements MapValueInterface
@@ -17,9 +16,8 @@ class BaseValue implements MapValueInterface
      * BaseValue constructor.
      * @param string|array $propertyPath Property path to read data from
      */
-    public function __construct($propertyPath)
+    public function __construct(string|array $propertyPath)
     {
-        UnionTypes::assert('$propertyPath', $propertyPath, 'string', 'array');
         $this->propertyPath = $propertyPath;
     }
 

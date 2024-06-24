@@ -18,7 +18,7 @@ class TestFlags
     const OPTION_E = 16;
 }
 
-final class FlagsTest extends TestCase
+final class FlagsTraitTest extends TestCase
 {
     public function testFlags()
     {

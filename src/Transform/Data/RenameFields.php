@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Strata\Data\Transform\Data;
 
-use Strata\Data\Helper\UnionTypes;
 use Strata\Data\Transform\NotTransformedInterface;
 use Strata\Data\Transform\NotTransformedTrait;
 use Symfony\Component\PropertyAccess\PropertyPath;
@@ -42,7 +41,7 @@ class RenameFields extends DataAbstract implements NotTransformedInterface
      */
     public function canTransform($data): bool
     {
-        return UnionTypes::is($data, 'array', 'object');
+        return (is_array($data) || is_object($data));
     }
 
     /**
@@ -73,7 +72,7 @@ class RenameFields extends DataAbstract implements NotTransformedInterface
             $propertyPath = new PropertyPath($old);
             $parent =& $data;
             $elements = $propertyPath->getElements();
-            if ($elements > 1) {
+            if (count($elements) > 1) {
                 for ($x = 0; $x < count($elements) - 1; $x++) {
                     $key = $elements[$x];
                     $parent =& $parent[$key];

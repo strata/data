@@ -42,7 +42,7 @@ On data providers:
 
 ### Query Manager caching
 
-The [query manager](retrieving-data/query-manager.md) uses similar techniques to control caching:
+The [query manager](../retrieving-data/query-manager.md) uses similar techniques to control caching:
 
 On the query manager:
 

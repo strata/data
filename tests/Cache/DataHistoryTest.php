@@ -113,8 +113,7 @@ class DataHistoryTest extends TestCase
     {
         $history = new DataHistory(new FilesystemAdapter(self::CACHE_NAMESPACE, 0, self::CACHE_DIR));
 
-        // test empty
-        $this->assertNull($history->getLastItem(123));
+        $this->assertFalse($history->hasItem(123));
 
         $now = new \DateTimeImmutable();
         $history->add('123', $this->data[1], ['message' => 'Hello']);

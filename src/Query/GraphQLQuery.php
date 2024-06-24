@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Strata\Data\Query;
 
 use Strata\Data\Collection;
+use Strata\Data\CollectionInterface;
+use Strata\Data\DataProviderInterface;
 use Strata\Data\Exception\GraphQLQueryException;
 use Strata\Data\Exception\QueryException;
 use Strata\Data\Http\GraphQL;
@@ -16,6 +18,7 @@ use Strata\Data\Mapper\WildcardMappingStrategy;
 use Strata\Data\Query\BuildQuery\BuildGraphQLQuery;
 use Strata\Data\Query\GraphQL\Fragment;
 use Strata\Data\Query\GraphQL\GraphQLTrait;
+use Strata\Data\Traits\QueryStaticMethodsTrait;
 
 /**
  * Class to help craft a GraphQL API query
@@ -23,6 +26,7 @@ use Strata\Data\Query\GraphQL\GraphQLTrait;
 class GraphQLQuery extends QueryAbstract implements GraphQLQueryInterface
 {
     use GraphQLTrait;
+    use QueryStaticMethodsTrait;
 
     protected ?string $name = null;
     private ?string $alias = null;
@@ -46,9 +50,11 @@ class GraphQLQuery extends QueryAbstract implements GraphQLQueryInterface
      */
     public function getDataProvider(): GraphQL
     {
+        if (!($this->dataProvider instanceof GraphQL)) {
+            throw new \Exception('Data provider not set');
+        }
         return $this->dataProvider;
     }
-
 
     /**
      * Return query name
@@ -349,7 +355,7 @@ class GraphQLQuery extends QueryAbstract implements GraphQLQueryInterface
 
     /**
      * Return collection of data from a query response
-     * @return Collection
+     * @return CollectionInterface
      * @throws QueryException
      * @throws \Strata\Data\Exception\BaseUriException
      * @throws \Strata\Data\Exception\HttpException
@@ -357,7 +363,7 @@ class GraphQLQuery extends QueryAbstract implements GraphQLQueryInterface
      * @throws \Strata\Data\Exception\MapperException
      * @throws \Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface
      */
-    public function getCollection(): Collection
+    public function getCollection(): CollectionInterface
     {
         // Run response, if not already run
         if (!$this->hasResponseRun()) {

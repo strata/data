@@ -6,6 +6,7 @@ namespace Strata\Data\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Strata\Data\Cache\DataCache;
+use Strata\Data\Exception\InvalidHttpMethodException;
 use Strata\Data\Helper\ContentHasher;
 use Strata\Data\Http\Http;
 use Strata\Data\Http\Rest;
@@ -57,7 +58,8 @@ class HttpTest extends TestCase
 
     public function testInvalidMethod()
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(\TypeError::class);
+        // @phpstan-ignore-next-line
         Http::validMethod(99);
     }
 
@@ -231,9 +233,7 @@ class HttpTest extends TestCase
         $this->assertSame('46', $item['id']);
         $this->assertSame("Test", $item['title']);
 
-        /** ideas */
-        return;
-
+/*
         // Data manager (deals with logging, events, data transformations)
         $manager = new DataManager();
 
@@ -249,6 +249,7 @@ class HttpTest extends TestCase
         $manager->addTransformer(new GraphQLTransformer())
                 ->addTransformer(new CollectionTransformer('entries'));
         $data = $mamager->transform($data);
+*/
     }
 
     public function testList()
@@ -377,7 +378,6 @@ class HttpTest extends TestCase
             $response = $api->runRequest($response);
         }
 
-        /** @phpstan-ignore-next-line */
         $this->assertEquals('https://example.com/api/file-378.html', $response->getInfo('url'));
         $this->assertEquals(379, $api->getTotalHttpRequests());
     }
@@ -442,6 +442,44 @@ class HttpTest extends TestCase
         $this->assertEquals('My name is John Smith', $response->getContent());
 
         $this->assertEquals(5, $api->getTotalHttpRequests());
+    }
+
+    public function testDefaultCache()
+    {
+        $api = new Rest('http://example.com/');
+        $api->enableCache();
+
+        $this->assertTrue($api->isCacheEnabled());
+        $this->assertEquals(60 * 60, $api->getCache()->getLifetime());
+    }
+
+    public function testStatusMethods()
+    {
+        $responses = [
+            new MockResponse('OK'),
+            new MockResponse('ERROR', ['http_code' => 500]),
+            new MockResponse('REDIRECT', ['http_code' => 301, 'redirect_url' => 'http://example.com/new-url']),
+        ];
+
+        $api = new Rest('http://example.com/');
+        $api->setHttpClient(new MockHttpClient($responses));
+        $api->suppressErrors();
+
+        $response = $api->get('test');
+        $this->assertTrue($response->isSuccessful());
+        $this->assertFalse($response->isFailed());
+        $this->assertFalse($response->isRedirect());
+
+        $response = $api->get('failed');
+        $this->assertFalse($response->isSuccessful());
+        $this->assertTrue($response->isFailed());
+        $this->assertFalse($response->isRedirect());
+
+        $response = $api->get('redirect');
+        $this->assertFalse($response->isSuccessful());
+        $this->assertTrue($response->isFailed());
+        $this->assertTrue($response->isRedirect());
+        $this->assertEquals('http://example.com/new-url', $response->getRedirectUrl());
     }
 
     public function testCacheableRequest()
