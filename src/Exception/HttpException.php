@@ -110,7 +110,7 @@ class HttpException extends \Exception
     public function context(): array
     {
         return [
-            'request_trace' => $this->requestTrace
+            'http_request_trace' => $this->requestTrace
         ];
     }
 
@@ -128,7 +128,12 @@ class HttpException extends \Exception
             if ($x > 0) {
                 $content .= $indent;
             }
-            $content .= $key . ': ' . $value . PHP_EOL;
+            $content .= $key . ': ';
+            $content .= match (gettype($value)) {
+                'boolean' => ($value === true) ? 'true' : 'false',
+                default => $value,
+            };
+            $content .= PHP_EOL;
             $x++;
         });
         return $content;
