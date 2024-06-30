@@ -100,6 +100,21 @@ class HttpException extends \Exception
     }
 
     /**
+     * Get the exception's context information
+     *
+     * Used in Laravel error handling
+     * @see https://laravel.com/docs/11.x/errors#handling-exceptions
+     *
+     * @return string[]
+     */
+    public function context(): array
+    {
+        return [
+            'request_trace' => $this->requestTrace
+        ];
+    }
+
+    /**
      * Expand array values into key: value pairs
      * @param array $array
      * @param string $indent
