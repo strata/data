@@ -44,7 +44,7 @@ trait DataProviderCommonTrait
     public function getBaseUri(): string
     {
         if (empty($this->baseUri)) {
-            throw new BaseUriException(sprintf('Base URI not set, please set via %s::setBaseUri()', get_class($this)));
+            throw new BaseUriException(sprintf('Base URI not set, please set via %s::setBaseUri()', $this::class));
         }
 
         return $this->baseUri;

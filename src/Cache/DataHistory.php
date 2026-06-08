@@ -18,9 +18,6 @@ use Psr\Cache\CacheItemPoolInterface;
 class DataHistory
 {
     const CACHE_KEY_PREFIX = 'history_';
-
-    private CacheItemPoolInterface $cache;
-    private int $cacheLifetime;
     private int $maxHistoryDays = 30;
     private array $historyItems = [];
 
@@ -28,12 +25,10 @@ class DataHistory
      * Constructor
      *
      * @param CacheItemPoolInterface $cache PSR-6 cache
-     * @param int $lifetime Default cache lifetime for data cache, defaults to 2 months if not set
+     * @param int $cacheLifetime Default cache lifetime for data cache, defaults to 2 months if not set
      */
-    public function __construct(CacheItemPoolInterface $cache, int $lifetime = 2 * CacheLifetime::MONTH)
+    public function __construct(private CacheItemPoolInterface $cache, private int $cacheLifetime = 2 * CacheLifetime::MONTH)
     {
-        $this->cache = $cache;
-        $this->cacheLifetime = $lifetime;
     }
 
     /**
@@ -120,16 +115,12 @@ class DataHistory
             return $item;
         }
 
-        switch ($field) {
-            case 'updated':
-                return $item['updated'];
-            case 'content_hash':
-                return $item['content_hash'];
-            case 'metadata':
-                return $item['metadata'];
-            default:
-                throw new CacheException(sprintf('Cannot return history field "%s" since not set', $field));
-        }
+        return match ($field) {
+            'updated' => $item['updated'],
+            'content_hash' => $item['content_hash'],
+            'metadata' => $item['metadata'],
+            default => throw new CacheException(sprintf('Cannot return history field "%s" since not set', $field)),
+        };
     }
 
     /**

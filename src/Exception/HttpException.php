@@ -10,13 +10,7 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
 class HttpException extends \Exception
 {
     const INDENT = ' ';
-    private string $requestUri;
-    private string $requestMethod;
-    private array $requestOptions;
     private ?string $requestBody = null;
-    private array $responseErrorData;
-    private array $responseData;
-    private ResponseInterface $response;
     private string $requestTrace = '';
 
     /**
@@ -25,29 +19,22 @@ class HttpException extends \Exception
      * Outputs key HTTP request and response data with exception, data can also be accessed via getters
      *
      * @param $message
-     * @param string $uri
-     * @param string $method
-     * @param array $options
+     * @param string $requestUri
+     * @param string $requestMethod
+     * @param array $requestOptions
      * @param ResponseInterface $response
-     * @param array $errorData
+     * @param array $responseErrorData
      * @param array $responseData
      * @param \Exception|null $previous
      */
-    public function __construct(string $message, string $uri, string $method, array $options, ResponseInterface $response, array $errorData = [], array $responseData = [], \Exception $previous = null)
+    public function __construct(string $message, private string $requestUri, private string $requestMethod, private array $requestOptions, private ResponseInterface $response, private array $responseErrorData = [], private array $responseData = [], \Exception $previous = null)
     {
-        $this->requestUri = $uri;
-        $this->requestMethod = $method;
-        $this->requestOptions = $options;
-        $this->response = $response;
-        $this->responseErrorData = $errorData;
-        $this->responseData = $responseData;
-
         // Append error data if set
-        $message .= $this->getMessageFromErrorData($errorData);
+        $message .= $this->getMessageFromErrorData($this->responseErrorData);
         $message = trim($message);
 
         // Create request trace to aid debugging
-        $this->createRequestTrace($uri, $method, $options, $response, $errorData);
+        $this->createRequestTrace($this->requestUri, $this->requestMethod, $this->requestOptions, $this->response, $this->responseErrorData);
 
         parent::__construct($message, 0, $previous);
     }
@@ -60,19 +47,12 @@ class HttpException extends \Exception
             if (in_array($name, ['body', 'user_data'])) {
                 continue;
             }
-            switch ($name) {
-                case 'query':
-                    $httpInfo .= 'Request query params: ' . $this->expandArrayValues($values);
-                    break;
-                case 'headers':
-                    $httpInfo .= 'Request headers: ' . $this->expandArrayValues($values);
-                    break;
-                case 'extra':
-                    $httpInfo .= 'Request extra: ' . $this->expandArrayValues($values);
-                    break;
-                default:
-                    $httpInfo .= $name . ': ' . $values . PHP_EOL;
-            }
+            match ($name) {
+                'query' => $httpInfo .= 'Request query params: ' . $this->expandArrayValues($values),
+                'headers' => $httpInfo .= 'Request headers: ' . $this->expandArrayValues($values),
+                'extra' => $httpInfo .= 'Request extra: ' . $this->expandArrayValues($values),
+                default => $httpInfo .= $name . ': ' . $values . PHP_EOL,
+            };
         }
         if (isset($options['body'])) {
             $httpInfo .= 'Request body: ';
@@ -88,7 +68,7 @@ class HttpException extends \Exception
             if (!empty($headers)) {
                 $httpInfo .= 'Response headers: ' . $this->expandArrayValues($response->getHeaders());
             }
-        } catch (HttpExceptionInterface $e) {
+        } catch (HttpExceptionInterface) {
             // continue
         }
         $this->requestTrace = $httpInfo;

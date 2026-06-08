@@ -108,7 +108,7 @@ class QueryManager
 
         $this->dataProviders[$name] = [
             self::DATA_PROVIDER_NAME => $name,
-            self::DATA_PROVIDER_CLASS => get_class($dataProvider),
+            self::DATA_PROVIDER_CLASS => $dataProvider::class,
             self::DATA_PROVIDER_OBJECT => $dataProvider,
             self::DATA_PROVIDER_QUERIES => [],
         ];
@@ -571,7 +571,7 @@ class QueryManager
 
             $value = [
                 'name' => $dataProviderName,
-                'class' => get_class($dataProvider),
+                'class' => $dataProvider::class,
                 'baseUri' => $dataProvider->getBaseUri(),
                 'cacheEnabled' => $dataProvider->isCacheEnabled(),
             ];
@@ -581,7 +581,7 @@ class QueryManager
             foreach ($item[self::DATA_PROVIDER_QUERIES] as $queryName => $query) {
                 $value = [
                     'name'          => $queryName,
-                    'class'         => get_class($query),
+                    'class'         => $query::class,
                     'type'          => null,
                     'dataProvider'  => $dataProviderName,
                     'hasResponse'   => false

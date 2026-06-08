@@ -112,7 +112,7 @@ class MappingStrategy implements MappingStrategyInterface, PropertyAccessorInter
             if (!is_string($source) && !is_array($source)) {
                 $type = gettype($source);
                 if ($type === 'object') {
-                    $type = get_class($source);
+                    $type = $source::class;
                 }
                 throw new MapperException(sprintf('Source for destination "%s" not a valid type. Must be a string, array, CallableValue, CallableData, or MapValueInterface object. %s passed.', $destination, $type));
             }

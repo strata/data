@@ -12,11 +12,8 @@ use Symfony\Component\Stopwatch\Stopwatch;
 
 class StopwatchSubscriber implements EventSubscriberInterface
 {
-    private Stopwatch $stopwatch;
-
-    public function __construct(Stopwatch $stopwatch)
+    public function __construct(private Stopwatch $stopwatch)
     {
-        $this->stopwatch = $stopwatch;
     }
 
     public static function getSubscribedEvents(): array

@@ -628,7 +628,7 @@ class Http implements DataProviderInterface
             ]), FailureEvent::NAME);
 
             if (!$this->isSuppressErrors()) {
-                if (substr((string) $response->getStatusCode(), 0, 3) === '404') {
+                if (str_starts_with((string) $response->getStatusCode(), '404')) {
                     throw new HttpNotFoundException(
                         'Not Found HTTP error',
                         $this->requestTrace->getRequestUri($requestId),

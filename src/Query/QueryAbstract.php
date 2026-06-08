@@ -61,7 +61,7 @@ abstract class QueryAbstract implements QueryInterface
     {
         $class = $this->getRequiredDataProviderClass();
         if (!($dataProvider instanceof $class)) {
-            throw new QueryException(sprintf('Cannot set data provider of type %s to this query, type %s required', get_class($dataProvider), $class));
+            throw new QueryException(sprintf('Cannot set data provider of type %s to this query, type %s required', $dataProvider::class, $class));
         }
         $this->dataProvider = $dataProvider;
         return $this;
@@ -430,10 +430,9 @@ abstract class QueryAbstract implements QueryInterface
     /**
      * Add one parameter to apply to this query
      * @param string $key
-     * @param mixed $value
      * @return $this Fluent interface
      */
-    public function addParam(string $key, $value): self
+    public function addParam(string $key, mixed $value): self
     {
         $this->params[$key] = $value;
         return $this;

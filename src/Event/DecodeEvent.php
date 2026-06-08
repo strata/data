@@ -8,11 +8,8 @@ class DecodeEvent extends RequestEventAbstract
 {
     const NAME = 'data.request.decode';
 
-    private $decodedData;
-
-    public function __construct($decodedData, string $requestId, string $uri, array $context = [])
+    public function __construct(private $decodedData, string $requestId, string $uri, array $context = [])
     {
-        $this->decodedData = $decodedData;
         parent::__construct($requestId, $uri, $context);
     }
 

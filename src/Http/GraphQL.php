@@ -89,7 +89,7 @@ class GraphQL extends Http
 
         try {
             $partialData = $this->decode($response);
-        } catch (DecoderException $e) {
+        } catch (DecoderException) {
             $partialData = [];
         }
 

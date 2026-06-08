@@ -52,10 +52,9 @@ class Collection implements CollectionInterface
     /**
      * Whether a offset exists
      * @link https://php.net/manual/en/arrayaccess.offsetexists.php
-     * @param mixed $offset
      * @return bool true on success or false on failure.
      */
-    public function offsetExists($offset): bool
+    public function offsetExists(mixed $offset): bool
     {
         return isset($this->collection[$offset]);
     }
@@ -63,10 +62,9 @@ class Collection implements CollectionInterface
     /**
      * Offset to retrieve
      * @link https://php.net/manual/en/arrayaccess.offsetget.php
-     * @param mixed $offset
      * @return mixed Can return all value types.
      */
-    public function offsetGet($offset): mixed
+    public function offsetGet(mixed $offset): mixed
     {
         return $this->collection[$offset] ?? null;
     }
@@ -74,11 +72,9 @@ class Collection implements CollectionInterface
     /**
      * Offset to set
      * @link https://php.net/manual/en/arrayaccess.offsetset.php
-     * @param mixed $offset
-     * @param mixed $value
      * @return void
      */
-    public function offsetSet($offset, $value): void
+    public function offsetSet(mixed $offset, mixed $value): void
     {
         if (is_null($offset)) {
             $this->collection[] = $value;
@@ -90,10 +86,9 @@ class Collection implements CollectionInterface
     /**
      * Offset to unset
      * @link https://php.net/manual/en/arrayaccess.offsetunset.php
-     * @param mixed $offset
      * @return void
      */
-    public function offsetUnset($offset): void
+    public function offsetUnset(mixed $offset): void
     {
         unset($this->collection[$offset]);
     }

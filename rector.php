@@ -8,7 +8,7 @@ use Rector\Symfony\Set\SymfonySetList;
 
 return RectorConfig::configure()
     ->withPaths([__DIR__ . '/src', __DIR__ . '/tests'])
-    ->withPhpSets(php74: true);
+    ->withPhpSets(php80: true);
 
 
 /*

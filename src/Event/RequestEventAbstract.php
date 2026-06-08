@@ -9,15 +9,8 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
 
 abstract class RequestEventAbstract extends Event
 {
-    private string $requestId;
-    private string $uri;
-    private array $context;
-
-    public function __construct(string $requestId, string $uri, array $context = [])
+    public function __construct(private string $requestId, private string $uri, private array $context = [])
     {
-        $this->requestId = $requestId;
-        $this->uri = $uri;
-        $this->context = $context;
     }
 
     /**
