@@ -13,15 +13,15 @@ final class DecoderFactoryTest extends TestCase
 {
     public function testFilenameFactory()
     {
-        $this->assertInstanceOf('Strata\Data\Decode\Json', DecoderFactory::fromFilename('example.json'));
-        $this->assertInstanceOf('Strata\Data\Decode\Markdown', DecoderFactory::fromFilename('example.md'));
-        $this->assertInstanceOf('Strata\Data\Decode\Markdown', DecoderFactory::fromFilename('example.mkd'));
-        $this->assertInstanceOf('Strata\Data\Decode\Markdown', DecoderFactory::fromFilename('example.markdown'));
-        $this->assertInstanceOf('Strata\Data\Decode\Rss', DecoderFactory::fromFilename('example.rss'));
-        $this->assertInstanceOf('Strata\Data\Decode\Rss', DecoderFactory::fromFilename('example.atom'));
+        $this->assertInstanceOf(\Strata\Data\Decode\Json::class, DecoderFactory::fromFilename('example.json'));
+        $this->assertInstanceOf(\Strata\Data\Decode\Markdown::class, DecoderFactory::fromFilename('example.md'));
+        $this->assertInstanceOf(\Strata\Data\Decode\Markdown::class, DecoderFactory::fromFilename('example.mkd'));
+        $this->assertInstanceOf(\Strata\Data\Decode\Markdown::class, DecoderFactory::fromFilename('example.markdown'));
+        $this->assertInstanceOf(\Strata\Data\Decode\Rss::class, DecoderFactory::fromFilename('example.rss'));
+        $this->assertInstanceOf(\Strata\Data\Decode\Rss::class, DecoderFactory::fromFilename('example.atom'));
         $this->assertNull(DecoderFactory::fromFilename('example.html'));
 
-        $this->assertInstanceOf('Strata\Data\Decode\Rss', DecoderFactory::fromFilename('https://example.com/feed.rss'));
+        $this->assertInstanceOf(\Strata\Data\Decode\Rss::class, DecoderFactory::fromFilename('https://example.com/feed.rss'));
         $this->assertNull(DecoderFactory::fromFilename('https://example.com/feed'));
     }
 
@@ -41,27 +41,27 @@ final class DecoderFactoryTest extends TestCase
         return [
             'Json' => [
                 'application/json',
-                'Strata\Data\Decode\Json'
+                \Strata\Data\Decode\Json::class
             ],
             'Markdown1' => [
                'text/markdown',
-                'Strata\Data\Decode\Markdown'
+                \Strata\Data\Decode\Markdown::class
             ],
             'Markdown2' => [
                 'text/x-markdown',
-                'Strata\Data\Decode\Markdown'
+                \Strata\Data\Decode\Markdown::class
             ],
             'Rss1' => [
                 'application/rss+xml',
-                'Strata\Data\Decode\Rss'
+                \Strata\Data\Decode\Rss::class
             ],
             'Rss2' => [
                 'text/rss',
-                'Strata\Data\Decode\Rss'
+                \Strata\Data\Decode\Rss::class
             ],
             'Atom' => [
                 'application/atom+xml',
-                'Strata\Data\Decode\Rss'
+                \Strata\Data\Decode\Rss::class
             ],
         ];
     }

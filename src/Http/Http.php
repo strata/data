@@ -456,10 +456,7 @@ class Http implements DataProviderInterface
      */
     public function statusMessage(int $code): ?string
     {
-        if (isset(Response::$statusTexts[$code])) {
-            return Response::$statusTexts[$code];
-        }
-        return null;
+        return Response::$statusTexts[$code] ?? null;
     }
 
     /**

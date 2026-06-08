@@ -76,10 +76,7 @@ trait DecoratedResponseTrait
     public function getHeader(string $header, bool $throw = true): ?array
     {
         $headers = $this->decorated->getHeaders($throw);
-        if (isset($headers[$header])) {
-            return $headers[$header];
-        }
-        return null;
+        return $headers[$header] ?? null;
     }
 
     /**

@@ -14,7 +14,7 @@ abstract class MapperAbstract
 
     private bool $mapToObject = false;
     private ?string $className = null;
-    private string $collectionClass = 'Strata\Data\Collection';
+    private string $collectionClass = \Strata\Data\Collection::class;
     private MappingStrategyInterface $strategy;
 
     /**

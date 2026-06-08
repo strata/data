@@ -51,7 +51,7 @@ class PaginationTest extends TestCase
         $pages = new Pagination();
 
         $pages->setTotalResults(1039);
-        $this->expectException('Strata\Data\Exception\PaginationException');
+        $this->expectException(\Strata\Data\Exception\PaginationException::class);
         $pages->setPage(100);
     }
 
@@ -111,7 +111,7 @@ class PaginationTest extends TestCase
         $pages = new Pagination();
         $pages->setTotalResults(37);
 
-        $this->expectException('Strata\Data\Exception\PaginationException');
+        $this->expectException(\Strata\Data\Exception\PaginationException::class);
         $pages->setPage(9);
 
         $pages->setResultsPerPage(4);

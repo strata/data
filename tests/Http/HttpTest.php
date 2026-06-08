@@ -200,7 +200,7 @@ class HttpTest extends TestCase
         $api->setHttpClient(new MockHttpClient($responses));
 
         $feed = $api->getRss('feed.rss');
-        $this->assertInstanceOf('Laminas\Feed\Reader\Feed\FeedInterface', $feed);
+        $this->assertInstanceOf(\Laminas\Feed\Reader\Feed\FeedInterface::class, $feed);
         $this->assertEquals('News feed generator', $feed->getTitle());
     }
 
@@ -212,7 +212,7 @@ class HttpTest extends TestCase
         $api = new Rest('https://example.com/api/');
         $api->setHttpClient(new MockHttpClient($responses));
 
-        $this->expectException('\Strata\Data\Exception\HttpNotFoundException');
+        $this->expectException(\Strata\Data\Exception\HttpNotFoundException::class);
         $response = $api->get('test');
     }
 
@@ -225,7 +225,7 @@ class HttpTest extends TestCase
         $api->setHttpClient(new MockHttpClient($responses));
 
         $response = $api->get('test');
-        $this->assertInstanceOf('Symfony\Contracts\HttpClient\ResponseInterface', $response);
+        $this->assertInstanceOf(\Symfony\Contracts\HttpClient\ResponseInterface::class, $response);
         $this->assertEquals(200, $response->getStatusCode());
 
         $item = $api->decode($response);

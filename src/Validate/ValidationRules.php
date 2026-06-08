@@ -54,21 +54,21 @@ class ValidationRules implements ValidatorInterface
     {
         switch ($ruleName) {
             case 'array':
-                return '\Strata\Data\Validate\Rule\ArrayRule';
+                return \Strata\Data\Validate\Rule\ArrayRule::class;
             case 'boolean':
-                return '\Strata\Data\Validate\Rule\BooleanRule';
+                return \Strata\Data\Validate\Rule\BooleanRule::class;
             case 'email':
-                return '\Strata\Data\Validate\Rule\EmailRule';
+                return \Strata\Data\Validate\Rule\EmailRule::class;
             case 'in':
-                return '\Strata\Data\Validate\Rule\InRule';
+                return \Strata\Data\Validate\Rule\InRule::class;
             case 'number':
-                return '\Strata\Data\Validate\Rule\NumberRule';
+                return \Strata\Data\Validate\Rule\NumberRule::class;
             case 'image':
-                return '\Strata\Data\Validate\Rule\ImageRule';
+                return \Strata\Data\Validate\Rule\ImageRule::class;
             case 'required':
-                return '\Strata\Data\Validate\Rule\RequiredRule';
+                return \Strata\Data\Validate\Rule\RequiredRule::class;
             case 'url':
-                return '\Strata\Data\Validate\Rule\UrlRule';
+                return \Strata\Data\Validate\Rule\UrlRule::class;
             default:
                 throw new ValidatorRulesException(sprintf('Validation rule not recognised: %s', $ruleName));
         }

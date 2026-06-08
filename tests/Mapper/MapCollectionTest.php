@@ -79,7 +79,7 @@ final class MapCollectionTest extends TestCase
 
         $collection = $mapper->map($this->data, '[items]');
 
-        $this->assertInstanceOf('Strata\Data\Collection', $collection);
+        $this->assertInstanceOf(\Strata\Data\Collection::class, $collection);
         $this->assertEquals(3, count($collection));
         $this->assertEquals('Banana', $collection[1]['name']);
         $this->assertEquals(1, $collection->getPagination()->getPage());
@@ -98,7 +98,7 @@ final class MapCollectionTest extends TestCase
         $mapper = new MapCollection($mapping);
         $mapper->setTotalResults('[meta_data][total]')
             ->setResultsPerPage('[meta_data][per_page]')
-            ->toObject('Tests\Item');
+            ->toObject(\Tests\Item::class);
 
         $collection = $mapper->map($this->data, '[items]');
         $this->assertTrue($collection instanceof Collection);
@@ -119,8 +119,8 @@ final class MapCollectionTest extends TestCase
         $mapper = new MapCollection($mapping);
         $mapper->setTotalResults('[meta_data][total]')
             ->setResultsPerPage('[meta_data][per_page]')
-            ->toObject('Tests\Item')
-            ->setCollectionClass('Tests\MyCollection');
+            ->toObject(\Tests\Item::class)
+            ->setCollectionClass(\Tests\MyCollection::class);
 
         $collection = $mapper->map($this->data, '[items]');
         $this->assertTrue($collection instanceof MyCollection);
@@ -133,10 +133,10 @@ final class MapCollectionTest extends TestCase
 
     public function testInvalidCustomClass()
     {
-        $this->expectException('Strata\Data\Exception\MapperException');
+        $this->expectException(\Strata\Data\Exception\MapperException::class);
 
         $mapper = new MapCollection([]);
-        $mapper->toObject('Tests\Item')
-               ->setCollectionClass('Tests\InvalidCollection');
+        $mapper->toObject(\Tests\Item::class)
+               ->setCollectionClass(\Tests\InvalidCollection::class);
     }
 }

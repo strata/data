@@ -35,10 +35,7 @@ class RequestTrace
      */
     public function getRequest(string $requestId)
     {
-        if (isset($this->requests[$requestId])) {
-            return $this->requests[$requestId];
-        }
-        return null;
+        return $this->requests[$requestId] ?? null;
     }
 
     /**

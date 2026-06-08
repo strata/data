@@ -22,7 +22,7 @@ final class RssTest extends TestCase
         $decoder = new Rss();
         $feed = $decoder->decode($response);
 
-        $this->assertInstanceOf('Laminas\Feed\Reader\Feed\FeedInterface', $feed);
+        $this->assertInstanceOf(\Laminas\Feed\Reader\Feed\FeedInterface::class, $feed);
         $this->assertEquals('News feed generator', $feed->getTitle());
 
         $x = 0;
