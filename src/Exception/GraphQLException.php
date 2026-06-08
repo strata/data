@@ -65,7 +65,7 @@ class GraphQLException extends HttpException
             $content = $error['message'];
             if (isset($error['locations'])) {
                 foreach ($error['locations'] as $location) {
-                    $content = rtrim($content, '.');
+                    $content = rtrim((string) $content, '.');
                     $content .= sprintf(' on line %d, column %d', $location['line'], $location['column']);
                 }
             }

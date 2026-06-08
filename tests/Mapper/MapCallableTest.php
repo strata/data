@@ -12,7 +12,7 @@ use Strata\Data\Transform\Value\CallableValue;
 
 function user_transform($value): string
 {
-    return 'X ' . strtoupper($value);
+    return 'X ' . strtoupper((string) $value);
 }
 
 final class MapCallableTest extends TestCase
@@ -89,7 +89,7 @@ final class MapCallableTest extends TestCase
     public function testObjectMethodWithNullData()
     {
         $mapping = [
-            '[name]' => new CallableData([$this, 'populateContent'], '[person_name]'),
+            '[name]' => new CallableData($this->populateContent(...), '[person_name]'),
             '[age]' => '[person_age]',
         ];
         $mapper = new MapItem($mapping);
@@ -137,6 +137,6 @@ final class MapCallableTest extends TestCase
 
     public static function staticPopulateContent(array $data)
     {
-        return strtolower($data['person_name']);
+        return strtolower((string) $data['person_name']);
     }
 }

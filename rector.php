@@ -3,12 +3,15 @@
 declare(strict_types=1);
 
 use Rector\Config\RectorConfig;
-use Rector\Set\ValueObject\LevelSetList;
+use Rector\Php81\Rector\Property\ReadOnlyPropertyRector;
 use Rector\Symfony\Set\SymfonySetList;
 
 return RectorConfig::configure()
     ->withPaths([__DIR__ . '/src', __DIR__ . '/tests'])
-    ->withPhpSets(php80: true);
+    ->withPhpSets(php81: true)
+    ->withSkip([
+        ReadOnlyPropertyRector::class
+    ]);
 
 
 /*

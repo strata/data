@@ -17,7 +17,7 @@ class ImageRule extends ValidatorRuleAbstract
     public function validate($data): bool
     {
         $value = $this->getProperty($data);
-        $info = pathinfo($value);
+        $info = pathinfo((string) $value);
         if (!isset($info['extension'])) {
             return false;
         }

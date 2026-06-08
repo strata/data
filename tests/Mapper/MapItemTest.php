@@ -24,7 +24,7 @@ class Person2 extends Person
 {
     public function setName($name)
     {
-        $this->name = strtolower($name);
+        $this->name = strtolower((string) $name);
     }
 }
 

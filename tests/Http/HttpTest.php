@@ -423,7 +423,7 @@ class HttpTest extends TestCase
 
         // POST
         $callback = function ($method, $url, $options) {
-            parse_str($options['body'], $postData);
+            parse_str((string) $options['body'], $postData);
             if (!isset($postData['name'])) {
                 return new MockResponse('Bad request: name not found', ['http_code' => 400]);
             }

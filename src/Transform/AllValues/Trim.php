@@ -28,6 +28,6 @@ class Trim extends ValuesAbstract
      */
     public function transform($data)
     {
-        return trim($data);
+        return trim((string) $data);
     }
 }
