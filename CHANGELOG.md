@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Features
 
-* Support Symfony 8 ([c7a8468](https://github.com/strata/data/commit/c7a84683568f2301c789848c4b171b84a567c76f))
+* Support Symfony 8 ([127b939](https://github.com/strata/data/commit/127b939cbdb4dd45a813a2ecbe1c964483a8fa85))
 
 ## [0.9.0](https://github.com/strata/data/compare/v0.8.2...v0.9.0) (2024-06-24)
 
