@@ -40,8 +40,10 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: mbstring, intl, redis-6.3
+          extensions: mbstring, intl, :redis, redis-6.3
           ini-values: post_max_size=256M, max_execution_time=180
+        env:
+          fail-fast: true
 
       - name: Check PHP version
         run: php -v
