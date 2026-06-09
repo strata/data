@@ -52,26 +52,17 @@ class ValidationRules implements ValidatorInterface
      */
     protected function getRuleClass(string $ruleName): string
     {
-        switch ($ruleName) {
-            case 'array':
-                return '\Strata\Data\Validate\Rule\ArrayRule';
-            case 'boolean':
-                return '\Strata\Data\Validate\Rule\BooleanRule';
-            case 'email':
-                return '\Strata\Data\Validate\Rule\EmailRule';
-            case 'in':
-                return '\Strata\Data\Validate\Rule\InRule';
-            case 'number':
-                return '\Strata\Data\Validate\Rule\NumberRule';
-            case 'image':
-                return '\Strata\Data\Validate\Rule\ImageRule';
-            case 'required':
-                return '\Strata\Data\Validate\Rule\RequiredRule';
-            case 'url':
-                return '\Strata\Data\Validate\Rule\UrlRule';
-            default:
-                throw new ValidatorRulesException(sprintf('Validation rule not recognised: %s', $ruleName));
-        }
+        return match ($ruleName) {
+            'array' => \Strata\Data\Validate\Rule\ArrayRule::class,
+            'boolean' => \Strata\Data\Validate\Rule\BooleanRule::class,
+            'email' => \Strata\Data\Validate\Rule\EmailRule::class,
+            'in' => \Strata\Data\Validate\Rule\InRule::class,
+            'number' => \Strata\Data\Validate\Rule\NumberRule::class,
+            'image' => \Strata\Data\Validate\Rule\ImageRule::class,
+            'required' => \Strata\Data\Validate\Rule\RequiredRule::class,
+            'url' => \Strata\Data\Validate\Rule\UrlRule::class,
+            default => throw new ValidatorRulesException(sprintf('Validation rule not recognised: %s', $ruleName)),
+        };
     }
 
     /**

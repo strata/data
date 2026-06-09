@@ -17,15 +17,12 @@ use Strata\Data\Query\QueryInterface;
  */
 class BuildGraphQLQuery implements BuildQueryInterface
 {
-    private GraphQL $dataProvider;
-
     /**
      * Constructor
      * @param GraphQL $dataProvider Data provider to use to build this query
      */
-    public function __construct(GraphQL $dataProvider)
+    public function __construct(private GraphQL $dataProvider)
     {
-        $this->dataProvider = $dataProvider;
     }
 
     /**
@@ -63,7 +60,7 @@ class BuildGraphQLQuery implements BuildQueryInterface
                     break;
                 default:
                     // If a variable do not quote
-                    if (is_string($value) && strpos($value, '$') === 0) {
+                    if (is_string($value) && str_starts_with($value, '$')) {
                         $paramValue = $value;
                         break;
                     }

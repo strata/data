@@ -133,7 +133,7 @@ class MapValues extends DataAbstract implements NotTransformedInterface
      */
     private function normalize($value)
     {
-        $value = strtolower($value);
+        $value = strtolower((string) $value);
         $value = trim($value);
         return $value;
     }

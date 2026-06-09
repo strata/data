@@ -76,10 +76,7 @@ trait DecoratedResponseTrait
     public function getHeader(string $header, bool $throw = true): ?array
     {
         $headers = $this->decorated->getHeaders($throw);
-        if (isset($headers[$header])) {
-            return $headers[$header];
-        }
-        return null;
+        return $headers[$header] ?? null;
     }
 
     /**
@@ -167,7 +164,7 @@ trait DecoratedResponseTrait
         if (method_exists($this->decorated, 'toStream')) {
             return $this->decorated->toStream(false);
         } else {
-            throw new \Exception('Method toStream does not exist on object ' . get_class($this->decorated));
+            throw new \Exception('Method toStream does not exist on object ' . $this->decorated::class);
         }
     }
 }

@@ -40,7 +40,7 @@ class BooleanValue extends BaseValue
             return null;
         }
 
-        $value = strtolower($value);
+        $value = strtolower((string) $value);
         if (in_array($value, $this->trueValues, true)) {
             return true;
         }

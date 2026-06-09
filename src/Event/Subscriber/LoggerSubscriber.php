@@ -14,11 +14,8 @@ class LoggerSubscriber implements EventSubscriberInterface
 {
     const PREFIX = '(Strata Data) ';
 
-    private LoggerInterface $logger;
-
-    public function __construct(LoggerInterface $logger)
+    public function __construct(private LoggerInterface $logger)
     {
-        $this->logger = $logger;
     }
 
     public static function getSubscribedEvents(): array

@@ -165,7 +165,7 @@ class DataCacheTest extends TestCase
         $adapter = new FilesystemAdapter('cache', 0, self::CACHE_DIR);
         $api->setCache($adapter);
 
-        $this->expectException('Strata\Data\Exception\CacheException');
+        $this->expectException(\Strata\Data\Exception\CacheException::class);
         $api->setCacheTags(['test-tag']);
     }
 

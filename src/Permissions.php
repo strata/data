@@ -8,7 +8,7 @@ namespace Strata\Data;
  * Class to manage allowed actions on an API and to protect against misuse
  *
  */
-class Permissions
+class Permissions implements \Stringable
 {
     const READ      = 1;
     const CREATE    = 2;
@@ -80,17 +80,13 @@ class Permissions
      */
     public function getName(int $action): ?string
     {
-        switch ($action) {
-            case self::READ:
-                return 'READ';
-            case self::CREATE:
-                return 'CREATE';
-            case self::UPDATE:
-                return 'UPDATE';
-            case self::DELETE:
-                return 'DELETE';
-        }
-        return null;
+        return match ($action) {
+            self::READ => 'READ',
+            self::CREATE => 'CREATE',
+            self::UPDATE => 'UPDATE',
+            self::DELETE => 'DELETE',
+            default => null,
+        };
     }
 
     /**
@@ -98,7 +94,7 @@ class Permissions
      *
      * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
         $results = [];
         if ($this->read()) {

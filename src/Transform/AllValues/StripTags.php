@@ -28,6 +28,6 @@ class StripTags extends ValuesAbstract
      */
     public function transform($data)
     {
-        return strip_tags($data);
+        return strip_tags((string) $data);
     }
 }

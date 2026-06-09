@@ -25,7 +25,6 @@ use Psr\Cache\CacheItemPoolInterface;
  */
 class DataCache implements CacheItemPoolInterface, TagAwareAdapterInterface, PruneableInterface
 {
-    private CacheItemPoolInterface $cache;
     protected array $tags = [];
     protected int $lifetime;
 
@@ -35,12 +34,11 @@ class DataCache implements CacheItemPoolInterface, TagAwareAdapterInterface, Pru
      * @param CacheItemPoolInterface $cache
      * @param ?int $defaultLifetime Default cache lifetime for data cache, defaults to 1 hour if not set
      */
-    public function __construct(CacheItemPoolInterface $cache, ?int $defaultLifetime = null)
+    public function __construct(private CacheItemPoolInterface $cache, ?int $defaultLifetime = null)
     {
         if ($defaultLifetime === null) {
             $defaultLifetime = CacheLifetime::HOUR;
         }
-        $this->cache = $cache;
         $this->setLifetime($defaultLifetime);
     }
 
@@ -92,7 +90,7 @@ class DataCache implements CacheItemPoolInterface, TagAwareAdapterInterface, Pru
     public function setTags(array $tags)
     {
         if (!$this->isTaggable()) {
-            throw new CacheException(sprintf('Tags are not supported by your cache adapter %s', get_class($this->cache)));
+            throw new CacheException(sprintf('Tags are not supported by your cache adapter %s', $this->cache::class));
         }
         $this->tags = $tags;
         return $this;

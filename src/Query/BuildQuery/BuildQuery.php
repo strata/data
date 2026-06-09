@@ -14,15 +14,12 @@ use Strata\Data\Query\QueryInterface;
  */
 class BuildQuery implements BuildQueryInterface
 {
-    private Http $dataProvider;
-
     /**
      * Constructor
      * @param Http $dataProvider Data provider to use to build this query
      */
-    public function __construct(Http $dataProvider)
+    public function __construct(private Http $dataProvider)
     {
-        $this->dataProvider = $dataProvider;
     }
 
     /**

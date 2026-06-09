@@ -48,6 +48,6 @@ class Concatenate extends DataAbstract
      */
     public function __invoke($objectOrArray, ...$arguments)
     {
-        return $this->transform($objectOrArray, ...$arguments);
+        return $this->transform($objectOrArray);
     }
 }

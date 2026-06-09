@@ -45,7 +45,7 @@ class DateTimeValue extends BaseValue
         }
         try {
             return new \DateTime($value, $this->timezone);
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             return null;
         }
     }

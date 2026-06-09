@@ -12,7 +12,6 @@ class MapArray implements MapValueInterface
 {
     use PropertyAccessorTrait;
 
-    private string $propertyPath;
     private MapItem $mapItem;
 
     /**
@@ -21,9 +20,8 @@ class MapArray implements MapValueInterface
      * @param string $propertyPath Property path to read data from (this must be an array of data, otherwise it is not mapped)
      * @param array|MappingStrategyInterface $strategy Array of mapping property paths, or MappingStrategy object
      */
-    public function __construct(string $propertyPath, $strategy)
+    public function __construct(private string $propertyPath, $strategy)
     {
-        $this->propertyPath = $propertyPath;
         $this->mapItem = new MapItem($strategy);
     }
 

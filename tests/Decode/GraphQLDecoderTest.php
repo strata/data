@@ -37,7 +37,7 @@ EOD;
 }
 EOD;
 
-        $this->expectException('Strata\Data\Exception\DecoderException');
+        $this->expectException(\Strata\Data\Exception\DecoderException::class);
         $data = $decoder->decode($data);
     }
 }

@@ -129,7 +129,7 @@ class DataHistoryTest extends TestCase
         $this->assertTrue($interval->format('%s') < 30);
 
         // Test invalid item field
-        $this->expectException('Strata\Data\Exception\CacheException');
+        $this->expectException(\Strata\Data\Exception\CacheException::class);
         $history->getLastItem(123, 'invalid');
     }
 

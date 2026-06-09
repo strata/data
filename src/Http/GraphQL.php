@@ -89,7 +89,7 @@ class GraphQL extends Http
 
         try {
             $partialData = $this->decode($response);
-        } catch (DecoderException $e) {
+        } catch (DecoderException) {
             $partialData = [];
         }
 
@@ -177,7 +177,7 @@ class GraphQL extends Http
     {
         // Make sure GraphQL query is on one line so valid JSON
         $query = preg_replace('/\s+/', ' ', $query);
-        $query = trim($query);
+        $query = trim((string) $query);
         $data = ['query' => $query];
 
         if (!empty($operationName)) {

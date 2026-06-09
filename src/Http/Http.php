@@ -456,10 +456,7 @@ class Http implements DataProviderInterface
      */
     public function statusMessage(int $code): ?string
     {
-        if (isset(Response::$statusTexts[$code])) {
-            return Response::$statusTexts[$code];
-        }
-        return null;
+        return Response::$statusTexts[$code] ?? null;
     }
 
     /**
@@ -631,7 +628,7 @@ class Http implements DataProviderInterface
             ]), FailureEvent::NAME);
 
             if (!$this->isSuppressErrors()) {
-                if (substr((string) $response->getStatusCode(), 0, 3) === '404') {
+                if (str_starts_with((string) $response->getStatusCode(), '404')) {
                     throw new HttpNotFoundException(
                         'Not Found HTTP error',
                         $this->requestTrace->getRequestUri($requestId),

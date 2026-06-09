@@ -10,7 +10,7 @@ use Strata\Data\Exception\DecoderException;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
 
-class Item
+class Item implements \Stringable
 {
     public function __toString(): string
     {

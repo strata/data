@@ -8,11 +8,8 @@ class FailureEvent extends RequestEventAbstract
 {
     const NAME = 'data.request.failure';
 
-    private \Exception $exception;
-
-    public function __construct(\Exception $exception, string $requestId, string $uri, array $context = [])
+    public function __construct(private \Exception $exception, string $requestId, string $uri, array $context = [])
     {
-        $this->exception = $exception;
         parent::__construct($requestId, $uri, $context);
     }
 

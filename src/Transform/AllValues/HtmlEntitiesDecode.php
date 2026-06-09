@@ -28,6 +28,6 @@ class HtmlEntitiesDecode extends ValuesAbstract
      */
     public function transform($data)
     {
-        return htmlspecialchars_decode($data);
+        return htmlspecialchars_decode((string) $data);
     }
 }

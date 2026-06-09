@@ -11,10 +11,9 @@ interface ValidatorInterface extends PropertyAccessorInterface
     /**
      * Is the item valid?
      *
-     * @param mixed $data
      * @return bool
      */
-    public function validate($data): bool;
+    public function validate(mixed $data): bool;
 
     /**
      * Return error message from last validate() call

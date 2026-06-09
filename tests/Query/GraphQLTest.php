@@ -16,7 +16,7 @@ class GraphQLTest extends TestCase
         $this->assertSame(GraphQL::class, $query->getRequiredDataProviderClass());
 
         $query->setDataProvider(new GraphQL('https://example.com'));
-        $this->assertSame(GraphQL::class, get_class($query->getDataProvider()));
+        $this->assertSame(GraphQL::class, $query->getDataProvider()::class);
 
         $this->expectException(QueryException::class);
         $query->setDataProvider(new Rest('https://example.com'));

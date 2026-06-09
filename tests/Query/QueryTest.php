@@ -37,7 +37,7 @@ class QueryTest extends TestCase
         $this->assertSame(Rest::class, $query->getRequiredDataProviderClass());
 
         $query->setDataProvider(new Rest('https://example.com'));
-        $this->assertSame(Rest::class, get_class($query->getDataProvider()));
+        $this->assertSame(Rest::class, $query->getDataProvider()::class);
 
         $this->expectException(QueryException::class);
         $query->setDataProvider(new GraphQL('https://example.com'));

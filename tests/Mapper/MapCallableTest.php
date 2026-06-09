@@ -12,7 +12,7 @@ use Strata\Data\Transform\Value\CallableValue;
 
 function user_transform($value): string
 {
-    return 'X ' . strtoupper($value);
+    return 'X ' . strtoupper((string) $value);
 }
 
 final class MapCallableTest extends TestCase
@@ -36,9 +36,7 @@ final class MapCallableTest extends TestCase
     {
         $mapping = [
             '[name]' => '[person_name]',
-            '[code]' => new CallableData(function ($data) {
-                return $data['person_town'] . '_' . $data['person_name'];
-            }),
+            '[code]' => new CallableData(fn($data) => $data['person_town'] . '_' . $data['person_name']),
         ];
         $mapper = new MapItem($mapping);
 
@@ -54,9 +52,7 @@ final class MapCallableTest extends TestCase
 
     public function testClosureWithValues()
     {
-        $function = function ($personName, $personTown) {
-            return $personName . '_' . $personTown;
-        };
+        $function = fn($personName, $personTown) => $personName . '_' . $personTown;
 
         $mapping = [
             '[name]' => '[person_name]',
@@ -93,7 +89,7 @@ final class MapCallableTest extends TestCase
     public function testObjectMethodWithNullData()
     {
         $mapping = [
-            '[name]' => new CallableData([$this, 'populateContent'], '[person_name]'),
+            '[name]' => new CallableData($this->populateContent(...), '[person_name]'),
             '[age]' => '[person_age]',
         ];
         $mapper = new MapItem($mapping);
@@ -125,7 +121,7 @@ final class MapCallableTest extends TestCase
     public function testObjectStaticMethod()
     {
         $mapping = [
-            '[name]' => new CallableData(['Tests\MapCallableTest', 'staticPopulateContent']),
+            '[name]' => new CallableData([\Tests\MapCallableTest::class, 'staticPopulateContent']),
             '[age]' => '[person_age]',
         ];
         $mapper = new MapItem($mapping);
@@ -141,6 +137,6 @@ final class MapCallableTest extends TestCase
 
     public static function staticPopulateContent(array $data)
     {
-        return strtolower($data['person_name']);
+        return strtolower((string) $data['person_name']);
     }
 }

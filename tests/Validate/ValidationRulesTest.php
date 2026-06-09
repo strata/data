@@ -19,7 +19,7 @@ class ValidationRulesTest extends TestCase
     {
         $validator = new ValidationRules(['prop' => 'required']);
 
-        $this->expectException('Strata\Data\Exception\ValidatorRulesException');
+        $this->expectException(\Strata\Data\Exception\ValidatorRulesException::class);
         $validator->setRules(['prop' => 'invalidRule']);
     }
 

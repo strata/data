@@ -24,7 +24,7 @@ class Person2 extends Person
 {
     public function setName($name)
     {
-        $this->name = strtolower($name);
+        $this->name = strtolower((string) $name);
     }
 }
 
@@ -171,7 +171,7 @@ final class MapItemTest extends TestCase
             'job_title' => '[occupation]',
         ];
         $mapper = new MapItem($mapping);
-        $mapper->toObject('Strata\Data\Tests\Person');
+        $mapper->toObject(\Strata\Data\Tests\Person::class);
 
         $data = [
             'person_name' => 'Fred Bloggs',

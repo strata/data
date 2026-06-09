@@ -73,11 +73,10 @@ interface DataProviderInterface
     /**
      * Decode response
      *
-     * @param mixed $response
      * @param DecoderInterface|null $decoder Optional decoder, if not set uses getDefaultDecoder()
      * @return mixed
      */
-    public function decode($response, ?DecoderInterface $decoder = null);
+    public function decode(mixed $response, ?DecoderInterface $decoder = null);
 
     /**
      * Is the cache enabled?

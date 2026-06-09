@@ -96,9 +96,8 @@ trait IterableKeyBasedTrait
     /**
      * Add item to collection
      * @param $offset
-     * @param mixed $value
      */
-    public function offsetSet($offset, $value)
+    public function offsetSet($offset, mixed $value)
     {
         $this->collection[$offset] = $value;
     }

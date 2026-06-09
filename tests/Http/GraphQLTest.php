@@ -119,7 +119,7 @@ EOD;
 
         $this->assertTrue($graphQL->ping());
 
-        $this->expectException('\Strata\Data\Exception\HttpNotFoundException');
+        $this->expectException(\Strata\Data\Exception\HttpNotFoundException::class);
         $graphQL->ping();
     }
 

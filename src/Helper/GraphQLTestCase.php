@@ -25,9 +25,9 @@ class GraphQLTestCase extends TestCase
     {
         // Strip line returns
         $expected = preg_replace('/\s+/', ' ', $expected);
-        $expected = trim($expected);
+        $expected = trim((string) $expected);
         $actual = preg_replace('/\s+/', ' ', $actual);
-        $actual = trim($actual);
+        $actual = trim((string) $actual);
 
         Assert::assertThat(
             $actual,
