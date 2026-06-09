@@ -4,32 +4,12 @@ declare(strict_types=1);
 
 use Rector\Config\RectorConfig;
 use Rector\Php81\Rector\Property\ReadOnlyPropertyRector;
-use Rector\Symfony\Set\SymfonySetList;
 
 return RectorConfig::configure()
     ->withPaths([__DIR__ . '/src', __DIR__ . '/tests'])
-    ->withPhpSets(php81: true)
+    ->withPhpSets(php82: true)
+    ->withPreparedSets(symfonyCodeQuality: true)
+    ->withComposerBased(symfony: true)
     ->withSkip([
         ReadOnlyPropertyRector::class
     ]);
-
-
-/*
-return static function (RectorConfig $rectorConfig): void {
-    $rectorConfig->paths([
-        __DIR__ . '/src',
-        __DIR__ . '/tests',
-    ]);
-
-    $rectorConfig->sets([
-        LevelSetList::UP_TO_PHP_82,
-        SymfonySetList::SYMFONY_60,
-        SymfonySetList::SYMFONY_61,
-        SymfonySetList::SYMFONY_62,
-        SymfonySetList::SYMFONY_63,
-        SymfonySetList::SYMFONY_64,
-        SymfonySetList::SYMFONY_70,
-        SymfonySetList::SYMFONY_71,
-    ]);
-};
-*/
