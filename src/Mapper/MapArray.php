@@ -11,6 +11,7 @@ use Strata\Data\Transform\Value\MapValueInterface;
 class MapArray implements MapValueInterface
 {
     use PropertyAccessorTrait;
+
     private MapItem $mapItem;
 
     /**
