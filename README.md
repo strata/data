@@ -18,7 +18,7 @@ See the [documentation](docs/README.md) for more.
 You can use this with the [frontend](https://github.com/strata/frontend) package to help you build a frontend website.
 
 ## Status
-Please note this software is in development, usage may change before the 1.0 release.
+Please note this software is in development and usage may change before the 1.0 release.
 
 ## Requirements
 
