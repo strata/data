@@ -30,7 +30,7 @@ Please note this software is in development, usage may change before the 1.0 rel
 Install via Composer:
 
 ```
-composer require strata/data:^0.9
+composer require strata/data
 ```
 
 ## Thanks to
