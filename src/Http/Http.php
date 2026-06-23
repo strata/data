@@ -398,7 +398,6 @@ class Http implements DataProviderInterface
      *
      * Hash generated from: URI + GET params
      *
-     * @param $method
      * @param $uri
      * @param array $context
      * @return string Unique identifier for this request
@@ -720,7 +719,7 @@ class Http implements DataProviderInterface
      * @throws HttpException
      * @throws \Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface
      */
-    public function post(string $uri, string|array $postData = null, array $options = []): CacheableResponse
+    public function post(string $uri, string|array|null $postData = null, array $options = []): CacheableResponse
     {
         if (is_array($postData)) {
             if (isset($options['body']) && is_array($options['body'])) {

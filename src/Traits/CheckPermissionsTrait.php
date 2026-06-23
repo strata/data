@@ -22,7 +22,7 @@ trait CheckPermissionsTrait
      * Set permissions for accessing the API, defaults to read-only
      * @param Permissions $permissions
      */
-    public function setPermissions(Permissions $permissions = null)
+    public function setPermissions(?Permissions $permissions = null)
     {
         if ($permissions instanceof Permissions) {
             $this->permissions = $permissions;

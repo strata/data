@@ -106,7 +106,7 @@ class DataHistory
      * @return mixed|array|null Return last history item or null on failure
      * @throws CacheException
      */
-    public function getLastItem($key, string $field = null)
+    public function getLastItem($key, ?string $field = null)
     {
         $history = $this->getAll($key);
         $item = array_pop($history);
