@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Strata\Data\Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Strata\Data\Decode\DecoderFactory;
 use Symfony\Component\HttpClient\MockHttpClient;
@@ -25,9 +26,7 @@ final class DecoderFactoryTest extends TestCase
         $this->assertNull(DecoderFactory::fromFilename('https://example.com/feed'));
     }
 
-    /**
-     * @dataProvider responseDataProvider
-     */
+    #[DataProvider('responseDataProvider')]
     public function testResponseFactory($contentType, $expectedClass)
     {
         $mockResponse = new MockResponse('', ['response_headers' => ['Content-type' => $contentType]]);

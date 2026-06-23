@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Strata\Data\Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Strata\Data\Validate\Rule\EmailRule;
 
 class EmailRuleTest extends TestCase
 {
-    /**
-     * @dataProvider validDataProvider
-     */
+
+    #[DataProvider('validDataProvider')]
     public function testValid(string $email)
     {
         $validator = new EmailRule('[email]');
@@ -20,9 +20,7 @@ class EmailRuleTest extends TestCase
         $this->assertTrue($validator->validate($data));
     }
 
-    /**
-     * @dataProvider invalidDataProvider
-     */
+    #[DataProvider('invalidDataProvider')]
     public function testInvalid(string $email)
     {
         $validator = new EmailRule('[email]');

@@ -56,7 +56,6 @@ class GraphQL extends Http
      */
     public function getRequestIdentifier(string $uri, array $context = []): string
     {
-        // The "Strata\Data\Http\GraphQL::getRequestIdentifier()" method will require a new "$method" argument in the next major version of its parent class "Strata\Data\Http\Http", not defining it is deprecated.
         if (!empty($context['query'])) {
             $uri .= '?' . http_build_query($context['query']);
         }

@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace Strata\Data\Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Strata\Data\Validate\Rule\RequiredRule;
 
 class RequiredRuleTest extends TestCase
 {
-    /**
-     * @dataProvider validDataProvider
-     */
+    #[DataProvider('validDataProvider')]
     public function testValid(string $propertyPath)
     {
         $data = ['email' => 'hello@studio24.net', 'title' => '', 'number' => 0, 'things' => [], 'null' => null];
@@ -20,9 +19,7 @@ class RequiredRuleTest extends TestCase
         $this->assertTrue($validator->validate($data));
     }
 
-    /**
-     * @dataProvider invalidDataProvider
-     */
+    #[DataProvider('invalidDataProvider')]
     public function testInvalid(string $propertyPath)
     {
         $data = ['email' => 'hello@studio24.net', 'title' => '', 'number' => 0, 'things' => [], 'null' => null];

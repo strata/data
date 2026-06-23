@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace Strata\Data\Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Strata\Data\Validate\Rule\NumberRule;
 
 class NumberRuleTest extends TestCase
 {
-    /**
-     * @dataProvider validDataProvider
-     */
+    #[DataProvider('validDataProvider')]
     public function testValid($number)
     {
         $validator = new NumberRule('[data]');
@@ -20,9 +19,7 @@ class NumberRuleTest extends TestCase
         $this->assertTrue($validator->validate($data));
     }
 
-    /**
-     * @dataProvider invalidDataProvider
-     */
+    #[DataProvider('invalidDataProvider')]
     public function testInvalid($number)
     {
         $validator = new NumberRule('[data]');
