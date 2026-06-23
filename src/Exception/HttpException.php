@@ -27,7 +27,7 @@ class HttpException extends \Exception
      * @param array $responseData
      * @param \Exception|null $previous
      */
-    public function __construct(string $message, private string $requestUri, private string $requestMethod, private array $requestOptions, private ResponseInterface $response, private array $responseErrorData = [], private array $responseData = [], \Exception $previous = null)
+    public function __construct(string $message, private string $requestUri, private string $requestMethod, private array $requestOptions, private ResponseInterface $response, private array $responseErrorData = [], private array $responseData = [], ?\Exception $previous = null)
     {
         // Append error data if set
         $message .= $this->getMessageFromErrorData($this->responseErrorData);

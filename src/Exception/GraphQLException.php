@@ -25,7 +25,7 @@ class GraphQLException extends HttpException
      * @param ?string $lastQuery
      * @param \Exception|null $previous
      */
-    public function __construct(string $message, string $uri, string $method, array $options, ResponseInterface $response, array $errorData = [], array $responseData = [], \Exception $previous = null, ?string $lastQuery = null)
+    public function __construct(string $message, string $uri, string $method, array $options, ResponseInterface $response, array $errorData = [], array $responseData = [], ?\Exception $previous = null, ?string $lastQuery = null)
     {
         if (null !== $lastQuery) {
             $this->setLastQuery($lastQuery);

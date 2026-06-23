@@ -33,7 +33,7 @@ trait FlagsTrait
 {
     protected $flags;
 
-    public function __construct(int $options = null)
+    public function __construct(?int $options = null)
     {
         if ($options !== null) {
             $this->setFlags($options);
