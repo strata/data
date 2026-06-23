@@ -10,7 +10,6 @@ use Strata\Data\Validate\Rule\EmailRule;
 
 class EmailRuleTest extends TestCase
 {
-
     #[DataProvider('validDataProvider')]
     public function testValid(string $email)
     {
