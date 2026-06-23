@@ -9,8 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Bug Fixes
 
-* Fix some minor deprecations ([0e43518](https://github.com/strata/data/commit/0e435188ab31b68731ee0a7ddb76351738787088))
-* Fix some minor deprecations ([3bbb354](https://github.com/strata/data/commit/3bbb354481a9de980bd4a70125ed91ca0c648d0e))
+* Fix some minor deprecations 
 
 ## [0.10.0](https://github.com/strata/data/compare/v0.9.0...v0.10.0) (2026-06-09)
 
